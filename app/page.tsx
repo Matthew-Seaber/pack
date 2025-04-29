@@ -1,7 +1,7 @@
 function HomePage() {
   return (
     <>
-      <h1 className="text-3xl">HomePage</h1>
+      <h1 className="text-3xl">🚧 The Future of Education is <s>Here</s> Coming Soon...</h1>
     </>
   );
 }
