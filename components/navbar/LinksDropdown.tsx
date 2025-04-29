@@ -22,7 +22,7 @@ function LinksDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-52" align="start" sideOffset={10}>
         <DropdownMenuItem>
-          <Link href="/profile" className="capitalize w-full">
+          <Link href="/pricing" className="capitalize w-full">
             🚀 UPGRADE
           </Link>
         </DropdownMenuItem>
