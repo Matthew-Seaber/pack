@@ -41,14 +41,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 const formSchema = z.object({
   yearGroup: z.string(),
   educationLevel: z.string(),
-  name_0764670473: z.array(z.string()).nonempty("Please at least one item"),
+  subjects: z.array(z.string()).nonempty("Please at least one item"),
   otherSubjects: z
     .array(z.string())
     .nonempty("Please at least one item")
     .optional(),
   reviseFrequency: z.string(),
   revisionMethods: z.array(z.string()).nonempty("Please at least one item"),
+  otherMethods: z
+    .array(z.string())
+    .nonempty("Please at least one item")
+    .optional(),
   revisionApps: z.array(z.string()).nonempty("Please at least one item"),
+  otherApps: z
+    .array(z.string())
+    .nonempty("Please at least one item")
+    .optional(),
   moneyMonth: z.string(),
   moneyOne: z.string(),
   tutor: z.string().optional(),
@@ -59,19 +67,21 @@ const formSchema = z.object({
   name_5557725765: z.string().min(1).optional(),
   email: z.string().optional(),
   marketing: z.boolean().default(true).optional(),
+  pomodoro: z.string(),
 });
 
 function MarketResearchPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name_0764670473: ["React"],
-      otherSubjects: ["test"],
-      revisionMethods: ["React"],
-      revisionApps: ["React"],
-      motivation: ["React"],
-      dislikes: ["React"],
-      name_2918344441: ["React"],
+      subjects: [],
+      otherSubjects: [],
+      revisionMethods: [],
+      revisionApps: [],
+      motivation: [],
+      dislikes: [],
+      name_2918344441: [],
+      marketing: true,
     },
   });
 
@@ -91,7 +101,7 @@ function MarketResearchPage() {
 
   return (
     <>
-      <h1 className="text-3xl pb-10">Pack Market Research</h1>
+      <h1 className="text-3xl pb-10 text-center">Pack Market Research</h1>
 
       <Form {...form}>
         <form
@@ -103,7 +113,7 @@ function MarketResearchPage() {
             name="yearGroup"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Year group</FormLabel>
+                <FormLabel>Year group *</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -134,7 +144,7 @@ function MarketResearchPage() {
             name="educationLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Education level</FormLabel>
+                <FormLabel>Education level *</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -159,181 +169,184 @@ function MarketResearchPage() {
 
           <FormField
             control={form.control}
-            name="name_0764670473"
+            name="subjects"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What subjects do you study?</FormLabel>
+                <FormLabel>What subjects do you study? *</FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
                       <MultiSelectorInput placeholder="Select subjects" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"ABiology"}>
+                        <MultiSelectorItem value={"A Level Biology"}>
                           Biology (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GBiology"}>
+                        <MultiSelectorItem value={"GCSE Biology"}>
                           Biology (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ABusiness"}>
+                        <MultiSelectorItem value={"A Level Business"}>
                           Business (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GBusiness"}>
+                        <MultiSelectorItem value={"GCSE Business"}>
                           Business (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AChemistry"}>
+                        <MultiSelectorItem value={"A Level Chemistry"}>
                           Chemistry (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GChemistry"}>
+                        <MultiSelectorItem value={"GCSE Chemistry"}>
                           Chemistry (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GCitizenship"}>
+                        <MultiSelectorItem value={"GCSE Citizenship"}>
                           Citizenship (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AComputer Science"}>
+                        <MultiSelectorItem value={"A Level Computer Science"}>
                           Computer Science (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GComputer Science"}>
+                        <MultiSelectorItem value={"GCSE Computer Science"}>
                           Computer Science (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ACriminology"}>
+                        <MultiSelectorItem value={"A Level Criminology"}>
                           Criminology (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ADrama"}>
+                        <MultiSelectorItem value={"A Level Drama"}>
                           Drama (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GDrama"}>
+                        <MultiSelectorItem value={"GCSE Drama"}>
                           Drama (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AEconomics"}>
+                        <MultiSelectorItem value={"A Level Economics"}>
                           Economics (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AEnglish Language"}>
+                        <MultiSelectorItem value={"A Level English Language"}>
                           English Language (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GEnglish Language"}>
+                        <MultiSelectorItem value={"GCSE English Language"}>
                           English Language (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AEnglish Literature"}>
+                        <MultiSelectorItem value={"A Level English Literature"}>
                           English Literature (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GEnglish Literature"}>
+                        <MultiSelectorItem value={"GCSE English Literature"}>
                           English Literature (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AFine Art"}>
+                        <MultiSelectorItem value={"A Level Fine Art"}>
                           Fine Art (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GFine Art"}>
+                        <MultiSelectorItem value={"GCSE Fine Art"}>
                           Fine Art (GCSE)
                         </MultiSelectorItem>
                         <MultiSelectorItem
-                          value={"GFood Preparation and Nutrition"}
+                          value={"GCSE Food Preparation and Nutrition"}
                         >
                           Food Preparation and Nutrition (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"L3Food Science"}>
+                        <MultiSelectorItem value={"Level 3 Food Science"}>
                           Food Science (Level 3)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AFrench"}>
+                        <MultiSelectorItem value={"A Level French"}>
                           French (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GFrench"}>
+                        <MultiSelectorItem value={"GCSE French"}>
                           French (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AFurther Maths"}>
+                        <MultiSelectorItem value={"A Level Further Maths"}>
                           Further Maths (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"L2Further Maths"}>
+                        <MultiSelectorItem value={"Level 2 Further Maths"}>
                           Further Maths (Level 2)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AGeography"}>
+                        <MultiSelectorItem value={"A Level Geography"}>
                           Geography (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GGeography"}>
+                        <MultiSelectorItem value={"GCSE Geography"}>
                           Geography (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AGerman"}>
+                        <MultiSelectorItem value={"A Level German"}>
                           German (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GGerman"}>
+                        <MultiSelectorItem value={"GCSE German"}>
                           German (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AGraphics Communications"}>
+                        <MultiSelectorItem
+                          value={"A Level Graphics Communications"}
+                        >
                           Graphics Communications (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GGraphics Communications"}>
+                        <MultiSelectorItem
+                          value={"GCSE Graphics Communications"}
+                        >
                           Graphics Communications (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AHistory"}>
+                        <MultiSelectorItem value={"A Level History"}>
                           History (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GHistory"}>
+                        <MultiSelectorItem value={"GCSE History"}>
                           History (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GLatin"}>
+                        <MultiSelectorItem value={"GCSE Latin"}>
                           Latin (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AMaths"}>
+                        <MultiSelectorItem value={"A Level Maths"}>
                           Maths (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GMaths"}>
+                        <MultiSelectorItem value={"GCSE Maths"}>
                           Maths (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GMusic"}>
+                        <MultiSelectorItem value={"GCSE Music"}>
                           Music (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"APhysical Education"}>
+                        <MultiSelectorItem value={"A Level Physical Education"}>
                           Physical Education (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GPhysical Education"}>
+                        <MultiSelectorItem value={"GCSE Physical Education"}>
                           Physical Education (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"APhysics"}>
+                        <MultiSelectorItem value={"A Level Physics"}>
                           Physics (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GPhysics"}>
+                        <MultiSelectorItem value={"GCSE Physics"}>
                           Physics (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"APolitics"}>
+                        <MultiSelectorItem value={"A Level Politics"}>
                           Politics (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AProduct Design"}>
+                        <MultiSelectorItem value={"A Level Product Design"}>
                           Product Design (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GProduct Design"}>
+                        <MultiSelectorItem value={"GCSE Product Design"}>
                           Product Design (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"APsychology"}>
+                        <MultiSelectorItem value={"A Level Psychology"}>
                           Psychology (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AReligious Studies"}>
+                        <MultiSelectorItem value={"A Level Religious Studies"}>
                           Religious Studies (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GReligious Studies"}>
+                        <MultiSelectorItem value={"GCSE Religious Studies"}>
                           Religious Studies (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ASociology"}>
+                        <MultiSelectorItem value={"A Level Sociology"}>
                           Sociology (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ASpanish"}>
+                        <MultiSelectorItem value={"A Level Spanish"}>
                           Spanish (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GSpanish"}>
+                        <MultiSelectorItem value={"GCSE Spanish"}>
                           Spanish (GCSE)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"AStatistics"}>
+                        <MultiSelectorItem value={"A Level Statistics"}>
                           Statistics (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"ATextiles"}>
+                        <MultiSelectorItem value={"A Level Textiles"}>
                           Textiles (A Level)
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"GTextiles"}>
+                        <MultiSelectorItem value={"GCSE Textiles"}>
                           Textiles (GCSE)
                         </MultiSelectorItem>
                       </MultiSelectorList>
@@ -356,9 +369,9 @@ function MarketResearchPage() {
                 <FormLabel>Other subjects (excluding BTECs)</FormLabel>
                 <FormControl>
                   <TagsInput
-                    value={field.value || ["TEST"]}
+                    value={field.value || []}
                     onValueChange={field.onChange}
-                    placeholder="Enter your tags"
+                    placeholder="Enter any additional subjects you study"
                   />
                 </FormControl>
                 <FormDescription>
@@ -375,16 +388,18 @@ function MarketResearchPage() {
             name="reviseFrequency"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel>How often do you revise?</FormLabel>
+                <FormLabel>How often do you revise? *</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
                     className="flex flex-col space-y-1"
                   >
                     {[
-                      ["Male", "male"],
-                      ["Female", "female"],
-                      ["Other", "other"],
+                      ["Almost every day", "everyDay"],
+                      ["A few times a week", "fewWeek"],
+                      ["Once or twice a week", "onceTwiceWeek"],
+                      ["Just before tests", "beforeTests"],
+                      ["Very rarely", "rarely"],
                     ].map((option, index) => (
                       <FormItem
                         className="flex items-center space-x-3 space-y-0"
@@ -419,25 +434,43 @@ function MarketResearchPage() {
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select languages" />
+                      <MultiSelectorInput placeholder="Select revision methods" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"React"}>
-                          React
+                        <MultiSelectorItem value={"Past Papers"}>
+                          Past Papers
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Vue"}>Vue</MultiSelectorItem>
-                        <MultiSelectorItem value={"Svelte"}>
-                          Svelte
+                        <MultiSelectorItem value={"Flashcards"}>
+                          Flashcards
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Mind Maps"}>
+                          Mind Maps
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Reading Notes"}>
+                          Reading Notes
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Mnemonics/Songs"}>
+                          Mnemonics/Songs
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Blurting"}>
+                          Blurting
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Teaching Others"}>
+                          Teaching Others
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Podcasts/Videos"}>
+                          Podcasts/Videos
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
                 </FormControl>
-                <FormDescription>Select multiple options.</FormDescription>
+                <FormDescription>
+                  Select multiple options (type to search).
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -445,15 +478,15 @@ function MarketResearchPage() {
 
           <FormField
             control={form.control}
-            name="revisionApps"
+            name="otherMethods"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Other revision methods.</FormLabel>
                 <FormControl>
                   <TagsInput
-                    value={field.value}
+                    value={field.value || []}
                     onValueChange={field.onChange}
-                    placeholder="Enter your tags"
+                    placeholder="Enter any other revision methods you use"
                   />
                 </FormControl>
                 <FormDescription>
@@ -470,104 +503,151 @@ function MarketResearchPage() {
             name="revisionApps"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Other revision apps.</FormLabel>
-                <FormControl>
-                  <TagsInput
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    placeholder="Enter your tags"
-                  />
-                </FormControl>
-                <FormDescription>Add tags.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="revisionApps"
-            render={({ field }) => (
-              <FormItem>
                 <FormLabel>What revision apps do you use?</FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select languages" />
+                      <MultiSelectorInput placeholder="Select revision apps" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"React"}>
-                          React
+                        <MultiSelectorItem value={"Adapt"}>
+                          Adapt
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Vue"}>Vue</MultiSelectorItem>
-                        <MultiSelectorItem value={"Svelte"}>
-                          Svelte
+                        <MultiSelectorItem value={"Anki"}>
+                          Anki
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"BBC Bitesize"}>
+                          BBC Bitesize
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Brainscape"}>
+                          Brainscape
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Cognito"}>
+                          Cognito
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"ExamQ"}>
+                          ExamQ
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Exam Solutions"}>
+                          Exam Solutions
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"GCSEPod"}>
+                          GCSEPod
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Gizmo"}>
+                          Gizmo
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Physics and Maths Tutor"}>
+                          Physics and Maths Tutor
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Quizlet"}>
+                          Quizlet
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Revision World"}>
+                          Revision World
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Save My Exams"}>
+                          Save My Exams
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Seneca"}>
+                          Seneca
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Smart Revise"}>
+                          Smart Revise
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"StudySmarter"}>
+                          StudySmarter
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Tassomai"}>
+                          Tassomai
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
                 </FormControl>
-                <FormDescription>Select multiple options.</FormDescription>
+                <FormDescription>
+                  Select multiple options (type to search).
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4">
-              <FormField
-                control={form.control}
-                name="moneyMonth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      How much do you spend on revision apps per month?
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a value." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="m@example.com">
-                          m@example.com
-                        </SelectItem>
-                        <SelectItem value="m@google.com">
-                          m@google.com
-                        </SelectItem>
-                        <SelectItem value="m@support.com">
-                          m@support.com
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Please select the combined amount you spend on online
-                      revision apps/websites every month.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="otherApps"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Other revision apps.</FormLabel>
+                <FormControl>
+                  <TagsInput
+                    value={field.value || []}
+                    onValueChange={field.onChange}
+                    placeholder="Enter any other revision apps you use"
+                  />
+                </FormControl>
+                <FormDescription>
+                  Please enter any other revision apps not listed above (press
+                  enter to submit).
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
-            name="moneyOne"
+            name="pomodoro"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>
+                  What do you think about the Pomodoro technique? *
+                </FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    className="flex flex-col space-y-1"
+                  >
+                    {[
+                      ["I like it", "like"],
+                      ["I don't like it", "onceTwiceWeek"],
+                      ["Never used it", "never"],
+                      ["Not heard of it", "notHeard"],
+                    ].map((option, index) => (
+                      <FormItem
+                        className="flex items-center space-x-3 space-y-0"
+                        key={index}
+                      >
+                        <FormControl>
+                          <RadioGroupItem value={option[1]} />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {option[0]}
+                        </FormLabel>
+                      </FormItem>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormDescription>
+                  Select from the options above.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="moneyMonth"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  How much have you spent on one-time purchase revision apps?
+                  How much do you spend on revision apps per month? *
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -575,13 +655,49 @@ function MarketResearchPage() {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a value." />
+                      <SelectValue placeholder="Select a range" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="m@example.com">m@example.com</SelectItem>
-                    <SelectItem value="m@google.com">m@google.com</SelectItem>
-                    <SelectItem value="m@support.com">m@support.com</SelectItem>
+                    <SelectItem value="0">£0</SelectItem>
+                    <SelectItem value="5">£0-£5</SelectItem>
+                    <SelectItem value="15">£5-£15</SelectItem>
+                    <SelectItem value="30">£15-£30</SelectItem>
+                    <SelectItem value="+">£30+</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Please select the combined amount you spend on online revision
+                  apps/websites every month.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="moneyOne"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  How much have you spent on one-time purchase revision apps? *
+                </FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a range" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="0">£0</SelectItem>
+                    <SelectItem value="5">£0-£5</SelectItem>
+                    <SelectItem value="15">£5-£15</SelectItem>
+                    <SelectItem value="30">£15-£30</SelectItem>
+                    <SelectItem value="+">£30+</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -611,13 +727,15 @@ function MarketResearchPage() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="m@example.com">m@example.com</SelectItem>
-                    <SelectItem value="m@google.com">m@google.com</SelectItem>
-                    <SelectItem value="m@support.com">m@support.com</SelectItem>
+                    <SelectItem value="0">£0-£15</SelectItem>
+                    <SelectItem value="5">£15-£25</SelectItem>
+                    <SelectItem value="15">£25-£35</SelectItem>
+                    <SelectItem value="30">£35-£50</SelectItem>
+                    <SelectItem value="+">£50+</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Please select the amount you spend an hour for a tutor.
+                  Please select the average amount you spend an hour for a tutor.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -629,13 +747,12 @@ function MarketResearchPage() {
             name="motivation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What motivates you to revise?</FormLabel>
+                <FormLabel>What motivates you to revise? *</FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
                       <MultiSelectorInput placeholder="Select languages" />
@@ -670,7 +787,6 @@ function MarketResearchPage() {
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
                       <MultiSelectorInput placeholder="Select languages" />
@@ -705,7 +821,6 @@ function MarketResearchPage() {
                     values={field.value}
                     onValuesChange={field.onChange}
                     loop
-                    className="max-w-xs"
                   >
                     <MultiSelectorTrigger>
                       <MultiSelectorInput placeholder="Select languages" />
@@ -735,7 +850,7 @@ function MarketResearchPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  What would you like to see in a new revision app?
+                  What would you like to see in a new all-in-one revision app?
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="Enter some features" type="" {...field} />
