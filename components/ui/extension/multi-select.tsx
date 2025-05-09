@@ -28,7 +28,7 @@ interface MultiSelectorProps
 
 interface MultiSelectContextProps {
   value: string[];
-  onValueChange: (value: any) => void;
+  onValueChange: (value: string[]) => void;
   open: boolean;
   setOpen: (value: boolean) => void;
   inputValue: string;
@@ -72,12 +72,15 @@ const MultiSelector = ({
   const [selectedValue, setSelectedValue] = React.useState("");
 
   const onValueChangeHandler = useCallback(
-    (val: string) => {
-      if (value.includes(val)) {
-        onValueChange(value.filter((item) => item !== val));
-      } else {
-        onValueChange([...value, val]);
-      }
+    (vals: string[]) => {
+      const updatedValues = vals.reduce((acc, val) => {
+        if (value.includes(val)) {
+          return acc.filter((item) => item !== val);
+        } else {
+          return [...acc, val];
+        }
+      }, value);
+      onValueChange(updatedValues);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [value],
@@ -156,12 +159,12 @@ const MultiSelector = ({
         case "Delete":
           if (value.length > 0) {
             if (activeIndex !== -1 && activeIndex < value.length) {
-              onValueChangeHandler(value[activeIndex]);
+              onValueChangeHandler([value[activeIndex]]);
               moveCurrent();
             } else {
               if (target.selectionStart === 0) {
                 if (selectedValue === inputValue || isValueSelected) {
-                  onValueChangeHandler(value[value.length - 1]);
+                  onValueChangeHandler([value[value.length - 1]]);
                 }
               }
             }
@@ -253,7 +256,7 @@ const MultiSelectorTrigger = forwardRef<
             aria-roledescription="button to remove option"
             type="button"
             onMouseDown={mousePreventDefault}
-            onClick={() => onValueChange(item)}
+            onClick={() => onValueChange([item])}
           >
             <span className="sr-only">Remove {item} option</span>
             <RemoveIcon className="h-4 w-4 hover:stroke-destructive" />
@@ -270,7 +273,7 @@ MultiSelectorTrigger.displayName = "MultiSelectorTrigger";
 const MultiSelectorInput = forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => {
+>(({ className, ...props }) => {
   const {
     setOpen,
     inputValue,
@@ -358,7 +361,7 @@ const MultiSelectorItem = forwardRef<
       ref={ref}
       {...props}
       onSelect={() => {
-        onValueChange(value);
+        onValueChange([value]);
         setInputValue("");
       }}
       className={cn(
