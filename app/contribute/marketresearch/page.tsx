@@ -37,10 +37,10 @@ import { TagsInput } from "@/components/ui/extension/tags-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 
 const formSchema = z.object({
   yearGroup: z.string(),
-  educationLevel: z.string(),
   subjects: z.array(z.string()).nonempty("Please at least one item"),
   otherSubjects: z
     .array(z.string())
@@ -68,6 +68,7 @@ const formSchema = z.object({
   email: z.string().optional(),
   marketing: z.boolean().default(true).optional(),
   pomodoro: z.string(),
+  curricularSlider: z.number().min(0).max(10),
 });
 
 function MarketResearchPage() {
@@ -82,6 +83,7 @@ function MarketResearchPage() {
       dislikes: [],
       name_2918344441: [],
       marketing: true,
+      curricularSlider: 0,
     },
   });
 
@@ -124,7 +126,6 @@ function MarketResearchPage() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Year 9">Year 9</SelectItem>
                     <SelectItem value="Year 10">Year 10</SelectItem>
                     <SelectItem value="Year 11">Year 11</SelectItem>
                     <SelectItem value="Year 12">Year 12</SelectItem>
@@ -133,34 +134,6 @@ function MarketResearchPage() {
                 </Select>
                 <FormDescription>
                   Please select your year group.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="educationLevel"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Education level *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your education level" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="GCSEs">GCSEs</SelectItem>
-                    <SelectItem value="A Levels">A Levels</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Please select whether you&#39;re studying GCSEs or A Levels.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -735,8 +708,32 @@ function MarketResearchPage() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Please select the average amount you spend an hour for a tutor.
+                  Please select the average amount you spend an hour for a
+                  tutor.
                 </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="curricularSlider"
+            render={({ field: { value, onChange } }) => (
+              <FormItem>
+                <FormLabel>Number of extra/super curricular activities you do a week *: {value}</FormLabel>
+                <FormControl>
+                  <Slider
+                    min={0}
+                    max={10}
+                    step={1}
+                    defaultValue={[0]}
+                    onValueChange={(vals) => {
+                      onChange(vals[0]);
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>Adjust the number of activities you currently undertake on an average week by sliding.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
