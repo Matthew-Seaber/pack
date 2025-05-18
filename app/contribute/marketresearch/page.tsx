@@ -41,28 +41,22 @@ import { Slider } from "@/components/ui/slider";
 
 const formSchema = z.object({
   yearGroup: z.string(),
-  subjects: z.array(z.string()).nonempty("Please at least one item"),
-  otherSubjects: z
-    .array(z.string())
-    .nonempty("Please at least one item")
-    .optional(),
+  subjects: z.array(z.string()).nonempty("Please enter at least one item"),
+  otherSubjects: z.array(z.string()).optional(),
   reviseFrequency: z.string(),
-  revisionMethods: z.array(z.string()).nonempty("Please at least one item"),
-  otherMethods: z
+  devices: z.array(z.string()).nonempty("Please enter at least one item"),
+  revisionMethods: z
     .array(z.string())
-    .nonempty("Please at least one item")
-    .optional(),
-  revisionApps: z.array(z.string()).nonempty("Please at least one item"),
-  otherApps: z
-    .array(z.string())
-    .nonempty("Please at least one item")
-    .optional(),
+    .nonempty("Please enter at least one item"),
+  otherMethods: z.array(z.string()).optional(),
+  revisionApps: z.array(z.string()).nonempty("Please enter at least one item"),
+  otherApps: z.array(z.string()).optional(),
   moneyMonth: z.string(),
   moneyOne: z.string(),
   tutor: z.string().optional(),
-  motivation: z.array(z.string()).nonempty("Please at least one item"),
-  dislikes: z.array(z.string()).nonempty("Please at least one item"),
-  name_2918344441: z.array(z.string()).nonempty("Please at least one item"),
+  motivation: z.array(z.string()).nonempty("Please enter at least one item"),
+  dislikes: z.array(z.string()).nonempty("Please enter at least one item"),
+  struggle: z.array(z.string()).nonempty("Please enter at least one item"),
   newFeatures: z.string().min(1),
   name_5557725765: z.string().min(1).optional(),
   email: z.string().optional(),
@@ -77,11 +71,12 @@ function MarketResearchPage() {
     defaultValues: {
       subjects: [],
       otherSubjects: [],
+      devices: [],
       revisionMethods: [],
       revisionApps: [],
       motivation: [],
       dislikes: [],
-      name_2918344441: [],
+      struggle: [],
       marketing: true,
       curricularSlider: 0,
     },
@@ -390,6 +385,47 @@ function MarketResearchPage() {
                 </FormControl>
                 <FormDescription>
                   Select from the options above.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="devices"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>What devices do you have? *</FormLabel>
+                <FormControl>
+                  <MultiSelector
+                    values={field.value}
+                    onValuesChange={field.onChange}
+                    loop
+                  >
+                    <MultiSelectorTrigger>
+                      <MultiSelectorInput placeholder="Select device(s)" />
+                    </MultiSelectorTrigger>
+                    <MultiSelectorContent>
+                      <MultiSelectorList>
+                        <MultiSelectorItem value={"Phone"}>
+                          Phone
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Laptop"}>
+                          Laptop
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Desktop"}>
+                          Desktop
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Tablet"}>
+                          Tablet
+                        </MultiSelectorItem>
+                      </MultiSelectorList>
+                    </MultiSelectorContent>
+                  </MultiSelector>
+                </FormControl>
+                <FormDescription>
+                  Select multiple options if applicable.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -721,7 +757,10 @@ function MarketResearchPage() {
             name="curricularSlider"
             render={({ field: { value, onChange } }) => (
               <FormItem>
-                <FormLabel>Number of extra/super curricular activities you do a week *: {value}</FormLabel>
+                <FormLabel>
+                  Number of extra/super curricular activities you do a week *:{" "}
+                  {value}
+                </FormLabel>
                 <FormControl>
                   <Slider
                     min={0}
@@ -733,7 +772,10 @@ function MarketResearchPage() {
                     }}
                   />
                 </FormControl>
-                <FormDescription>Adjust the number of activities you currently undertake on an average week by sliding.</FormDescription>
+                <FormDescription>
+                  Adjust the number of activities you currently undertake on an
+                  average week by sliding.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -809,7 +851,7 @@ function MarketResearchPage() {
 
           <FormField
             control={form.control}
-            name="name_2918344441"
+            name="struggle"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>What do you struggle with when revising?</FormLabel>
