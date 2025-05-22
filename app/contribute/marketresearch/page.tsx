@@ -98,7 +98,11 @@ function MarketResearchPage() {
 
   return (
     <>
-      <h1 className="text-3xl pb-10 text-center">Pack Market Research</h1>
+      <h1 className="text-3xl pb-5 text-center">Pack Market Research</h1>
+      <h2 className="text-1xl pb-8 text-center">
+        For a chance to win a £5 Amazon gift card, fill in the short form below
+        to help form how Pack is developed.
+      </h2>
 
       <Form {...form}>
         <form
@@ -396,7 +400,9 @@ function MarketResearchPage() {
             name="devices"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What devices do you have? *</FormLabel>
+                <FormLabel>
+                  What of the following devices do you have? *
+                </FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
@@ -794,17 +800,13 @@ function MarketResearchPage() {
                     loop
                   >
                     <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select languages" />
+                      <MultiSelectorInput placeholder="Select from list" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>
-                          1
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
                         <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>
-                          3
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
@@ -828,17 +830,13 @@ function MarketResearchPage() {
                     loop
                   >
                     <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select languages" />
+                      <MultiSelectorInput placeholder="Select from list" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>
-                          1
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
                         <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>
-                          3
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
@@ -862,17 +860,13 @@ function MarketResearchPage() {
                     loop
                   >
                     <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select languages" />
+                      <MultiSelectorInput placeholder="Select from list" />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>
-                          1
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
                         <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>
-                          3
-                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
