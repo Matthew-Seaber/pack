@@ -798,12 +798,12 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"React"}>
-                          React
+                        <MultiSelectorItem value={"1"}>
+                          1
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Vue"}>Vue</MultiSelectorItem>
-                        <MultiSelectorItem value={"Svelte"}>
-                          Svelte
+                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>
+                          3
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
@@ -832,12 +832,12 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"React"}>
-                          React
+                        <MultiSelectorItem value={"1"}>
+                          1
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Vue"}>Vue</MultiSelectorItem>
-                        <MultiSelectorItem value={"Svelte"}>
-                          Svelte
+                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>
+                          3
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
@@ -866,12 +866,12 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"React"}>
-                          React
+                        <MultiSelectorItem value={"1"}>
+                          1
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Vue"}>Vue</MultiSelectorItem>
-                        <MultiSelectorItem value={"Svelte"}>
-                          Svelte
+                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
+                        <MultiSelectorItem value={"3"}>
+                          3
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
