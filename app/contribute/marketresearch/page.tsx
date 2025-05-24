@@ -39,6 +39,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 
+import { supabase } from "../../../lib/supabase";
+
 const formSchema = z.object({
   yearGroup: z.string().nonempty("Required"),
   subjects: z.array(z.string()).nonempty("Required"),
@@ -95,9 +97,15 @@ function MarketResearchPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Supabase logic here
+      const { data, error } = await supabase
+        .from("market_research_submissions")
+        .insert([values]);
 
+      if (error) throw error;
+
+      console.log("Inserted successfully:", data);
       console.log(values);
+
       toast(
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
           <h3>Done</h3>
