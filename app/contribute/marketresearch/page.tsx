@@ -41,7 +41,7 @@ import { Slider } from "@/components/ui/slider";
 
 const formSchema = z.object({
   yearGroup: z.string(),
-  subjects: z.array(z.string()).nonempty("Please enter at least one item"),
+  subjects: z.array(z.string()).nonempty("Required"),
   otherSubjects: z.array(z.string()).optional(),
   reviseFrequency: z.string(),
   devices: z.array(z.string()).nonempty("Please enter at least one item"),
@@ -49,7 +49,7 @@ const formSchema = z.object({
     .array(z.string())
     .nonempty("Please enter at least one item"),
   otherMethods: z.array(z.string()).optional(),
-  revisionApps: z.array(z.string()).nonempty("Please enter at least one item"),
+  revisionApps: z.array(z.string()).optional(),
   otherApps: z.array(z.string()).optional(),
   moneyMonth: z.string(),
   moneyOne: z.string(),
@@ -57,8 +57,8 @@ const formSchema = z.object({
   motivation: z.array(z.string()).nonempty("Please enter at least one item"),
   dislikes: z.array(z.string()).nonempty("Please enter at least one item"),
   struggle: z.array(z.string()).nonempty("Please enter at least one item"),
-  newFeatures: z.string().min(1),
-  name_5557725765: z.string().min(1).optional(),
+  newFeatures: z.string().min(1).optional(),
+  finalThoughts: z.string().min(1).optional(),
   email: z.string().optional(),
   marketing: z.boolean().default(true).optional(),
   pomodoro: z.string(),
@@ -147,7 +147,7 @@ function MarketResearchPage() {
                 <FormLabel>What subjects do you study? *</FormLabel>
                 <FormControl>
                   <MultiSelector
-                    values={field.value}
+                    values={field.value ?? []}
                     onValuesChange={field.onChange}
                     loop
                   >
@@ -401,11 +401,11 @@ function MarketResearchPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  What of the following devices do you have? *
+                  Which of the following devices do you have access to? *
                 </FormLabel>
                 <FormControl>
                   <MultiSelector
-                    values={field.value}
+                    values={field.value ?? []}
                     onValuesChange={field.onChange}
                     loop
                   >
@@ -414,14 +414,14 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"Phone"}>
-                          Phone
+                        <MultiSelectorItem value={"Desktop"}>
+                          Desktop
                         </MultiSelectorItem>
                         <MultiSelectorItem value={"Laptop"}>
                           Laptop
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Desktop"}>
-                          Desktop
+                        <MultiSelectorItem value={"Phone"}>
+                          Phone
                         </MultiSelectorItem>
                         <MultiSelectorItem value={"Tablet"}>
                           Tablet
@@ -443,10 +443,12 @@ function MarketResearchPage() {
             name="revisionMethods"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What revision methods do you use?</FormLabel>
+                <FormLabel>
+                  Which of these revision methods do you use? *
+                </FormLabel>
                 <FormControl>
                   <MultiSelector
-                    values={field.value}
+                    values={field.value ?? []}
                     onValuesChange={field.onChange}
                     loop
                   >
@@ -455,8 +457,8 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"Past Papers"}>
-                          Past Papers
+                        <MultiSelectorItem value={"Blurting"}>
+                          Blurting
                         </MultiSelectorItem>
                         <MultiSelectorItem value={"Flashcards"}>
                           Flashcards
@@ -464,20 +466,20 @@ function MarketResearchPage() {
                         <MultiSelectorItem value={"Mind Maps"}>
                           Mind Maps
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Reading Notes"}>
-                          Reading Notes
-                        </MultiSelectorItem>
                         <MultiSelectorItem value={"Mnemonics/Songs"}>
                           Mnemonics/Songs
                         </MultiSelectorItem>
-                        <MultiSelectorItem value={"Blurting"}>
-                          Blurting
-                        </MultiSelectorItem>
-                        <MultiSelectorItem value={"Teaching Others"}>
-                          Teaching Others
+                        <MultiSelectorItem value={"Past Papers"}>
+                          Past Papers
                         </MultiSelectorItem>
                         <MultiSelectorItem value={"Podcasts/Videos"}>
                           Podcasts/Videos
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Reading Notes"}>
+                          Reading Notes
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Teaching Others"}>
+                          Teaching Others
                         </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
@@ -518,10 +520,12 @@ function MarketResearchPage() {
             name="revisionApps"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What revision apps do you use?</FormLabel>
+                <FormLabel>
+                  Which of these revision apps/websites do you use?
+                </FormLabel>
                 <FormControl>
                   <MultiSelector
-                    values={field.value}
+                    values={field.value ?? []}
                     onValuesChange={field.onChange}
                     loop
                   >
@@ -730,7 +734,7 @@ function MarketResearchPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  If applicable, how much do you spend on a tutor per hour?
+                  How much do you/are you willing to spend on a tutor per hour?
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -750,8 +754,8 @@ function MarketResearchPage() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Please select the average amount you spend an hour for a
-                  tutor.
+                  Please select the average amount you(&apos;d) spend an hour
+                  for a tutor.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -804,9 +808,48 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
-                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
+                        <MultiSelectorItem value={"Fear of failure"}>
+                          Fear of failure
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Feeling guilty when not revising"}
+                        >
+                          Feeling guilty when not revising
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Friends revising"}>
+                          Friends revising
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Getting good grades in upcoming exams"}
+                        >
+                          Getting good grades in upcoming exams
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Having self-set goals"}>
+                          Having self-set goals
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Improving confidence"}>
+                          Improving confidence
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={
+                            "Obtaining required grades for a future course"
+                          }
+                        >
+                          Obtaining required grades for a future course (e.g. A
+                          Level/College, University etc.)
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Parents'/teachers' expectations"}
+                        >
+                          Parents&apos;/teachers&apos; expectations
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Reward system"}>
+                          Reward system (of any scale e.g. money if you achieve
+                          target grades)
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Staying in a certain set"}>
+                          Staying in a certain set
+                        </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
@@ -822,7 +865,9 @@ function MarketResearchPage() {
             name="dislikes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What do you dislike about revising?</FormLabel>
+                <FormLabel>
+                  What puts you off revising in the first place? *
+                </FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
@@ -834,9 +879,54 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
-                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={
+                            "Believing you'll do well without any revision"
+                          }
+                        >
+                          Believing you&apos;ll do well without any revision
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Burnout from past revision"}>
+                          Burnout from past revision
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Lack of interest in the subject"}
+                        >
+                          Lack of interest in the subject
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Lack of time"}>
+                          Lack of time
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Thinking revision is a waste of time"}
+                        >
+                          Thinking revision is a waste of time
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Thinking revision is boring"}
+                        >
+                          Thinking revision is boring
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Thinking revision is repetitive"}
+                        >
+                          Thinking revision is repetitive
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Thinking revision requires too much effort"}
+                        >
+                          Thinking revision requires too much effort
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Thinking revision won't help"}
+                        >
+                          Thinking revision won&apos;t help
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Wanting to do other things instead"}
+                        >
+                          Wanting to do other things instead
+                        </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
@@ -852,7 +942,9 @@ function MarketResearchPage() {
             name="struggle"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What do you struggle with when revising?</FormLabel>
+                <FormLabel>
+                  What do you struggle with while revising? *
+                </FormLabel>
                 <FormControl>
                   <MultiSelector
                     values={field.value}
@@ -864,9 +956,41 @@ function MarketResearchPage() {
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
                       <MultiSelectorList>
-                        <MultiSelectorItem value={"1"}>1</MultiSelectorItem>
-                        <MultiSelectorItem value={"2"}>2</MultiSelectorItem>
-                        <MultiSelectorItem value={"3"}>3</MultiSelectorItem>
+                        <MultiSelectorItem value={"Avoiding distractions"}>
+                          Avoiding distractions (e.g. phone, social media etc.)
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Feeling overwhelmed"}>
+                          Feeling overwhelmed
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Keeping yourself motivated"}>
+                          Keeping yourself motivated
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Knowing what to revise"}>
+                          Knowing what to revise
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Making revision active rather than passive"}
+                        >
+                          Making revision active rather than passive
+                        </MultiSelectorItem>
+                        <MultiSelectorItem value={"Not knowing how to revise"}>
+                          Not knowing how to revise a certain topic/subject
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Staying focused for long periods of time"}
+                        >
+                          Staying focused for long periods of time
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Sticking to a revision plan"}
+                        >
+                          Sticking to a revision plan
+                        </MultiSelectorItem>
+                        <MultiSelectorItem
+                          value={"Understanding difficult topics"}
+                        >
+                          Understanding difficult topics
+                        </MultiSelectorItem>
                       </MultiSelectorList>
                     </MultiSelectorContent>
                   </MultiSelector>
@@ -899,7 +1023,7 @@ function MarketResearchPage() {
 
           <FormField
             control={form.control}
-            name="name_5557725765"
+            name="finalThoughts"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
