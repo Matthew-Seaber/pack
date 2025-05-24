@@ -62,22 +62,33 @@ const formSchema = z.object({
   email: z.string().optional(),
   marketing: z.boolean().default(true).optional(),
   pomodoro: z.string(),
-  curricularSlider: z.number().min(0).max(10),
+  curricularSlider: z.number().min(0).max(9),
 });
 
 function MarketResearchPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      yearGroup: "",
       subjects: [],
       otherSubjects: [],
+      reviseFrequency: "",
       devices: [],
       revisionMethods: [],
+      otherMethods: [],
       revisionApps: [],
+      otherApps: [],
+      moneyMonth: "",
+      moneyOne: "",
+      tutor: "",
       motivation: [],
       dislikes: [],
       struggle: [],
+      newFeatures: "",
+      finalThoughts: "",
+      email: "",
       marketing: true,
+      pomodoro: "",
       curricularSlider: 0,
     },
   });
@@ -98,8 +109,10 @@ function MarketResearchPage() {
 
   return (
     <>
-      <h1 className="text-3xl pb-5 text-center">Pack Market Research</h1>
-      <h2 className="text-1xl pb-8 text-center">
+      <h1 className="text-3xl pb-5 text-center font-medium">
+        Pack Market Research
+      </h1>
+      <h2 className="text-1xl pb-5 text-center">
         For a chance to win a £5 Amazon gift card, fill in the short form below
         to help form how Pack is developed.
       </h2>
@@ -769,12 +782,12 @@ function MarketResearchPage() {
               <FormItem>
                 <FormLabel>
                   Number of extra/super curricular activities you do a week *:{" "}
-                  {value}
+                  {value === 9 ? "8+" : value}
                 </FormLabel>
                 <FormControl>
                   <Slider
                     min={0}
-                    max={10}
+                    max={9}
                     step={1}
                     defaultValue={[0]}
                     onValueChange={(vals) => {
@@ -783,7 +796,7 @@ function MarketResearchPage() {
                   />
                 </FormControl>
                 <FormDescription>
-                  Adjust the number of activities you currently undertake on an
+                  Adjust the number of activities/clubs you currently undertake on an
                   average week by sliding.
                 </FormDescription>
                 <FormMessage />
