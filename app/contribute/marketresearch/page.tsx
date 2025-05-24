@@ -40,10 +40,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 
 const formSchema = z.object({
-  yearGroup: z.string(),
+  yearGroup: z.string().nonempty("Required"),
   subjects: z.array(z.string()).nonempty("Required"),
   otherSubjects: z.array(z.string()).optional(),
-  reviseFrequency: z.string(),
+  reviseFrequency: z.string().nonempty("Required"),
   devices: z.array(z.string()).nonempty("Please enter at least one item"),
   revisionMethods: z
     .array(z.string())
@@ -51,17 +51,17 @@ const formSchema = z.object({
   otherMethods: z.array(z.string()).optional(),
   revisionApps: z.array(z.string()).optional(),
   otherApps: z.array(z.string()).optional(),
-  moneyMonth: z.string(),
-  moneyOne: z.string(),
+  moneyMonth: z.string().nonempty("Required"),
+  moneyOne: z.string().nonempty("Required"),
   tutor: z.string().optional(),
   motivation: z.array(z.string()).nonempty("Please enter at least one item"),
   dislikes: z.array(z.string()).nonempty("Please enter at least one item"),
   struggle: z.array(z.string()).nonempty("Please enter at least one item"),
-  newFeatures: z.string().min(1).optional(),
-  finalThoughts: z.string().min(1).optional(),
+  newFeatures: z.string().optional(),
+  finalThoughts: z.string().optional(),
   email: z.string().optional(),
-  marketing: z.boolean().default(true).optional(),
-  pomodoro: z.string(),
+  marketing: z.boolean().optional(),
+  pomodoro: z.string().nonempty("Required"),
   curricularSlider: z.number().min(0).max(9),
 });
 
@@ -93,14 +93,25 @@ function MarketResearchPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // Supabase logic here
+
       console.log(values);
       toast(
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <h3>Done</h3>
           <code className="text-white">{JSON.stringify(values, null, 2)}</code>
         </pre>
       );
+
+      toast.success(
+        `Form submitted successfully; thanks for your response!${
+          values.email ? " Good luck!" : ""
+        }`
+      );
+
+      form.reset();
     } catch (error) {
       console.error("Form submission error", error);
       toast.error("Failed to submit the form. Please try again.");
