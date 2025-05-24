@@ -19,6 +19,16 @@ export const metadata: Metadata = {
   title: "Pack",
   description:
     "The future of education is here. Level up your learning today, and boost your exam grades to new heights! 🚀",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/android-icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon-180x180.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
