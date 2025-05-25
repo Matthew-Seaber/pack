@@ -95,11 +95,37 @@ function MarketResearchPage() {
     },
   });
 
+  function prepareData(values: z.infer<typeof formSchema>) {
+    return {
+      email: values.email || null,
+      marketing: values.marketing || false,
+      year_group: values.yearGroup,
+      subjects: values.subjects,
+      other_subjects: values.otherSubjects,
+      revise_frequency: values.reviseFrequency,
+      devices: values.devices,
+      revision_methods: values.revisionMethods,
+      other_methods: values.otherMethods,
+      apps_websites: values.revisionApps,
+      other_apps_websites: values.otherApps,
+      pomodoro: values.pomodoro,
+      money_month: values.moneyMonth,
+      money_one: values.moneyOne,
+      tutor: values.tutor,
+      activities: values.curricularSlider,
+      motivation: values.motivation,
+      dislikes: values.dislikes,
+      struggles: values.struggle,
+      features: values.newFeatures,
+      final_thoughts: values.finalThoughts,
+    };
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const { data, error } = await supabase
         .from("market_research_submissions")
-        .insert([values]);
+        .insert([prepareData(values)]);
 
       if (error) throw error;
 
@@ -815,8 +841,8 @@ function MarketResearchPage() {
                   />
                 </FormControl>
                 <FormDescription>
-                  Adjust the number of activities/clubs you currently undertake on an
-                  average week by sliding.
+                  Adjust the number of activities/clubs you currently undertake
+                  on an average week by sliding.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
