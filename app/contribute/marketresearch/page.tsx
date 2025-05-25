@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "sonner";
+import { Toaster, toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -129,15 +129,7 @@ function MarketResearchPage() {
 
       if (error) throw error;
 
-      console.log("Inserted successfully:", data);
-      console.log(values);
-
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <h3>Done</h3>
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      );
+      console.log("Form submitted successfully. ", data);
 
       toast.success(
         `Form submitted successfully; thanks for your response!${
@@ -1145,6 +1137,8 @@ function MarketResearchPage() {
           <Button type="submit">Submit</Button>
         </form>
       </Form>
+
+      <Toaster />
     </>
   );
 }
