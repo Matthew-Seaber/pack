@@ -131,7 +131,7 @@ function MarketResearchPage() {
 
       console.log("Form submitted successfully. ", data);
 
-      toast.error(
+      toast.success(
         `Form submitted successfully; thanks for your response!${
           values.email ? " Good luck!" : ""
         }`
