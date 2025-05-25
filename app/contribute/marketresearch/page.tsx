@@ -138,6 +138,11 @@ function MarketResearchPage() {
       );
 
       form.reset();
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+      
     } catch (error) {
       console.error("Form submission error", error);
       toast.error("Failed to submit the form. Please try again.");
