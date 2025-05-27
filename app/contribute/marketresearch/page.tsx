@@ -634,6 +634,9 @@ function MarketResearchPage() {
                         <MultiSelectorItem value={"Smart Revise"}>
                           Smart Revise
                         </MultiSelectorItem>
+                        <MultiSelectorItem value={"Study Rocket"}>
+                          Study Rocket
+                        </MultiSelectorItem>
                         <MultiSelectorItem value={"StudySmarter"}>
                           StudySmarter
                         </MultiSelectorItem>
