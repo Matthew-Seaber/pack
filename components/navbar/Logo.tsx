@@ -1,15 +1,23 @@
-import Link from "next/link"
-import { SiJetpackcompose } from "react-icons/si";
-import { Button } from "../ui/button"
+import Link from "next/link";
+import Image from "next/image";
 
 function Logo() {
   return (
-    <Button size="icon" asChild>
+    <>
       <Link href="/">
-        <SiJetpackcompose className="w-6 h-6" />
+        <span className="block w-8 h-8">
+          <Image
+            src="/logo-dark.svg"
+            alt="Logo, press to go home"
+            width={24}
+            height={24}
+            className="hidden dark:block w-full h-full object-contain"
+            style={{ display: "block" }}
+          />
+        </span>
       </Link>
-    </Button>
+    </>
   );
 }
 
-export default Logo
+export default Logo;
