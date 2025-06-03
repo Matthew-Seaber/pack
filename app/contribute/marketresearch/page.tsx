@@ -692,7 +692,7 @@ function MarketResearchPage() {
                   >
                     {[
                       ["I like it", "like"],
-                      ["I don't like it", "onceTwiceWeek"],
+                      ["I don't like it", "dislike"],
                       ["Never used it", "never"],
                       ["Not heard of it", "notHeard"],
                     ].map((option, index) => (
