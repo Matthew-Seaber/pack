@@ -156,7 +156,7 @@ function MarketResearchPage() {
       </h1>
       <h2 className="text-1xl pb-5 text-center">
         For a chance to win a £5 Amazon gift card, fill in the short form below
-        to help form how Pack is developed.
+        to help form how Pack is developed (giveaway ends at 9AM on the 15th August and the winner will be contacted shortly after).
       </h2>
 
       <Form {...form}>
