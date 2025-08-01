@@ -155,8 +155,8 @@ function MarketResearchPage() {
         Pack Market Research
       </h1>
       <h2 className="text-1xl pb-5 text-center">
-        For a chance to win a £5 Amazon gift card, fill in the short form below
-        to help form how Pack is developed (giveaway ends at 9AM on the 15th August and the winner will be contacted shortly after).
+        For a chance to win a £5 Amazon gift card*, fill in the short form below
+        to help form how Pack is developed.
       </h2>
 
       <Form {...form}>
@@ -1145,6 +1145,11 @@ function MarketResearchPage() {
           <Button type="submit">Submit</Button>
         </form>
       </Form>
+
+      <p>
+        *Giveaway ends at 9AM on the 15th August and the winner will be contacted
+        shortly after.
+      </p>
 
       <Toaster />
     </>
