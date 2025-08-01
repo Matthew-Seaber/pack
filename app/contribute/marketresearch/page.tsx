@@ -1146,7 +1146,7 @@ function MarketResearchPage() {
         </form>
       </Form>
 
-      <p>
+      <p className='text-center text-muted-foreground'>
         *Giveaway ends at 9AM on the 15th August and the winner will be contacted
         shortly after.
       </p>
