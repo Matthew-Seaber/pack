@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const formSchema = z.object({
   yearGroup: z.string().nonempty("Required"),
@@ -123,7 +123,7 @@ function MarketResearchPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("market_research_submissions")
         .insert([prepareData(values)]);
 
@@ -142,7 +142,6 @@ function MarketResearchPage() {
       setTimeout(() => {
         window.location.href = "/";
       }, 3000);
-      
     } catch (error) {
       console.error("Form submission error", error);
       toast.error("Failed to submit the form. Please try again.");
@@ -1146,9 +1145,9 @@ function MarketResearchPage() {
         </form>
       </Form>
 
-      <p className='text-center text-muted-foreground'>
-        *Giveaway ends at 9AM on the 15th August and the winner will be contacted
-        shortly after.
+      <p className="text-center text-muted-foreground">
+        *Giveaway ends at 9AM on the 15th August and the winner will be
+        contacted shortly after.
       </p>
 
       <Toaster />

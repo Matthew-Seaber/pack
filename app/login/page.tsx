@@ -9,6 +9,8 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    try {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17,9 +19,13 @@ export default function LoginPage() {
     if (res.ok) {
       router.push("/dashboard");
     } else {
-      alert("Login failed");
+      alert("Login incorrect. Please check your username and password.");
     }
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("There was a system error. Please try again later.");
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center">
