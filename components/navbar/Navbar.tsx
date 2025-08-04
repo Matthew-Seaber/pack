@@ -5,16 +5,16 @@ import Logo from "./Logo";
 function Navbar() {
   return (
     <nav className="border-b">
-      <div className="container flex flex-col sm:flex-row sm:justify-between sm:items-center flex-wrap py-6">
+      <div className="container flex justify-between items-center flex-wrap py-6 gap-4">
         <Logo />
-        
-        <div className="flex gap-4 items-center">
-            <DarkMode />
-            <LinksDropdown />
+
+        <div className="flex gap-4 items-center flex-shrink-0">
+          <DarkMode />
+          <LinksDropdown />
         </div>
       </div>
     </nav>
   );
 }
 
-export default Navbar
+export default Navbar;

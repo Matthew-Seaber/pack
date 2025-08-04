@@ -38,13 +38,12 @@ export async function POST(req: Request) {
   const cookieAge = 7; // In days
 
   res.cookies.set({
-    name: "session",
+    name: "sessionCookie",
     value: token,
     httpOnly: true,
     path: "/",
     maxAge: 60 * 60 * 24 * cookieAge,
     sameSite: "lax",
-    secure: true,
   });
 
   return res;
