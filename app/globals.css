@@ -69,7 +69,32 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-poppins), sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-montserrat), sans-serif;
+  }
+
+  code,
+  pre,
+  .mono {
+    font-family: var(--font-roboto-mono), monospace;
+  }
+
+  .poppins {
+    font-family: var(--font-poppins), sans-serif;
+  }
+
+  .montserrat {
+    font-family: var(--font-montserrat), sans-serif;
   }
 }

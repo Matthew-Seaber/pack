@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Poppins, Montserrat, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import PageConfig from "../components/page-config";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-montserrat",
+});
+
+const roboto_mono = Roboto_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-roboto-mono",
 });
 
 export const metadata: Metadata = {
@@ -51,7 +58,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Pack" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${roboto_mono.variable} ${poppins.variable} ${montserrat.variable} antialiased`}
       >
         <PageConfig>{children}</PageConfig>
         <Analytics />

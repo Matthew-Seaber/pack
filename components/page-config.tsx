@@ -11,8 +11,8 @@ export default function ConditionalContent({
 }) {
   const pathname = usePathname();
 
-  // On login page, only render the children without providers/navbar
-  if (pathname === "/login") {
+  // On login and signup page, only render the children without providers/navbar
+  if (pathname === "/login" || pathname === "/signup") {
     return <>{children}</>;
   }
 
