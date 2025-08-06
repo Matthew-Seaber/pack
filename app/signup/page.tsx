@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Eye, EyeOff, Trash } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -15,13 +16,13 @@ export default function SignupPage() {
 
   const [yearGroup, setYearGroup] = useState("Year 10");
   const [progressEmails, setProgressEmails] = useState("Enabled");
+  const [subjects, setSubjects] = useState([""]);
+  const [examBoards, setExamBoards] = useState([""]);
 
   const [title, setTitle] = useState("Mr");
   const [surname, setSurname] = useState("");
   const [subject, setSubject] = useState("Computer Science");
   const [classes, setClasses] = useState([""]);
-  const [subjects, setSubjects] = useState([""]);
-  const [examBoards, setExamBoards] = useState([""]);
 
   const router = useRouter();
 
@@ -97,9 +98,12 @@ export default function SignupPage() {
           }),
         });
         if (res.ok) {
-          router.push("/dashboard");
+          toast.success(`Success! Redirecting you to the dashboard...`);
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 2000);
         } else {
-          alert("Signup failed.");
+          toast.error("Failed to create user. Please try again.");
         }
       } catch (error) {
         console.error("Signup error:", error);
@@ -312,84 +316,90 @@ export default function SignupPage() {
                       <div className="relative w-1/4">
                         <select
                           value={examBoards[index]}
-                          onChange={(e) => updateExamBoard(index, e.target.value)}
+                          onChange={(e) =>
+                            updateExamBoard(index, e.target.value)
+                          }
                           className="w-full px-3 py-2 bg-[#1C1C1C] text-sm text-[#F2F2F2] rounded-md focus:outline-none border border-[#393939] appearance-none"
                         >
                           <option value="AQA">AQA</option>
                           <option value="Edexcel">Edexcel</option>
                         </select>
                       </div>
-                        <div className="relative w-3/4">
-                          <select
-                            value={subject}
-                            onChange={(e) => updateSubject(index, e.target.value)}
-                            required
-                            className="w-full px-3 py-2 pl-4 bg-[#1C1C1C] text-sm text-[#F2F2F2] rounded-md focus:outline-none border border-[#393939] appearance-none pr-10"
-                          >
-                            <option value="Biology">Biology</option>
-                            <option value="Business">Business</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Citizenship">Citizenship</option>
-                            <option value="Classical Civilisation">
-                              Classical Civilisation
-                            </option>
-                            <option value="Computer Science">
-                              Computer Science
-                            </option>
-                            <option value="Criminology">Criminology</option>
-                            <option value="Drama">Drama</option>
-                            <option value="Economics">Economics</option>
-                            <option value="English Language">
-                              English Language
-                            </option>
-                            <option value="English Literature">
-                              English Literature
-                            </option>
-                            <option value="Fine Art">Fine Art</option>
-                            <option value="Food Preparation and Nutrition">
-                              Food Preparation and Nutrition
-                            </option>
-                            <option value="Food Science">Food Science</option>
-                            <option value="French">French</option>
-                            <option value="Further Maths">Further Maths</option>
-                            <option value="Geography">Geography</option>
-                            <option value="German">German</option>
-                            <option value="Graphics Communications">
-                              Graphics Communications
-                            </option>
-                            <option value="History">History</option>
-                            <option value="Latin">Latin</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Music">Music</option>
-                            <option value="Philosophy">Philosophy</option>
-                            <option value="Physical Education">
-                              Physical Education
-                            </option>
-                            <option value="Physics">Physics</option>
-                            <option value="Politics">Politics</option>
-                            <option value="Product Design">Product Design</option>
-                            <option value="Psychology">Psychology</option>
-                            <option value="Religious Studies">
-                              Religious Studies
-                            </option>
-                            <option value="Science">Science (Combined)</option>
-                            <option value="Sociology">Sociology</option>
-                            <option value="Spanish">Spanish</option>
-                            <option value="Statistics">Statistics</option>
-                            <option value="Textiles">Textiles</option>
-                          </select>
+                      <div className="relative w-3/4">
+                        <select
+                          value={subject}
+                          onChange={(e) => updateSubject(index, e.target.value)}
+                          required
+                          className="w-full px-3 py-2 pl-4 bg-[#1C1C1C] text-sm text-[#F2F2F2] rounded-md focus:outline-none border border-[#393939] appearance-none pr-10"
+                        >
+                          <option value="Biology">Biology</option>
+                          <option value="Business">Business</option>
+                          <option value="Chemistry">Chemistry</option>
+                          <option value="Citizenship">Citizenship</option>
+                          <option value="Classical Civilisation">
+                            Classical Civilisation
+                          </option>
+                          <option value="Computer Science">
+                            Computer Science
+                          </option>
+                          <option value="Criminology">Criminology</option>
+                          <option value="Drama">Drama</option>
+                          <option value="Economics">Economics</option>
+                          <option value="English Language">
+                            English Language
+                          </option>
+                          <option value="English Literature">
+                            English Literature
+                          </option>
+                          <option value="Fine Art">Fine Art</option>
+                          <option value="Food Preparation and Nutrition">
+                            Food Preparation and Nutrition
+                          </option>
+                          <option value="Food Science">Food Science</option>
+                          <option value="French">French</option>
+                          <option value="Further Maths">Further Maths</option>
+                          <option value="Geography">Geography</option>
+                          <option value="German">German</option>
+                          <option value="Graphics Communications">
+                            Graphics Communications
+                          </option>
+                          <option value="History">History</option>
+                          <option value="Latin">Latin</option>
+                          <option value="Mathematics">Mathematics</option>
+                          <option value="Music">Music</option>
+                          <option value="Philosophy">Philosophy</option>
+                          <option value="Physical Education">
+                            Physical Education
+                          </option>
+                          <option value="Physics">Physics</option>
+                          <option value="Politics">Politics</option>
+                          <option value="Product Design">Product Design</option>
+                          <option value="Psychology">Psychology</option>
+                          <option value="Religious Studies">
+                            Religious Studies
+                          </option>
+                          <option value="Science">Science (Combined)</option>
+                          <option value="Sociology">Sociology</option>
+                          <option value="Spanish">Spanish</option>
+                          <option value="Statistics">Statistics</option>
+                          <option value="Textiles">Textiles</option>
+                        </select>
 
-                          {subjects.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeSubject(index)}
-                              className="absolute inset-y-0 right-3 flex items-center"
-                            >
-                              <Trash strokeWidth={2.25} color="#E93F3F" size={15} />
-                            </button>
-                          )}
-                        </div>
+                        {subjects.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeSubject(index)}
+                            className="absolute inset-y-0 right-3 flex items-center"
+                          >
+                            <Trash
+                              strokeWidth={2.25}
+                              color="#E93F3F"
+                              size={15}
+                            />
+                          </button>
+                        )}
                       </div>
+                    </div>
                   ))}
                 </div>
 
