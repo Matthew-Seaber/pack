@@ -78,6 +78,7 @@ export default function SignupPage() {
       setCurrentStep(3);
     } else {
       try {
+        toast.info("Validating...");
         const res = await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -107,7 +108,7 @@ export default function SignupPage() {
         }
       } catch (error) {
         console.error("Signup error:", error);
-        alert("There was a system error. Please try again later.");
+        toast.error("There was a system error. Please try again later.");
       }
     }
   }

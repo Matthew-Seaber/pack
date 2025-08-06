@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { Toaster, toast } from "sonner";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -14,19 +15,23 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
+      toast.info("Validating...");
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
-        router.push("/dashboard");
+        toast.success(`Success! Redirecting you to the dashboard...`);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
       } else {
-        alert("Login incorrect. Please check your username and password.");
+        toast.error("Login incorrect. Please check your username and password.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("There was a system error. Please try again later.");
+      toast.error("There was a system error. Please try again later.");
     }
   }
 
@@ -137,6 +142,7 @@ export default function LoginPage() {
           .
         </p>
       </div>
+      <Toaster />
     </div>
   );
 }
