@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 
 export async function POST(req: Request) {
-    const { firstName, role, username, email, password, yearGroup, progressEmails, title, surname, subject, classes, subjects, examBoards } = await req.json();
+    const { firstName, role, username, email, password, /*yearGroup, progressEmails, title, surname, subject, classes, subjects, examBoards */} = await req.json();
 
     // Checks if user already exists (email or username)
     const { count, error } = await supabaseMainAdmin
