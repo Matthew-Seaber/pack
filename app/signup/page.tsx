@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Eye, EyeOff, Trash } from "lucide-react";
 import Image from "next/image";
-import { toast } from "sonner";
+import { Toaster, toast } from "sonner";
 
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -654,6 +654,7 @@ export default function SignupPage() {
           .
         </p>
       </div>
+      <Toaster />
     </div>
   );
 }
