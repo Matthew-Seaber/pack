@@ -9,7 +9,12 @@ export async function POST(req: Request) {
     role,
     username,
     email,
-    password /*yearGroup, progressEmails, title, surname, subject, classes, subjects, examBoards */,
+    password,
+    yearGroup,
+    progressEmails,
+    title,
+    surname,
+    subject /*classes, subjects, examBoards */,
   } = await req.json();
 
   // Checks if user already exists (email or username)
@@ -60,6 +65,57 @@ export async function POST(req: Request) {
       { message: `Error creating user: ${error}` },
       { status: 500 }
     );
+  }
+
+  if (role === "Student") {
+    let student;
+    try {
+      const yearNumber = yearGroup.slice(-2);
+
+      const { data, error } = await supabaseMainAdmin
+        .from("students")
+        .insert([
+          {
+            year_group: yearNumber,
+            progress_emails: progressEmails,
+          },
+        ])
+        .single();
+
+      if (error) throw error;
+
+      student = data;
+      console.log("Successfully inserted student data:", student);
+    } catch (error) {
+      return NextResponse.json(
+        { message: `Error creating student: ${error}` },
+        { status: 500 }
+      );
+    }
+  } else {
+    let teacher;
+    try {
+      const { data, error } = await supabaseMainAdmin
+        .from("teachers")
+        .insert([
+          {
+            title: title,
+            surname: surname,
+            subject: subject,
+          },
+        ])
+        .single();
+
+      if (error) throw error;
+
+      teacher = data;
+      console.log("Successfully inserted teacher data:", teacher);
+    } catch (error) {
+      return NextResponse.json(
+        { message: `Error creating teacher: ${error}` },
+        { status: 500 }
+      );
+    }
   }
 
   // Creates session token
