@@ -36,16 +36,18 @@ export async function POST(req: Request) {
             }]);
 
           if (error) throw error;
-    
+
+          console.log("Successfully inserted user data:", data);
+
         } catch (error) {
-            return NextResponse.json({ message: "Error creating user." }, { status: 500 });
+            return NextResponse.json({ message: `Error creating user: ${error}` }, { status: 500 });
         }
 
     // Creates session token
     const token = crypto.randomUUID();
-    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+    /*const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
 
-    /*await supabaseMainAdmin.from("sessions").insert({
+    await supabaseMainAdmin.from("sessions").insert({
         user_id: user.user_id,
         token,
         expires: expires,
