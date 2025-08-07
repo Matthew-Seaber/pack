@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: `Error creating student: ${error instanceof Error ? error.message : String(error)}` },
+        { message: `Error creating student: ${error instanceof Error ? error.message : JSON.stringify(error)}` },
         { status: 500 }
       );
     }
