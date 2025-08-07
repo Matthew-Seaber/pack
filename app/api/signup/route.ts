@@ -62,7 +62,11 @@ export async function POST(req: Request) {
     console.log("Successfully inserted user data:", user);
   } catch (error) {
     return NextResponse.json(
-      { message: `Error creating user: ${error instanceof Error ? error.message : String(error)}` },
+      {
+        message: `Error creating user: ${
+          error instanceof Error ? error.message : JSON.stringify(error)
+        }`,
+      },
       { status: 500 }
     );
   }
@@ -71,6 +75,13 @@ export async function POST(req: Request) {
     let student;
     try {
       const yearNumber = yearGroup.slice(-2);
+      let progressEmailsBoolean;
+
+      if (progressEmails === "Enabled") {
+        progressEmailsBoolean = true;
+      } else {
+        progressEmailsBoolean = false;
+      }
 
       const { data, error } = await supabaseMainAdmin
         .from("students")
@@ -78,7 +89,7 @@ export async function POST(req: Request) {
           {
             user_id: user.user_id,
             year_group: yearNumber,
-            progress_emails: progressEmails,
+            progress_emails: progressEmailsBoolean,
           },
         ])
         .select()
@@ -110,7 +121,11 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: `Error creating student: ${error instanceof Error ? error.message : JSON.stringify(error)}` },
+        {
+          message: `Error creating student: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        },
         { status: 500 }
       );
     }
@@ -155,7 +170,11 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: `Error creating teacher: ${error instanceof Error ? error.message : String(error)}` },
+        {
+          message: `Error creating teacher: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        },
         { status: 500 }
       );
     }
