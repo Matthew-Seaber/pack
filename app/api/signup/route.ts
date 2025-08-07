@@ -14,7 +14,8 @@ export async function POST(req: Request) {
     progressEmails,
     title,
     surname,
-    subject /*classes, subjects, examBoards */,
+    subject,
+    classes /*subjects, examBoards */,
   } = await req.json();
 
   // Checks if user already exists (email or username)
@@ -172,6 +173,33 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           message: `Error creating teacher: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const classRows = classes.map((className: string) => ({
+        teacher_id: user.user_id,
+        class_name: className,
+        join_code: crypto.randomBytes(4).toString("hex"), // Generates a unique code for each new class - 4 billion possible combinations
+      }));
+
+      const { error } = await supabaseMainAdmin
+        .from("classes")
+        .insert(classRows)
+        .select();
+
+      if (error) throw error;
+
+      console.log("Successfully inserted teacher's classes.");
+    } catch (error) {
+
+      return NextResponse.json(
+        {
+          message: `Error creating teacher's classes: ${
             error instanceof Error ? error.message : JSON.stringify(error)
           }`,
         },
