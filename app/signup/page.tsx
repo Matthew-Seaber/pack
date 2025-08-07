@@ -215,6 +215,8 @@ export default function SignupPage() {
           }, 2000);
         } else {
           toast.error("Failed to create user. Please try again.");
+          const errorData = await res.json();
+          console.error("Error creating user:", errorData.message);
         }
       } catch (error) {
         console.error("Signup error:", error);
