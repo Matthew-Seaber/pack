@@ -81,6 +81,7 @@ export async function POST(req: Request) {
             progress_emails: progressEmails,
           },
         ])
+        .select()
         .single();
 
       if (error) throw error;
@@ -88,19 +89,6 @@ export async function POST(req: Request) {
       student = data;
       console.log("Successfully inserted student data:", student);
     } catch (error) {
-      // TESTING
-      await fetch("/api/webhooks/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          error: "Failed to insert user (student)",
-          details: String(error),
-          userId: user.user_id,
-          context: "/signup/route.ts",
-        }),
-      });
-      // TESTING END
-
       // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
 
       try {
@@ -139,6 +127,7 @@ export async function POST(req: Request) {
             subject: subject,
           },
         ])
+        .select()
         .single();
 
       if (error) throw error;
