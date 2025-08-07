@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { Resend } from 'resend';
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const subject = "Pack Signup Rollback error";
     const emailContent = `
       <h2>${subject}</h2>
-      <h3><strong>Error:</strong> ${error || "N/A"}</p>
+      <h3><strong>Error:</strong> ${error || "N/A"}</h3>
       <p><strong>Context:</strong> ${context || "N/A"}</p>
       <p><strong>User ID:</strong> ${userId || "N/A"}</p>
       <p><strong>Details:</strong> ${details || "N/A"}</p>

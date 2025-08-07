@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       student = data;
       console.log("Successfully inserted student data:", student);
     } catch (error) {
-      // TEMPORARY FOR TESTING
+      // START OF TESTING (TEMP)
       await fetch("/api/webhooks/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,6 +99,7 @@ export async function POST(req: Request) {
           context: "/signup/route.ts",
         }),
       });
+      // END OF TESTING
 
       // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
       try {
