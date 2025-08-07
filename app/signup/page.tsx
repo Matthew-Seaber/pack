@@ -433,7 +433,11 @@ export default function SignupPage() {
                           className="w-full px-3 py-2 bg-[#1C1C1C] text-sm text-[#F2F2F2] rounded-md focus:outline-none border border-[#393939] appearance-none"
                         >
                           <option value="AQA">AQA</option>
+                          <option value="CCEA">CCEA</option>
                           <option value="Edexcel">Edexcel</option>
+                          <option value="Eduqas">Eduqas</option>
+                          <option value="OCR">OCR</option>
+                          <option value="WJEC">WJEC</option>
                         </select>
                       </div>
                       <div className="relative w-3/4">

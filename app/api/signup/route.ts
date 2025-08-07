@@ -15,7 +15,9 @@ export async function POST(req: Request) {
     title,
     surname,
     subject,
-    classes /*subjects, examBoards */,
+    classes,
+    subjects,
+    examBoards,
   } = await req.json();
 
   // Checks if user already exists (email or username)
@@ -115,7 +117,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             error: "Failed to rollback user (student)",
             details: String(error) + " | " + String(rollbackError),
-            userId: user.user_id,
+            userID: user.user_id,
             context: "/signup/route.ts",
           }),
         });
@@ -124,6 +126,96 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           message: `Error creating student: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const { error } = await supabaseMainAdmin
+        .from("student_stats")
+        .insert([
+          {
+            user_id: user.user_id,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("Successfully inserted student stats.");
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: `Error creating student's stats: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        },
+        { status: 500 }
+      );
+    }
+
+    try {
+      // Insert empty row for each subject (used in next part and after onboarding - a teacher and their email can be added later but this is optional)
+
+      const subjectRows = subjects.map(() => ({
+        user_id: user.user_id,
+      }));
+
+      const { data, error } = await supabaseMainAdmin
+        .from("subjects")
+        .insert(subjectRows)
+        .select("subject_id");
+
+      if (error) throw error;
+
+      const subjectIDs = data?.map((row) => row.subject_id) || [];
+
+      // Link each subject to a course
+
+      const combinedRecord: string[][] = [];
+      for (let i = 0; i < subjects.length; i++) {
+        combinedRecord.push([subjects[i], examBoards[i]]);
+      }
+
+      // Find corresponding courseIDs for each subject and create links
+      
+      const linkRows = [];
+      
+      for (let i = 0; i < combinedRecord.length; i++) {
+        const [subjectName, examBoardName] = combinedRecord[i];
+        
+        const { data: courseData, error: getCourseError } = await supabaseMainAdmin
+          .from("courses")
+          .select("course_id")
+          .eq("course_name", subjectName)
+          .eq("exam_board", examBoardName);
+
+        if (getCourseError) throw getCourseError;
+
+        if (courseData && courseData.length > 0) {
+          linkRows.push({
+            subject_id: subjectIDs[i],
+            course_id: courseData[0].course_id,
+          });
+        }
+      }
+
+      if (linkRows.length > 0) {
+        const { error: linkError } = await supabaseMainAdmin
+          .from("subject_course_links")
+          .insert(linkRows);
+
+        if (linkError) throw linkError;
+      }
+
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: `Error creating student's subjects or linking to courses. It's likely the subject/exam board pair don't exist or aren't yet supported by Pack: ${
             error instanceof Error ? error.message : JSON.stringify(error)
           }`,
         },
@@ -164,7 +256,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             error: "Failed to rollback user (teacher)",
             details: String(error) + " | " + String(rollbackError),
-            userId: user.user_id,
+            userID: user.user_id,
             context: "/signup/route.ts",
           }),
         });
@@ -196,7 +288,6 @@ export async function POST(req: Request) {
 
       console.log("Successfully inserted teacher's classes.");
     } catch (error) {
-
       return NextResponse.json(
         {
           message: `Error creating teacher's classes: ${
