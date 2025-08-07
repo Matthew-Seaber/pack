@@ -1,29 +1,9 @@
 import { NextResponse } from "next/server";
-import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin"; // TESTING
 
 import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-export async function POST(req: Request) {
-  // TESTING
-  try {
-      const {} = await supabaseMainAdmin
-        .from("users")
-        .insert([
-          {
-            username: "TEST",
-            email :"TEST",
-            password: "TEST",
-            first_name: "TEST",
-            role: "Student",
-          },
-        ])
-  } catch (error) {
-    console.error("Error inserting test user:", error);
-  }
-  // TESTING END
-
-  try {
+export async function POST(req: Request) {try {
     const body = await req.json();
     
     const { error, details, userId, context } = body;
