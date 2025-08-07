@@ -26,6 +26,11 @@ export default function SignupPage() {
 
   const router = useRouter();
 
+  const commonPasswordList = ["password1!", "Password1!", "password123!", "Password123!", "Qwerty123!"]; // Common passwords which meet all other password requirements
+  const numberList = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]; // List of numbers passwords must contain
+  const letterList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]; // List of letters passwords must contain
+  const specialCharacters = ["!", "@", "#", "$", "%", "^", "&", "*"]; // List of special characters passwords must contain
+
   const addNewClass = () => {
     setClasses([...classes, ""]);
   };
@@ -72,13 +77,57 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (currentStep === 1 && role === "Student") {
-      setCurrentStep(2);
-    } else if (currentStep === 1 && role === "Teacher") {
-      setCurrentStep(3);
+    const containsNumber = numberList.some(num => password.includes(num)); // Using "num" since "number" is reserved in TS
+    const containsLetter = letterList.some(letter => password.toLowerCase().includes(letter));
+    const containsSpecialCharacter = specialCharacters.some(character => password.includes(character));
+
+    if (!firstName || !username || !email || !password) { // Validation for empty fields
+      toast.error("Please fill in all fields.");
+      return;
+    } else if (username.length < 3 || username.length >= 20) { // Validation for username length
+      toast.error("Username must be at least 3 characters (20 max).");
+      return;
+    } else if (!email.includes("@") || !email.includes(".")) { // Validation for email type
+      toast.error("Please enter a valid email address.");
+      return;
+    } else if (password.length < 8) { // Validation for password length
+      toast.error("Password must be at least 8 characters long.");
+      return;
+    } else if (commonPasswordList.includes(password)) { // Validation for password strength #1
+      toast.error("Your password is a common password.");
+      return;
+    } else if (password.includes(" ")) { // Validation for password strength #2
+      toast.error("Password cannot contain spaces.");
+      return;
+    } else if (!containsNumber || !containsLetter || !containsSpecialCharacter) { // Validation for password strength #3
+      toast.error("Password must contain a combination of letters, numbers, and special characters.");
+      return;
+    }
+
+    if (currentStep === 1) {
+      if (role === "Student") {
+        setCurrentStep(2);
+        return;
+      } else if (role === "Teacher") {
+        setCurrentStep(3);
+        return;
+      }
     } else {
+      if (role === "Student") {
+        if (!yearGroup || !progressEmails || subjects.length === 0 || examBoards.length === 0) {
+          toast.error("Please fill in all fields.");
+          return;
+        }
+    } else if (role === "Teacher") {
+        if (!title || !surname || !subject || classes.length === 0) {
+          toast.error("Please fill in all fields.");
+          return;
+        }
+    }
+
       try {
         toast.info("Validating...");
+
         const res = await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -138,7 +187,9 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          {" "}
+          {/* Manual validation takes place on submit */}
           {currentStep === 1 ? (
             // Page 1
             <>
@@ -151,7 +202,6 @@ export default function SignupPage() {
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    required
                     className="w-full px-4 py-3 bg-[#1C1C1C] text-[#F2F2F2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#393939] placeholder:text-[#4D4D4D] placeholder:font-semibold"
                     placeholder="Freddy"
                     autoComplete="given-name"
@@ -190,7 +240,6 @@ export default function SignupPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  required
                   className="w-full px-4 py-3 bg-[#1C1C1C] text-[#F2F2F2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#393939] placeholder:text-[#4D4D4D] placeholder:font-semibold"
                   placeholder="Freddy123"
                   autoComplete="username"
@@ -205,7 +254,6 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   className="w-full px-4 py-3 bg-[#1C1C1C] text-[#F2F2F2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#393939] placeholder:text-[#4D4D4D] placeholder:font-semibold"
                   placeholder="freddy@example.com"
                   autoComplete="email"
@@ -221,7 +269,6 @@ export default function SignupPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                     className="w-full pl-4 pr-12 py-3 bg-[#1C1C1C] text-[#F2F2F2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#393939] placeholder:text-[#4D4D4D] placeholder:font-bold"
                     placeholder="••••••••••"
                   />
