@@ -88,32 +88,19 @@ export async function POST(req: Request) {
       student = data;
       console.log("Successfully inserted student data:", student);
     } catch (error) {
-      // START OF TESTING (TEMP)
-      try {
-        const {} = await supabaseMainAdmin.from("users").insert([
-          {
-            username: "TEST",
-            email: "TEST",
-            password: "TEST",
-            first_name: "TEST",
-            role: "Student",
-          },
-        ]);
-      } catch (error) {
-        console.error("Error inserting test user:", error);
-      }
 
-      try {
-        await supabaseMainAdmin
-          .from("users")
-          .delete()
-          .eq("user_id", user.user_id);
-      } catch (testError) {
-        console.error("Error rolling back test user:", testError);
-      }
-      // END OF TESTING
-
+      await fetch("/api/webhooks/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          error: "Failed to insert user (student)",
+          details: String(error) + " | " + String(error),
+          userId: user.user_id,
+          context: "/signup/route.ts",
+        }),
+      });
       // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
+
       try {
         await supabaseMainAdmin
           .from("users")
