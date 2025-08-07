@@ -87,6 +87,25 @@ export async function POST(req: Request) {
       student = data;
       console.log("Successfully inserted student data:", student);
     } catch (error) {
+      // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
+      try {
+        await supabaseMainAdmin
+          .from("users")
+          .delete()
+          .eq("user_id", user.user_id);
+      } catch (rollbackError) {
+        await fetch("/api/webhooks/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            error: "Failed to rollback user (student)",
+            details: String(error) + " | " + String(rollbackError),
+            userId: user.user_id,
+            context: "/signup/route.ts",
+          }),
+        });
+      }
+
       return NextResponse.json(
         { message: `Error creating student: ${error}` },
         { status: 500 }
@@ -111,6 +130,25 @@ export async function POST(req: Request) {
       teacher = data;
       console.log("Successfully inserted teacher data:", teacher);
     } catch (error) {
+      // Rollback if teacher creation fails - found out in testing that user would stay in database if this section fails
+      try {
+        await supabaseMainAdmin
+          .from("users")
+          .delete()
+          .eq("user_id", user.user_id);
+      } catch (rollbackError) {
+        await fetch("/api/webhooks/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            error: "Failed to rollback user (teacher)",
+            details: String(error) + " | " + String(rollbackError),
+            userId: user.user_id,
+            context: "/signup/route.ts",
+          }),
+        });
+      }
+
       return NextResponse.json(
         { message: `Error creating teacher: ${error}` },
         { status: 500 }
