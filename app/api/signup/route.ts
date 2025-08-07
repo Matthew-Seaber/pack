@@ -76,6 +76,7 @@ export async function POST(req: Request) {
         .from("students")
         .insert([
           {
+            user_id: user.user_id,
             year_group: yearNumber,
             progress_emails: progressEmails,
           },
@@ -118,6 +119,7 @@ export async function POST(req: Request) {
         .from("teachers")
         .insert([
           {
+            user_id: user.user_id,
             title: title,
             surname: surname,
             subject: subject,
