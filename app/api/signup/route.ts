@@ -216,7 +216,11 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           message: `Error creating student's subjects or linking to courses. It's likely the subject/exam board pair don't exist or aren't yet supported by Pack: ${
-            error instanceof Error ? error.message : JSON.stringify(error)
+            error instanceof Error
+              ? error.message
+              : typeof error === "string"
+                ? error
+                : JSON.stringify(error, Object.getOwnPropertyNames(error))
           }`,
         },
         { status: 500 }
