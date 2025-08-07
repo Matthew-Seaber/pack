@@ -23,7 +23,7 @@ export async function POST(req: Request) {try {
 
     await resend.emails.send({
       from: 'Pack Support <support@packapp.co.uk>',
-      to: [process.env.ERROR_NOTIFICATION_EMAIL!],
+      to: process.env.ERROR_NOTIFICATION_EMAIL!,
       subject: subject,
       html: emailContent,
     });
