@@ -77,17 +77,6 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    await fetch("/api/webhooks/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        error: "Failed to rollback user (TEST)",
-        details: "test_error",
-        userId: "test_user_id",
-        context: "/signup/route.ts",
-      }),
-    });
-
     const containsNumber = numberList.some(num => password.includes(num)); // Using "num" since "number" is reserved in TS
     const containsLetter = letterList.some(letter => password.toLowerCase().includes(letter));
     const containsSpecialCharacter = specialCharacters.some(character => password.includes(character));

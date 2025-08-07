@@ -102,6 +102,15 @@ export async function POST(req: Request) {
       } catch (error) {
         console.error("Error inserting test user:", error);
       }
+
+      try {
+        await supabaseMainAdmin
+          .from("users")
+          .delete()
+          .eq("user_id", user.user_id);
+      } catch (testError) {
+        console.error("Error rolling back test user:", testError);
+      }
       // END OF TESTING
 
       // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
