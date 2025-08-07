@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     console.log("Successfully inserted user data:", user);
   } catch (error) {
     return NextResponse.json(
-      { message: `Error creating user: ${error}` },
+      { message: `Error creating user: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: `Error creating student: ${error}` },
+        { message: `Error creating student: ${error instanceof Error ? error.message : String(error)}` },
         { status: 500 }
       );
     }
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: `Error creating teacher: ${error}` },
+        { message: `Error creating teacher: ${error instanceof Error ? error.message : String(error)}` },
         { status: 500 }
       );
     }
