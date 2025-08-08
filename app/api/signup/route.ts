@@ -220,8 +220,9 @@ export async function POST(req: Request) {
               ? error.message
               : typeof error === "string"
                 ? error
-                : JSON.stringify(error, Object.getOwnPropertyNames(error))
+                : JSON.stringify(error, Object.getOwnPropertyNames(error)) || String(error)
           }`,
+          errorDetails: error
         },
         { status: 500 }
       );
