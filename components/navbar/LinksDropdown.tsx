@@ -1,3 +1,5 @@
+"use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,12 +13,32 @@ import { Button } from "../ui/button";
 import UserIcon from "./UserIcon";
 import { links } from "@/utils/links";
 import { Toaster, toast } from "sonner";
+import { useEffect, useState } from "react";
 
 function LinksDropdown() {
+  const [firstName, setFirstName] = useState<string>(""); // Empty until GET request returns name
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          const userData = await response.json();
+          setFirstName(userData.first_name || ""); // Empty if GET request doesn't contain first name
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex gap-4 max-w-[100px]">
+        <Button variant="outline" className="flex gap-4 max-w-[200px]">
+          <p>{firstName}</p>
           <UserIcon />
         </Button>
       </DropdownMenuTrigger>
