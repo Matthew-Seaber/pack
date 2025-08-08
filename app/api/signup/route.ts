@@ -184,7 +184,13 @@ export async function POST(req: Request) {
       // Find corresponding courseIDs for each subject and create links
       
       const linkRows = [];
-      
+      let qualification;
+      if (yearGroup == "Year 10" || yearGroup == "Year 11") {
+        qualification = "GCSE";
+      } else if (yearGroup == "Year 12" || yearGroup == "Year 13") {
+        qualification = "A level";
+      }
+
       for (let i = 0; i < combinedRecord.length; i++) {
         const [subjectName, examBoardName] = combinedRecord[i];
         
@@ -192,7 +198,8 @@ export async function POST(req: Request) {
           .from("courses")
           .select("course_id")
           .eq("course_name", subjectName)
-          .eq("exam_board", examBoardName);
+          .eq("exam_board", examBoardName)
+          .eq("qualification", qualification);
 
         if (getCourseError) throw getCourseError;
 
@@ -221,7 +228,7 @@ export async function POST(req: Request) {
               : typeof error === "string"
                 ? error
                 : JSON.stringify(error, Object.getOwnPropertyNames(error)) || String(error)
-          }`,
+          }`, // Added extra checks above since during testing, the 'error' was {}
           errorDetails: error
         },
         { status: 500 }
