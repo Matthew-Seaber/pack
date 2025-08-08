@@ -243,7 +243,7 @@ export async function POST(req: Request) {
         debugInfo.push("No link rows to insert");
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({ // Using Postman to test API and debug
         message: "Code ran without console errors", 
         debug: debugInfo,
         linkRowsCount: linkRows.length
