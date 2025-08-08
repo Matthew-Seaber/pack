@@ -104,6 +104,7 @@ export async function POST(req: Request) {
       console.log("Successfully inserted student data:", student);
     } catch (error) {
       // Rollback if student creation fails - found out in testing that user would stay in database if this section fails
+      // Ensures referential integrity
 
       try {
         await supabaseMainAdmin
@@ -214,7 +215,8 @@ export async function POST(req: Request) {
       if (linkRows.length > 0) {
         const { error: linkError } = await supabaseMainAdmin
           .from("subject_course_link")
-          .insert(linkRows);
+          .insert(linkRows)
+          .select();
 
         if (linkError) throw linkError;
       }
