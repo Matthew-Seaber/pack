@@ -213,7 +213,7 @@ export async function POST(req: Request) {
 
       if (linkRows.length > 0) {
         const { error: linkError } = await supabaseMainAdmin
-          .from("subject_course_links")
+          .from("subject_course_link")
           .insert(linkRows);
 
         if (linkError) throw linkError;
