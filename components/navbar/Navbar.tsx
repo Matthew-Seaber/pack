@@ -1,5 +1,5 @@
 import LinksDropdown from "./LinksDropdown";
-import DarkMode from "./DarkMode";
+import DarkMode from "./UITheme";
 import Logo from "./Logo";
 
 function Navbar() {

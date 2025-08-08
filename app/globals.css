@@ -63,6 +63,62 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 60 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 90%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 30%;
+    --input: 0 0% 20%;
+    --ring: 60 100% 50%;
+    --chart-1: 0 100% 50%;
+    --chart-2: 120 100% 50%;
+    --chart-3: 240 100% 50%;
+    --chart-4: 60 100% 50%;
+    --chart-5: 300 100% 50%;
+  }
+
+  @media (prefers-contrast: high) {
+    :root {
+      --background: 0 0% 0%;
+      --foreground: 0 0% 100%;
+      --card: 0 0% 0%;
+      --card-foreground: 0 0% 100%;
+      --popover: 0 0% 0%;
+      --popover-foreground: 0 0% 100%;
+      --primary: 60 100% 50%;
+      --primary-foreground: 0 0% 0%;
+      --secondary: 0 0% 10%;
+      --secondary-foreground: 0 0% 100%;
+      --muted: 0 0% 15%;
+      --muted-foreground: 0 0% 90%;
+      --accent: 0 0% 15%;
+      --accent-foreground: 0 0% 100%;
+      --destructive: 0 100% 50%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 0 0% 30%;
+      --input: 0 0% 20%;
+      --ring: 60 100% 50%;
+      --chart-1: 0 100% 50%;
+      --chart-2: 120 100% 50%;
+      --chart-3: 240 100% 50%;
+      --chart-4: 60 100% 50%;
+      --chart-5: 300 100% 50%;
+    }
+  }
 }
 
 @layer base {
@@ -99,7 +155,9 @@
   }
 }
 
-@layer utilities { /* Custom scrollbar */
+@layer utilities {
+
+  /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
