@@ -162,6 +162,8 @@ export async function POST(req: Request) {
     try {
       // Insert empty row for each subject (used in next part and after onboarding - a teacher and their email can be added later but this is optional)
 
+      const debugInfo = [];
+
       const subjectRows = subjects.map(() => ({
         user_id: user.user_id,
       }));
@@ -192,8 +194,12 @@ export async function POST(req: Request) {
         qualification = "A level";
       }
 
+      debugInfo.push(`Combined records: ${JSON.stringify(combinedRecord)}`);
+
       for (let i = 0; i < combinedRecord.length; i++) {
         const [subjectName, examBoardName] = combinedRecord[i];
+        
+        debugInfo.push(`Looking for course: ${subjectName}, ${examBoardName}, ${qualification}`);
         
         const { data: courseData, error: getCourseError } = await supabaseMainAdmin
           .from("courses")
@@ -202,15 +208,24 @@ export async function POST(req: Request) {
           .eq("exam_board", examBoardName)
           .eq("qualification", qualification);
 
-        if (getCourseError) throw getCourseError;
+        if (getCourseError) {
+          debugInfo.push(`Error with getting course: ${JSON.stringify(getCourseError)}`);
+          throw getCourseError;
+        }
+
+        debugInfo.push(`Course data for ${subjectName}: ${JSON.stringify(courseData)}`);
 
         if (courseData && courseData.length > 0) {
           linkRows.push({
             subject_id: subjectIDs[i],
             course_id: courseData[0].course_id,
           });
+        } else {
+          debugInfo.push(`No course found for: ${subjectName}, ${examBoardName}, ${qualification}`);
         }
       }
+
+      debugInfo.push(`linkRows: ${JSON.stringify(linkRows)}`);
 
       if (linkRows.length > 0) {
         const { error: linkError } = await supabaseMainAdmin
@@ -218,8 +233,21 @@ export async function POST(req: Request) {
           .insert(linkRows)
           .select();
 
-        if (linkError) throw linkError;
+        if (linkError) {
+          debugInfo.push(`Link insertion error: ${JSON.stringify(linkError)}`);
+          throw linkError;
+        }
+        
+        debugInfo.push("Successfully inserted all subject course links");
+      } else {
+        debugInfo.push("No link rows to insert");
       }
+
+      return NextResponse.json({ 
+        message: "Code ran without console errors", 
+        debug: debugInfo,
+        linkRowsCount: linkRows.length
+      });
 
     } catch (error) {
       return NextResponse.json(
