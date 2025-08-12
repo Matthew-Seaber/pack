@@ -160,33 +160,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Insert empty row for each subject (used in next part and after onboarding - a teacher and their email can be added later but this is optional)
-
       const debugInfo = [];
-
-      const subjectRows = subjects.map(() => ({
-        user_id: user.user_id,
-      }));
-
-      const { data, error } = await supabaseMainAdmin
-        .from("subjects")
-        .insert(subjectRows)
-        .select("subject_id");
-
-      if (error) throw error;
-
-      const subjectIDs = data?.map((row) => row.subject_id) || [];
-
-      // Link each subject to a course
-
-      const combinedRecord: string[][] = [];
-      for (let i = 0; i < subjects.length; i++) {
-        combinedRecord.push([subjects[i], examBoards[i]]);
-      }
-
-      // Find corresponding courseIDs for each subject and create links
-      
-      const linkRows = [];
       let qualification;
       if (yearGroup == "Year 10" || yearGroup == "Year 11") {
         qualification = "GCSE";
@@ -194,13 +168,14 @@ export async function POST(req: Request) {
         qualification = "A level";
       }
 
-      debugInfo.push(`Combined records: ${JSON.stringify(combinedRecord)}`);
+      // Match user's inputs to courses
+      const subjectRows = [];
+      for (let i = 0; i < subjects.length; i++) {
+        const subjectName = subjects[i];
+        const examBoardName = examBoards[i];
 
-      for (let i = 0; i < combinedRecord.length; i++) {
-        const [subjectName, examBoardName] = combinedRecord[i];
-        
         debugInfo.push(`Looking for course: ${subjectName}, ${examBoardName}, ${qualification}`);
-        
+
         const { data: courseData, error: getCourseError } = await supabaseMainAdmin
           .from("courses")
           .select("course_id")
@@ -216,8 +191,8 @@ export async function POST(req: Request) {
         debugInfo.push(`Course data for ${subjectName}: ${JSON.stringify(courseData)}`);
 
         if (courseData && courseData.length > 0) {
-          linkRows.push({
-            subject_id: subjectIDs[i],
+          subjectRows.push({
+            user_id: user.user_id,
             course_id: courseData[0].course_id,
           });
         } else {
@@ -225,28 +200,27 @@ export async function POST(req: Request) {
         }
       }
 
-      debugInfo.push(`linkRows: ${JSON.stringify(linkRows)}`);
+      debugInfo.push(`subjectRows: ${JSON.stringify(subjectRows)}`);
 
-      if (linkRows.length > 0) {
-        const { error: linkError } = await supabaseMainAdmin
-          .from("subject_course_link")
-          .insert(linkRows)
+      if (subjectRows.length > 0) {
+        const { error: subjectInsertError } = await supabaseMainAdmin
+          .from("subjects")
+          .insert(subjectRows)
           .select();
 
-        if (linkError) {
-          debugInfo.push(`Link insertion error: ${JSON.stringify(linkError)}`);
-          throw linkError;
+        if (subjectInsertError) {
+          debugInfo.push(`Subject insertion error: ${JSON.stringify(subjectInsertError)}`);
+          throw subjectInsertError;
         }
-        
-        debugInfo.push("Successfully inserted all subject course links");
+        debugInfo.push("Successfully inserted all subjects with course_id");
       } else {
-        debugInfo.push("No link rows to insert");
+        debugInfo.push("No subject rows to insert");
       }
 
       return NextResponse.json({ // Using Postman to test API and debug
         message: "Code ran without console errors", 
         debug: debugInfo,
-        linkRowsCount: linkRows.length
+        subjectRowsCount: subjectRows.length
       });
 
     } catch (error) {

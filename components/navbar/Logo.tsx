@@ -4,7 +4,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 function Logo() {
-  const { resolvedTheme } = useTheme();
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -30,7 +30,7 @@ function Logo() {
     );
   }
 
-  if (resolvedTheme === "light") {
+  if (theme === "light") {
     logoPath = "/logo-light.svg";
   }
 
