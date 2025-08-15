@@ -174,21 +174,28 @@ export async function POST(req: Request) {
         const subjectName = subjects[i];
         const examBoardName = examBoards[i];
 
-        debugInfo.push(`Looking for course: ${subjectName}, ${examBoardName}, ${qualification}`);
+        debugInfo.push(
+          `Looking for course: ${subjectName}, ${examBoardName}, ${qualification}`
+        );
 
-        const { data: courseData, error: getCourseError } = await supabaseMainAdmin
-          .from("courses")
-          .select("course_id")
-          .eq("course_name", subjectName)
-          .eq("exam_board", examBoardName)
-          .eq("qualification", qualification);
+        const { data: courseData, error: getCourseError } =
+          await supabaseMainAdmin
+            .from("courses")
+            .select("course_id")
+            .eq("course_name", subjectName)
+            .eq("exam_board", examBoardName)
+            .eq("qualification", qualification);
 
         if (getCourseError) {
-          debugInfo.push(`Error with getting course: ${JSON.stringify(getCourseError)}`);
+          debugInfo.push(
+            `Error with getting course: ${JSON.stringify(getCourseError)}`
+          );
           throw getCourseError;
         }
 
-        debugInfo.push(`Course data for ${subjectName}: ${JSON.stringify(courseData)}`);
+        debugInfo.push(
+          `Course data for ${subjectName}: ${JSON.stringify(courseData)}`
+        );
 
         if (courseData && courseData.length > 0) {
           subjectRows.push({
@@ -196,7 +203,9 @@ export async function POST(req: Request) {
             course_id: courseData[0].course_id,
           });
         } else {
-          debugInfo.push(`No course found for: ${subjectName}, ${examBoardName}, ${qualification}`);
+          debugInfo.push(
+            `No course found for: ${subjectName}, ${examBoardName}, ${qualification}`
+          );
         }
       }
 
@@ -209,20 +218,23 @@ export async function POST(req: Request) {
           .select();
 
         if (subjectInsertError) {
-          debugInfo.push(`Subject insertion error: ${JSON.stringify(subjectInsertError)}`);
+          debugInfo.push(
+            `Subject insertion error: ${JSON.stringify(subjectInsertError)}`
+          );
           throw subjectInsertError;
         }
+
         debugInfo.push("Successfully inserted all subjects with course_id");
       } else {
         debugInfo.push("No subject rows to insert");
       }
 
-      return NextResponse.json({ // Using Postman to test API and debug
-        message: "Code ran without console errors", 
+      return NextResponse.json({
+        // Using Postman to test API and debug
+        message: "Code ran without console errors",
         debug: debugInfo,
-        subjectRowsCount: subjectRows.length
+        subjectRowsCount: subjectRows.length,
       });
-
     } catch (error) {
       return NextResponse.json(
         {
@@ -230,10 +242,11 @@ export async function POST(req: Request) {
             error instanceof Error
               ? error.message
               : typeof error === "string"
-                ? error
-                : JSON.stringify(error, Object.getOwnPropertyNames(error)) || String(error)
+              ? error
+              : JSON.stringify(error, Object.getOwnPropertyNames(error)) ||
+                String(error)
           }`, // Added extra checks above since during testing, the 'error' was {}
-          errorDetails: error
+          errorDetails: error,
         },
         { status: 500 }
       );
