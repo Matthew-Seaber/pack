@@ -29,7 +29,7 @@ export default function ConditionalContent({
     );
   }
 
-  // Different navbar for users who aren't logged in
+  // Different navbar for users who aren't logged in or accessing publically-available pages
   return (
     <Providers>
       <MainNavbar />
