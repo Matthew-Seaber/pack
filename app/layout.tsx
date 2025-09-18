@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Montserrat, Roboto_Mono } from "next/font/google";
+import { Poppins, Montserrat, Roboto_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -21,6 +21,12 @@ const roboto_mono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
   variable: "--font-roboto-mono",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -58,7 +64,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Pack" />
       </head>
       <body
-        className={`${roboto_mono.variable} ${poppins.variable} ${montserrat.variable} antialiased`}
+        className={`${inter.variable} ${roboto_mono.variable} ${poppins.variable} ${montserrat.variable} antialiased`}
       >
         <PageConfig>{children}</PageConfig>
         <Analytics />
