@@ -248,7 +248,6 @@ const MultiSelectorTrigger = forwardRef<
             "px-2 rounded-xl flex items-center gap-1",
             activeIndex === index && "ring-2 ring-muted-foreground ",
           )}
-          variant={"secondary"}
         >
           <span className="text-xs">{item}</span>
           <button
