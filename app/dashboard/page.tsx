@@ -95,27 +95,66 @@ export default async function Dashboard() {
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #FF5842" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                UPCOMING TESTS
+              </p>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #42FF6B" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                UPCOMING HOMEWORK
+              </p>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #42E3FF" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                YOUR STATS
+              </p>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #FFD338" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                RECOMMENDED REVISION
+              </p>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #B342FF" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                TO DO LIST
+              </p>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #EAA080" }}
-            ></Card>
+            >
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                QUOTE OF THE WEEK
+              </p>
+              <div
+                className="bg-[#FFCC91]/20 rounded-md p-3"
+                style={{ color: "#FFE0A6" }}
+              >
+                <p className="text-[13px] font-regular italic mb-2">
+                  &quot;Confidence is the most beautiful thing you can
+                  possess.&quot;
+                </p>
+                <p
+                  className="text-xs font-thin"
+                  style={{ transform: "translateX(3px)" }}
+                >
+                  - Sabrina Carpenter
+                </p>
+              </div>
+            </Card>
             <Card
               className="flex flex-col p-4"
               style={{ outline: "2px solid #5E42FF" }}

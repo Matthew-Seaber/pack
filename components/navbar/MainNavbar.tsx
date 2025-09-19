@@ -29,7 +29,7 @@ function MainNavbar() {
 
   return (
     <nav className="border-b">
-      <div className="container flex justify-between items-center flex-wrap py-6 gap-4">
+      <div className="container flex justify-between flex-wrap py-6 gap-4">
         <Logo />
 
         <div className="flex gap-4 items-center flex-shrink-0">
