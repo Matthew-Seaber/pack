@@ -163,7 +163,7 @@ export default async function Dashboard() {
                 POMODORO TIMER
               </p>
               <h2 className="my-3 text-6xl font-medium inter text-center tabular-nums">
-                20:00
+                25:00
               </h2>
               <p className="text-xs text-center">5 minute breaks</p>
               <Button
