@@ -35,6 +35,7 @@ function PomodoroPage() {
     "stopped" | "running" | "paused"
   >("stopped");
   const [timeRevised, setTimeRevised] = React.useState(0);
+  const [totalRevised, setTotalRevised] = React.useState(0);
   const isDesktop =
     typeof window !== "undefined" &&
     window.matchMedia("(min-width: 768px)").matches;
@@ -226,13 +227,15 @@ function PomodoroPage() {
 
     if (user) {
       try {
+        setTotalRevised(timeRevised + (focusLength - Math.ceil(currentTime / 60)));
+
         const res = await fetch("/api/user_stats/save_stats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             user_id: user.user_id,
             dataToChange: "pomodoro",
-            timeRevised: timeRevised,
+            timeRevised: totalRevised,
           }),
         });
 
@@ -253,7 +256,10 @@ function PomodoroPage() {
       toast.info("Timer ended. Sign in to track your progress.");
     }
 
-    setTimeRevised(0);
+    setTimeout(() => {
+      setTimeRevised(0);
+      setTotalRevised(0);
+    }, 1000);
   };
 
   return (
