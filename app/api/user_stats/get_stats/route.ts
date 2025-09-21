@@ -4,7 +4,7 @@ import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 export async function POST(req: Request) {
     const { user_id } = await req.json();
 
-    // Gets user's stats via user_id
+    // Gets a user's stats via user_id
     const { data: user_stats, error: fetchError } = await supabaseMainAdmin
     .from("student_stats")
     .select("streak, tasks_completed, schoolwork_completed, past_papers_completed, resources_downloaded, pomodoro_time")

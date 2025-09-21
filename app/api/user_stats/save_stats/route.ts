@@ -6,9 +6,22 @@ export async function POST(req: Request) {
     const { user_id, dataToChange, timeRevised } = await req.json();
 
   if (dataToChange === "pomodoro") {
+    const { data, error: fetchError } = await supabaseMainAdmin
+      .from("student_stats")
+      .select("pomodoro_time")
+      .eq("user_id", user_id)
+      .single();
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    const currentPomodoroTime = data?.pomodoro_time ?? 0;
+    const newPomodoroTime = currentPomodoroTime + timeRevised;
+
     const { error } = await supabaseMainAdmin
       .from("student_stats")
-      .update({ pomodoro_time: timeRevised })
+      .update({ pomodoro_time: newPomodoroTime })
       .eq("user_id", user_id);
     
     if (error) {
