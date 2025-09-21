@@ -241,7 +241,7 @@ function PomodoroPage() {
 
         if (res.ok) {
           toast.success(
-            `Great work! ${timeRevised} minutes have been added to your stats.`
+            `Great work! ${totalRevised} minutes have been added to your stats.`
           );
         } else {
           toast.error("Failed to save stats to profile.");
@@ -259,7 +259,7 @@ function PomodoroPage() {
     setTimeout(() => {
       setTimeRevised(0);
       setTotalRevised(0);
-    }, 1000);
+    }, 5000);
   };
 
   return (
