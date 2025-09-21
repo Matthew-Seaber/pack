@@ -172,12 +172,13 @@ function PomodoroPage() {
         setCurrentTime(focusLength * 60);
       }
 
-      startTimer();
     } else {
       toast.info("Break over. Time for another productive focus session!");
       setMode("focus");
       setCurrentTime(focusLength * 60);
     }
+
+    startTimer();
   };
 
   const startTimer = () => {
@@ -225,7 +226,7 @@ function PomodoroPage() {
 
     if (user) {
       try {
-        const res = await fetch("/api/user_stats", {
+        const res = await fetch("/api/user_stats/save_stats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

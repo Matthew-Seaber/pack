@@ -37,7 +37,7 @@ export async function getUser() {
     // Get user information from main 'users' table
     const { data: user, error: userError } = await supabaseMainAdmin
       .from('users')
-      .select('user_id, username, email, first_name, role')
+      .select('user_id, username, email, first_name, role, created_at, last_login')
       .eq('user_id', session.user_id)
       .single();
     
