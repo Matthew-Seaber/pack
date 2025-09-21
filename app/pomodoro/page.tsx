@@ -33,9 +33,7 @@ function PomodoroPage() {
   const [breakLength, setBreakLength] = React.useState(5);
   const [timerStatus, setTimerStatus] = React.useState<
     "stopped" | "running" | "paused"
-  >("stopped");
-  const [timeRevised, setTimeRevised] = React.useState(0);
-  const [totalRevised, setTotalRevised] = React.useState(0);
+  >("stopped")
   const isDesktop =
     typeof window !== "undefined" &&
     window.matchMedia("(min-width: 768px)").matches;
@@ -159,12 +157,39 @@ function PomodoroPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const sectionComplete = () => {
+  const sectionComplete = async () => {
     setTimerStatus("stopped");
 
     if (mode === "focus") {
       toast.info("Focus session complete. Enjoy your well deserved break!");
-      setTimeRevised((old) => old + focusLength);
+      if (user) {
+        try {
+          const res = await fetch("/api/user_stats/save_stats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: user.user_id,
+              dataToChange: "pomodoro",
+              timeRevised: focusLength,
+            }),
+          });
+
+          if (res.ok) {
+            toast.success(
+              `${focusLength} minutes have been added to your stats.`
+            );
+          } else {
+            toast.error("Failed to save stats to profile.");
+            const errorData = await res.json();
+            console.error("Stats saving error:", errorData.message);
+          }
+        } catch (error) {
+          console.error("Stats saving error (2):", error);
+          toast.error("Failed to save stats to profile.");
+        }
+      } else {
+        toast.info("Timer ended. Sign in to track your progress.");
+      }
 
       if (breakLength > 0) {
         setMode("break");
@@ -227,7 +252,8 @@ function PomodoroPage() {
 
     if (user) {
       try {
-        setTotalRevised(timeRevised + (focusLength - Math.ceil(currentTime / 60)));
+        const sessionLength = (focusLength - Math.ceil(currentTime / 60));
+        console.log("Session length:", sessionLength);
 
         const res = await fetch("/api/user_stats/save_stats", {
           method: "POST",
@@ -235,13 +261,13 @@ function PomodoroPage() {
           body: JSON.stringify({
             user_id: user.user_id,
             dataToChange: "pomodoro",
-            timeRevised: totalRevised,
+            timeRevised: sessionLength,
           }),
         });
 
         if (res.ok) {
           toast.success(
-            `Great work! ${totalRevised} minutes have been added to your stats.`
+            `Great work! ${sessionLength} minutes have been added to your stats.`
           );
         } else {
           toast.error("Failed to save stats to profile.");
@@ -255,11 +281,6 @@ function PomodoroPage() {
     } else {
       toast.info("Timer ended. Sign in to track your progress.");
     }
-
-    setTimeout(() => {
-      setTimeRevised(0);
-      setTotalRevised(0);
-    }, 5000);
   };
 
   return (
