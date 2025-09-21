@@ -25,7 +25,7 @@ export default function LoginPage() {
         toast.success(`Success! Redirecting you to the dashboard...`);
         setTimeout(() => {
           router.push("/dashboard");
-        }, 2000);
+        }, 1000);
       } else {
         toast.error("Login incorrect. Please check your username and password.");
       }
