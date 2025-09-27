@@ -56,3 +56,30 @@ export async function isAuthenticated(): Promise<boolean> {
   const user = await getUser();
   return user !== null;
 }
+
+export async function logout(): Promise<void> {
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('sessionCookie');
+
+  // Delete session from database
+  if (sessionCookie) {
+    try {
+      await supabaseMainAdmin
+        .from('sessions')
+        .delete()
+        .eq('token', sessionCookie.value);
+    } catch (error) {
+      console.error('Error deleting session from database:', error);
+    }
+  }
+
+  // Clear the session cookie
+  cookieStore.set({
+    name: 'sessionCookie',
+    value: '',
+    httpOnly: true,
+    path: '/',
+    maxAge: 0,
+    sameSite: 'lax',
+  });
+}

@@ -1,4 +1,4 @@
-import { getUser } from "@/lib/auth";
+import { getUser, logout } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Toaster } from "sonner";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 import UpdateEmailForm from "@/components/forms/UpdateEmail";
 import UpdatePasswordForm from "@/components/forms/UpdatePassword";
@@ -164,9 +163,18 @@ export default async function SettingsPage() {
         </p>
       )}
 
-      {/* Add log out button here */}
-
-      <Toaster />
+      <form
+        action={async () => {
+          "use server";
+          await logout();
+          redirect("/");
+        }}
+        className="mt-10 mb-5"
+      >
+        <Button type="submit">
+          Log out
+        </Button>
+      </form>
     </>
   );
 }

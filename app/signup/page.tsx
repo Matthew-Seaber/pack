@@ -212,7 +212,7 @@ export default function SignupPage() {
           toast.success(`Success! Redirecting you to the dashboard...`);
           setTimeout(() => {
             router.push("/dashboard");
-          }, 1000);
+          }, 500);
         } else {
           toast.error("Failed to create user. Please try again.");
           const errorData = await res.json();
