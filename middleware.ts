@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 
 // Routes which require user to be logged in
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/dashboard", "/settings"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
