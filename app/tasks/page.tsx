@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Toaster } from "sonner";
+import { Clock, AlignLeft } from "lucide-react";
+
+import { Toaster, toast } from "sonner";
 
 export default function TasksPage() {
   interface Task {
@@ -30,6 +32,29 @@ export default function TasksPage() {
     4: { bg: "bg-green-500/20", text: "#5ac46b" },
   };
 
+  // Function to convert a given timestamp to a UX-friendly format
+  const formatTimestamp = (timestamp: string): string => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const year = now.getFullYear();
+    const inputYear = date.getFullYear();
+
+    const day = date.getDate();
+    const month = date.toLocaleDateString("en-GB", { month: "short" });
+    const time = date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    // Include year if it's not due the current year
+    if (inputYear !== year) {
+      return `${day} ${month} ${inputYear}, ${time}`;
+    } else {
+      return `${day} ${month}, ${time}`;
+    }
+  };
+
   // Function to render a task (with colours based on its priority)
   const renderTask = (task: Task) => {
     const colors =
@@ -39,23 +64,49 @@ export default function TasksPage() {
     return (
       <div
         key={task.id}
-        className={`flex justify-between ${colors.bg} rounded-md mt-5 p-6`}
+        className={`flex items-start justify-between gap-4 ${colors.bg} rounded-md mt-5 pt-5 pb-3 px-6`}
         style={{ color: colors.text }}
       >
-        <div>
-          <p className="text-md font-medium pb-2">
-            {task.name.length > 50 ? task.name.slice(0, 50) + "..." : task.name}
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-md font-medium pb-4"
+            style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+          >
+            {task.name.length > 60 ? task.name.slice(0, 60) + "..." : task.name}
           </p>
+          {task.due && (
+            <div className="flex items-center gap-3 pb-2">
+              <Clock className="w-5 h-5" />
+              <p className="text-sm font-regular">
+                <i>{formatTimestamp(task.due)}</i>
+              </p>
+            </div>
+          )}
           {task.description && (
-            <p className="text-sm font-regular">
-              <i>
-                {task.description.length > 100
-                  ? task.description.slice(0, 100) + "..."
-                  : task.description}
-              </i>
-            </p>
+            <div className="flex items-start gap-3 pb-3">
+              <AlignLeft className="w-5 h-5 flex-shrink-0 mt-0.2" />
+              <p
+                className="text-sm font-regular"
+                style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+              >
+                <i>
+                  {task.description.length > 75
+                    ? task.description.slice(0, 75) + "..."
+                    : task.description}
+                </i>
+              </p>
+            </div>
           )}
         </div>
+        <div
+          className="flex-shrink-0 w-7 h-7 rounded-full border-2 cursor-pointer hover:bg-white/20 transition-colors"
+          style={{ borderColor: colors.text }}
+          onClick={() => {
+            // API call here
+            // Update UI
+            toast.success("Task complete!");
+          }}
+        />
       </div>
     );
   };
@@ -75,13 +126,14 @@ export default function TasksPage() {
           }
 
           // Gets tasks via API call
-          const tasksResponse = await fetch("/api/tasks", {
+          const tasksResponse = await fetch("/api/tasks/get_tasks", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           });
 
           if (!tasksResponse.ok) {
             console.error("Error getting tasks:", tasksResponse.statusText);
+            toast.error("Error getting your tasks. Please try again later.");
             setTasks(null);
           } else {
             const tasksData = await tasksResponse.json();
@@ -97,7 +149,8 @@ export default function TasksPage() {
 
             for (const task of tasksData.tasks) {
               const dueDate = new Date(task.due);
-              if (!task.due) { // No due date
+              if (!task.due) {
+                // No due date
                 tempTasksWithoutDueDate.push(task);
                 continue;
               }

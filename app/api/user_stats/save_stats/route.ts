@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
+import { getUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    // Gets user here instead of the client for security
+    const user = await getUser();
     const { user_id, dataToChange, timeRevised } = await req.json();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not signed in" },
+        { status: 401 }
+      );
+    }
 
   if (dataToChange === "pomodoro") {
     const { data, error: fetchError } = await supabaseMainAdmin
