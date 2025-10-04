@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, AlignLeft } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Toaster, toast } from "sonner";
 
 export default function TasksPage() {
@@ -263,6 +264,22 @@ export default function TasksPage() {
     <>
       <h2 className="text-2xl font-semibold mb-3">Tasks</h2>
       <p>Keep on top of your to-do list.</p>
+
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline">Add task</Button>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>
+              Add task
+            </SheetTitle>
+            <SheetDescription>
+              Add a new task
+            </SheetDescription>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
 
       {tasks && tasks.length > 0 ? (
         <>
