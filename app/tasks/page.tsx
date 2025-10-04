@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, AlignLeft } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { Toaster, toast } from "sonner";
 
@@ -101,10 +102,32 @@ export default function TasksPage() {
         <div
           className="flex-shrink-0 w-7 h-7 rounded-full border-2 cursor-pointer hover:bg-white/20 transition-colors"
           style={{ borderColor: colors.text }}
-          onClick={() => {
-            // API call here
-            // Update UI
-            toast.success("Task complete!");
+          onClick={async () => {
+            try {
+              const response = await fetch("/api/tasks/complete_task", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ taskID: task.id }),
+              });
+              
+              if (response.ok) {
+                toast.success("Task complete!");
+                // Refreshes all task lists and UI to ensure consistency before and after the transaction
+                setTasks(previous => previous ? previous.filter(tsk => tsk.id !== task.id) : null);
+                setTasksDueToday(previous => previous.filter(tsk => tsk.id !== task.id));
+                setTasksDueTomorrow(previous => previous.filter(tsk => tsk.id !== task.id));
+                setTasksDueThisWeek(previous => previous.filter(tsk => tsk.id !== task.id));
+                setTasksDueLater(previous => previous.filter(tsk => tsk.id !== task.id));
+                setTasksOverdue(previous => previous.filter(tsk => tsk.id !== task.id));
+                setTasksWithoutDueDate(previous => previous.filter(tsk => tsk.id !== task.id));
+              } else {
+                console.error("Failed to complete task:", response.statusText);
+                toast.error("Failed to complete task. Please try again later.");
+              }
+            } catch (error) {
+              console.error("Error completing task:", error);
+              toast.error("Error completing task. Please try again later.");
+            }
           }}
         />
       </div>
@@ -229,6 +252,7 @@ export default function TasksPage() {
         <p>Keep on top of your to-do list.</p>
 
         <h2 className="mt-6 mb-3 text-sm">
+          <Spinner className="inline mr-2" />
           <i>Loading tasks...</i>
         </h2>
       </>
