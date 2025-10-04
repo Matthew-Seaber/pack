@@ -1,9 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
+import { getUser } from "@/lib/auth";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { user_id } = await request.json();
+    // Gets user here instead of the client for security
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not signed in" }, { status: 401 });
+    }
+
+    const user_id = user.user_id;
 
     const { data: tasksData, error: fetchError } = await supabaseMainAdmin
       .from("tasks")
