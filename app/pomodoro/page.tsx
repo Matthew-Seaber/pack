@@ -164,7 +164,7 @@ function PomodoroPage() {
       toast.info("Focus session complete. Enjoy your well deserved break!");
       if (user) {
         try {
-          const res = await fetch("/api/user_stats/save_stats", {
+          const res = await fetch("/api/user_stats/save_stats", { // Using "res" because "response" has already been used earlier
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
