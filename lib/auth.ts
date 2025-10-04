@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { supabaseMainAdmin } from '@/lib/supabaseMainAdmin';
 
 export async function getUser() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('sessionCookie');
   
   if (!sessionCookie) {
@@ -58,7 +58,7 @@ export async function isAuthenticated(): Promise<boolean> {
 }
 
 export async function logout(): Promise<void> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('sessionCookie');
 
   // Delete session from database
