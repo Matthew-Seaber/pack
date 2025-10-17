@@ -15,7 +15,7 @@ export async function GET() {
 
     const { data: tasksData, error: fetchError } = await supabaseMainAdmin
       .from("tasks")
-      .select("task_id, task_name, task_description, due, priority")
+      .select("task_id, task_name, task_description, due, priority, subject_id")
       .eq("user_id", user_id);
 
     if (fetchError) {
@@ -29,9 +29,10 @@ export async function GET() {
     const tasks = tasksData.map((task) => ({
       id: task.task_id,
       name: task.task_name,
-      description: task.task_description,
-      due: task.due,
+      description: task.task_description || null,
+      due: task.due || null,
       priority: task.priority,
+      subject: task.subject_id || null,
     }));
 
     if (tasks.length === 0) {
