@@ -8,7 +8,10 @@ export async function GET() {
     const user = await getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "User not signed in" }, { status: 401 });
+      return NextResponse.json(
+        { error: "User not signed in" },
+        { status: 401 }
+      );
     }
 
     const user_id = user.user_id;
@@ -36,9 +39,9 @@ export async function GET() {
     }));
 
     if (tasks.length === 0) {
-      return NextResponse.json({ 
-        tasks: [], 
-        message: "No tasks found" 
+      return NextResponse.json({
+        tasks: [],
+        message: "No tasks found",
       });
     }
 
