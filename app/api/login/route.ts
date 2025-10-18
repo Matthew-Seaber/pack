@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   await supabaseMainAdmin.from("sessions").delete().eq("user_id", user.user_id);
 
   const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
 
   await supabaseMainAdmin.from("sessions").insert({
     user_id: user.user_id,
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
   // HTTP cookie for session
   const res = NextResponse.json({ message: "Successfully logged in" });
-  const cookieAge = 7; // In days
+  const cookieAge = 30; // In days
 
   res.cookies.set({
     name: "sessionCookie",
