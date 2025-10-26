@@ -16,15 +16,30 @@ import {
   Dumbbell,
   Building,
   LucideIcon,
+  Newspaper,
+  Clock,
+  PanelBottomOpen,
 } from "lucide-react";
+import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SubjectsPage() {
   interface Subject {
     id: string;
     name: string;
+    description: string;
     examBoard: string;
     papers: string;
     examDates: ExamDate[];
@@ -36,6 +51,9 @@ export default function SubjectsPage() {
   }
 
   const [subjects, setSubjects] = useState<Subject[] | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [sortType, setSortType] = useState<string>("Alphabetical");
+  const [filterType, setFilterType] = useState<string>("None");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -120,43 +138,161 @@ export default function SubjectsPage() {
     }
   };
 
-  // Function to get the next exam for a subject
-  const getNextExam = (examDates: ExamDate[]): ExamDate | null => {
+  // Function to get the next or final exam for a subject
+  const getExam = (
+    examDates: ExamDate[],
+    type: "next" | "final"
+  ): ExamDate | null => {
     if (!examDates || examDates.length === 0) return null;
 
     const now = new Date();
-    const upcomingExams = examDates.filter(
-      (exam) => new Date(exam.examDate) > now
-    );
+    let filteredExams = examDates;
 
-    // Bubble sort to sort based on exam date
-    for (let i = 0; i < upcomingExams.length; i++) {
-      for (let j = 0; j < upcomingExams.length - i - 1; j++) {
-        if (
-          new Date(upcomingExams[j].examDate).getTime() >
-          new Date(upcomingExams[j + 1].examDate).getTime()
-        ) {
-          [upcomingExams[j], upcomingExams[j + 1]] = [
-            upcomingExams[j + 1],
-            upcomingExams[j],
-          ];
-        }
+    if (type === "next") {
+      filteredExams = examDates.filter((exam) => new Date(exam.examDate) > now);
+    }
+
+    if (filteredExams.length === 0) return null;
+
+    // Sorts by exam date using bubble sort
+    for (let i = 0; i < filteredExams.length; i++) {
+      for (let j = 0; j < filteredExams.length - i - 1; j++) {
+      if (
+        new Date(filteredExams[j].examDate).getTime() >
+        new Date(filteredExams[j + 1].examDate).getTime()
+      ) {
+        [filteredExams[j], filteredExams[j + 1]] = [
+        filteredExams[j + 1],
+        filteredExams[j],
+        ];
+      }
       }
     }
 
-    return upcomingExams.length > 0 ? upcomingExams[0] : null;
+    return type === "next" ? filteredExams[0] : filteredExams[filteredExams.length - 1];
+  };
+
+  // Sidebar content component
+  const SidebarContent = () => {
+    if (!selectedSubject) {
+      return (
+        <div className="space-y-4">
+          <div className="flex gap-2 font-semibold">
+            <Button className="flex-1" variant="default">
+              <span className="mr-2">+</span>
+              ADD SUBJECT
+            </Button>
+            <Button className="text-foreground" variant="destructive">
+              <span className="mr-2">-</span>
+              REMOVE
+            </Button>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4 text-center py-12">
+            <p className="text-muted-foreground">
+              Select a subject to view details.
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Custom Insights</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">Blah blah blah</p>
+          </div>
+        </div>
+      );
+    }
+
+    const nextExam = getExam(selectedSubject.examDates, "next");
+    const finalExam = getExam(selectedSubject.examDates, "final");
+
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2 font-semibold">
+          <Button className="flex-1" variant="default">
+            <span className="mr-2">+</span>
+            ADD SUBJECT
+          </Button>
+          <Button className="text-foreground" variant="destructive">
+            <span className="mr-2">-</span>
+            REMOVE
+          </Button>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-2">
+            {selectedSubject.examBoard} {selectedSubject.name}
+          </h3>
+          <div className="space-y-2 text-sm">
+            {nextExam && (new Date(nextExam.examDate).getTime() - new Date().getTime() <= 21 * 24 * 60 * 60 * 1000) && ( // Within next 3 weeks
+              <div className="flex gap-2">
+              <Badge
+                backgroundColour="rgba(239, 68, 68, 0.2)"
+                textColour="#F87171"
+                className="w-auto px-3 py-1"
+              >
+                Exam soon
+              </Badge>
+              </div>
+            )}
+            {nextExam && (
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4" strokeWidth={2} />
+                <p>Next exam: {formatTimestamp(nextExam.examDate)}</p>
+              </div>
+            )}
+            {finalExam && (
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4" strokeWidth={2} />
+                <p>Final exam: {formatTimestamp(finalExam.examDate)}</p>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <Newspaper className="w-4 h-4" strokeWidth={2} />
+              <p>{selectedSubject.papers} papers</p>
+            </div>
+            {selectedSubject.description && (
+              <p className="text-muted-foreground text-xs italic">
+                {selectedSubject.description}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <Button className="w-full">View Specification</Button>
+            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+              View Resources
+            </Button>
+            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+              View Past Papers
+            </Button>
+            <Button variant="destructive" className="w-full">
+              Report Issue
+            </Button>
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Custom Insights</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Blah blah blah</p>
+        </div>
+      </div>
+    );
   };
 
   // Function to render a subject (with colours based on subject name)
   const renderSubject = (subject: Subject) => {
     const extras = getSubjectExtras(subject.name);
     const IconComponent = extras.icon;
-    const nextExam = getNextExam(subject.examDates);
+    const nextExam = getExam(subject.examDates, "next");
 
     return (
       <div
         key={subject.id}
-        className={`relative border-4 ${extras.border} rounded-xl p-6 cursor-pointer`}
+        onClick={() => setSelectedSubject(subject)}
+        className={`relative border-4 ${extras.border} rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
+          selectedSubject?.id === subject.id ? "ring-2 ring-primary" : "" // Adds outline when selected
+        }`}
       >
         <div className="absolute top-5 right-5">
           <IconComponent className="w-8 h-8" strokeWidth={1.5} />
@@ -200,7 +336,7 @@ export default function SubjectsPage() {
     );
   };
 
-  // Get user data using API and then get subjects
+  // Get user data using API
   React.useEffect(() => {
     const fetchUserSubjects = async () => {
       try {
@@ -215,7 +351,6 @@ export default function SubjectsPage() {
           }
 
           // Gets subjects and their exam dates via API call
-
           const subjectsResponse = await fetch(
             "/api/subjects/get_subjects_full",
             {
@@ -242,7 +377,7 @@ export default function SubjectsPage() {
           return;
         }
       } catch (error) {
-        console.error("Error getting user or tasks:", error);
+        console.error("Error getting user or subjects:", error);
       } finally {
         setLoading(false);
       }
@@ -266,18 +401,89 @@ export default function SubjectsPage() {
 
   return (
     <>
-      <h2 className="text-3xl font-semibold mb-3">My Subjects</h2>
+      <div className="flex gap-6 pb-24 xl:pb-0">
+        <div className="flex-1">
+          <h2 className="text-3xl font-semibold mb-4">My Subjects</h2>
 
-      {subjects && subjects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
-          {subjects.map((subject) => renderSubject(subject))}
+          <div className="flex flex-col xl:flex-row gap-3 mb-5">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search subjects..."
+                className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div className="bg-card border border-border rounded-lg px-4 h-[42px] flex items-center gap-4 text-sm xl:w-auto">
+              <div className="flex items-center gap-2">
+                <label className="text-muted-foreground" htmlFor="sort">
+                  Sort:
+                </label>
+                <Select value={sortType} onValueChange={setSortType}>
+                  <SelectTrigger id="sort" className="border-0 p-0">
+                    <SelectValue placeholder="Alphabetical" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Alphabetical">Alphabetical</SelectItem>
+                    <SelectItem value="Exam Date">Exam Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-muted-foreground" htmlFor="filter">
+                  Filter:
+                </label>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger id="filter" className="border-0 p-0">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Exam Board">Exam Board</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {subjects && subjects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {subjects.map((subject) => renderSubject(subject))}
+            </div>
+          ) : (
+            <div className="mt-5 p-6 text-center text-gray-500">
+              <p>You have no subjects linked to your profile.</p>
+              <Button className="mt-3">Add Subject</Button>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="mt-5 p-6 text-center text-gray-500">
-          <p>You have no subjects linked to your profile.</p>
-          <Button className="mt-3">Add Subject</Button>
+
+        <div className="hidden md:block w-80">
+          <SidebarContent />
         </div>
-      )}
+      </div>
+
+      <div className="md:hidden lg:hidden xl:hidden">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Fab>
+              <PanelBottomOpen />
+            </Fab>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>More Information</DrawerTitle>
+              <DrawerDescription>
+                Quick actions and personalised recommendations.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto">
+              <SidebarContent />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
+
       <Toaster />
     </>
   );

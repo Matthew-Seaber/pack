@@ -614,7 +614,7 @@ export default function TasksPage() {
                     Priority
                   </Label>
                   <Select value={taskPriority} onValueChange={setTaskPriority}>
-                    <SelectTrigger>
+                    <SelectTrigger id="priority">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
@@ -630,7 +630,7 @@ export default function TasksPage() {
                     Subject
                   </Label>
                   <Select value={taskSubject} onValueChange={setTaskSubject}>
-                    <SelectTrigger>
+                    <SelectTrigger id="subject">
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
                     <SelectContent>

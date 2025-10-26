@@ -43,7 +43,7 @@ export async function GET() {
     const { data: courseData, error: courseFetchError } =
       await supabaseMainAdmin
         .from("courses")
-        .select("course_id, course_name, exam_board, papers, final_year")
+        .select("course_id, course_name, course_description, exam_board, papers, final_year")
         .in("course_id", courseIDs);
 
     if (courseFetchError) {
@@ -89,6 +89,7 @@ export async function GET() {
       return {
         id: subject.subject_id,
         name: course?.course_name || "Course name error",
+        description: course?.course_description || "",
         examBoard: course?.exam_board || "",
         papers: course?.papers || "",
         examDates: examDatesByCourse.get(subject.course_id) || [],
