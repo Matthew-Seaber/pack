@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, AlignLeft, Notebook, Plus, ChevronDownIcon } from "lucide-react";
+import {
+  Clock,
+  AlignLeft,
+  Notebook,
+  Plus,
+  ChevronDownIcon,
+} from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Sheet,
@@ -19,8 +25,20 @@ import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 
 export default function TasksPage() {
@@ -78,92 +96,92 @@ export default function TasksPage() {
   };
 
   // Function to categorize a task based on its due date/time
-  const categorizeTask = React.useCallback((task: Task): 'overdue' | 'today' | 'tomorrow' | 'thisWeek' | 'later' | 'noDate' => {
-    if (!task.due) {
-      return 'noDate';
-    }
+  const categorizeTask = React.useCallback(
+    (
+      task: Task
+    ): "overdue" | "today" | "tomorrow" | "thisWeek" | "later" | "noDate" => {
+      if (!task.due) {
+        return "noDate";
+      }
 
-    const dueDate = new Date(task.due);
-    const today = new Date();
+      const dueDate = new Date(task.due);
+      const today = new Date();
 
-    // Due today
-    if (
-      dueDate.getFullYear() === today.getFullYear() &&
-      dueDate.getMonth() === today.getMonth() &&
-      dueDate.getDate() === today.getDate()
-    ) {
-      return 'today';
-    }
+      // Due today
+      if (
+        dueDate.getFullYear() === today.getFullYear() &&
+        dueDate.getMonth() === today.getMonth() &&
+        dueDate.getDate() === today.getDate()
+      ) {
+        return "today";
+      }
 
-    // Due tomorrow
-    if (
-      dueDate.getFullYear() === today.getFullYear() &&
-      dueDate.getMonth() === today.getMonth() &&
-      dueDate.getDate() === today.getDate() + 1
-    ) {
-      return 'tomorrow';
-    }
+      // Due tomorrow
+      if (
+        dueDate.getFullYear() === today.getFullYear() &&
+        dueDate.getMonth() === today.getMonth() &&
+        dueDate.getDate() === today.getDate() + 1
+      ) {
+        return "tomorrow";
+      }
 
-    // Due this week (within 7 days)
-    if (
-      dueDate > today &&
-      dueDate <=
-        new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() + 7
-        )
-    ) {
-      return 'thisWeek';
-    }
+      // Due this week (within 7 days)
+      if (
+        dueDate > today &&
+        dueDate <=
+          new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7)
+      ) {
+        return "thisWeek";
+      }
 
-    // Due later (more than 7 days away)
-    if (
-      dueDate >
-      new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() + 7
-      )
-    ) {
-      return 'later';
-    }
+      // Due later (more than 7 days away)
+      if (
+        dueDate >
+        new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7)
+      ) {
+        return "later";
+      }
 
-    // Overdue
-    if (dueDate < today) {
-      return 'overdue';
-    }
+      // Overdue
+      if (dueDate < today) {
+        return "overdue";
+      }
 
-    return 'noDate';
-  }, []);
+      return "noDate";
+    },
+    []
+  );
 
   // Function to add a task to the appropriate due category
-  const addTaskToCategory = React.useCallback((task: Task, category: ReturnType<typeof categorizeTask>) => {
-    switch (category) {
-      case 'overdue':
-        setTasksOverdue((previous) => [...previous, task]);
-        break;
-      case 'today':
-        setTasksDueToday((previous) => [...previous, task]);
-        break;
-      case 'tomorrow':
-        setTasksDueTomorrow((previous) => [...previous, task]);
-        break;
-      case 'thisWeek':
-        setTasksDueThisWeek((previous) => [...previous, task]);
-        break;
-      case 'later':
-        setTasksDueLater((previous) => [...previous, task]);
-        break;
-      case 'noDate':
-        setTasksWithoutDueDate((previous) => [...previous, task]);
-        break;
-      default:
-        setTasksWithoutDueDate((previous) => [...previous, task]);
-        console.log("Task categorisation error", category);
-        break;
-    }
-  }, []);
+  const addTaskToCategory = React.useCallback(
+    (task: Task, category: ReturnType<typeof categorizeTask>) => {
+      switch (category) {
+        case "overdue":
+          setTasksOverdue((previous) => [...previous, task]);
+          break;
+        case "today":
+          setTasksDueToday((previous) => [...previous, task]);
+          break;
+        case "tomorrow":
+          setTasksDueTomorrow((previous) => [...previous, task]);
+          break;
+        case "thisWeek":
+          setTasksDueThisWeek((previous) => [...previous, task]);
+          break;
+        case "later":
+          setTasksDueLater((previous) => [...previous, task]);
+          break;
+        case "noDate":
+          setTasksWithoutDueDate((previous) => [...previous, task]);
+          break;
+        default:
+          setTasksWithoutDueDate((previous) => [...previous, task]);
+          console.log("Task categorisation error", category);
+          break;
+      }
+    },
+    []
+  );
 
   // Function to handle adding a new task
   const handleAddTask = async () => {
@@ -179,7 +197,7 @@ export default function TasksPage() {
       // Combine date and time into a timestampz
       let dueTimestamp: string | null = null;
       const now = new Date();
-      
+
       if (date) {
         const combinedDate = new Date(date);
         if (time) {
@@ -256,11 +274,16 @@ export default function TasksPage() {
     });
 
     // Checks if time is 23:59:59 (i.e. user didn't set a time because there's no option to add seconds)
-    const isEndOfDay = date.getHours() === 23 && date.getMinutes() === 59 && date.getSeconds() === 59;
+    const isEndOfDay =
+      date.getHours() === 23 &&
+      date.getMinutes() === 59 &&
+      date.getSeconds() === 59;
 
     // Include year if it's not due the current year
     if (inputYear !== year) {
-      return isEndOfDay ? `${day} ${month} ${inputYear}` : `${day} ${month} ${inputYear}, ${time}`;
+      return isEndOfDay
+        ? `${day} ${month} ${inputYear}`
+        : `${day} ${month} ${inputYear}, ${time}`;
     } else {
       return isEndOfDay ? `${day} ${month}` : `${day} ${month}, ${time}`;
     }
@@ -268,15 +291,15 @@ export default function TasksPage() {
 
   // Function to render a task (with colours based on its priority)
   const renderTask = (task: Task) => {
-    const colors =
+    const colours =
       priorityColours[task.priority as keyof typeof priorityColours] ||
       priorityColours[4]; // Fallback to grey if error getting a task's corresponding colour
 
     return (
       <div
         key={task.id}
-        className={`flex items-start justify-between gap-4 ${colors.bg} rounded-md mt-5 pt-5 pb-3 px-6`}
-        style={{ color: colors.text }}
+        className={`flex items-start justify-between gap-4 ${colours.bg} rounded-md mt-5 pt-5 pb-3 px-6`}
+        style={{ color: colours.text }}
       >
         <div className="flex-1 min-w-0">
           <p
@@ -296,15 +319,17 @@ export default function TasksPage() {
           {task.subject && (
             <div className="flex items-center gap-3 pb-2">
               <Notebook className="w-5 h-5" />
-                <p
-                  className="text-sm font-regular"
-                  style={{
-                    wordBreak: "break-word",
-                    overflowWrap: "break-word",
-                  }}
-                >
-                  <i>{subjectMap.get(task.subject) || "Subject course not found"}</i>
-                </p>
+              <p
+                className="text-sm font-regular"
+                style={{
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                }}
+              >
+                <i>
+                  {subjectMap.get(task.subject) || "Subject course not found"}
+                </i>
+              </p>
             </div>
           )}
           {task.description && (
@@ -325,7 +350,7 @@ export default function TasksPage() {
         </div>
         <div
           className="flex-shrink-0 w-7 h-7 rounded-full border-2 cursor-pointer hover:bg-white/20 transition-colors"
-          style={{ borderColor: colors.text }}
+          style={{ borderColor: colours.text }}
           onClick={async () => {
             try {
               const response = await fetch("/api/tasks/complete_task", {
@@ -410,24 +435,24 @@ export default function TasksPage() {
 
             for (const task of tasksData.tasks) {
               const category = categorizeTask(task);
-              
+
               switch (category) {
-                case 'overdue':
+                case "overdue":
                   tempTasksOverdue.push(task);
                   break;
-                case 'today':
+                case "today":
                   tempTasksDueToday.push(task);
                   break;
-                case 'tomorrow':
+                case "tomorrow":
                   tempTasksDueTomorrow.push(task);
                   break;
-                case 'thisWeek':
+                case "thisWeek":
                   tempTasksDueThisWeek.push(task);
                   break;
-                case 'later':
+                case "later":
                   tempTasksDueLater.push(task);
                   break;
-                case 'noDate':
+                case "noDate":
                   tempTasksWithoutDueDate.push(task);
                   break;
                 default:
@@ -451,13 +476,16 @@ export default function TasksPage() {
           });
 
           if (!subjectsResponse.ok) {
-            console.error("Error getting subjects:", subjectsResponse.statusText);
+            console.error(
+              "Error getting subjects:",
+              subjectsResponse.statusText
+            );
             toast.error("Error getting your subjects. Please try again later.");
             setSubjects(null);
           } else {
             const subjectsData = await subjectsResponse.json();
             setSubjects(subjectsData.subjects);
-            
+
             // Create a map of 'subject_id's to 'course_name's for quick lookup when rendering tasks
             const map = new Map<string, string>();
             subjectsData.subjects.forEach((subject: Subject) => {
@@ -516,8 +544,8 @@ export default function TasksPage() {
               <Label className="px-1" htmlFor="name">
                 Name *
               </Label>
-              <Input 
-                id="name" 
+              <Input
+                id="name"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
               />
@@ -526,8 +554,8 @@ export default function TasksPage() {
               <Label className="px-1" htmlFor="description">
                 Description
               </Label>
-              <Input 
-                id="description" 
+              <Input
+                id="description"
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
               />
