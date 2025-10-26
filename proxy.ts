@@ -3,9 +3,9 @@ import type { NextRequest } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 
 // Routes which require user to be logged in
-const protectedRoutes = ["/dashboard", "/settings", "/tasks"];
+const protectedRoutes = ["/dashboard", "/settings", "/tasks", "/subjects"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -37,7 +37,8 @@ export async function middleware(request: NextRequest) {
     const now = new Date();
     const expiryDate = new Date(session.expires);
 
-    if (now > expiryDate) { // If session has expired
+    if (now > expiryDate) {
+      // If session has expired
       await supabaseMainAdmin
         .from("sessions")
         .delete()
@@ -56,8 +57,9 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-export const config = { // Ensures efficient use of middleware - makes sure it doesn't run on the following files/paths
-    matcher: [
-        "/((?!api|_next/static|_next/image|favicon.ico|manifest.json|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.ico$|.*\\.css$|.*\\.js$|.*\\.json$).*)",
-    ],
+export const config = {
+  // Ensures efficient use of middleware - makes sure it doesn't run on the following files/paths
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.json|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.ico$|.*\\.css$|.*\\.js$|.*\\.json$).*)",
+  ],
 };
