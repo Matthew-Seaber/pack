@@ -285,7 +285,7 @@ function PomodoroPage() {
 
   return (
     <>
-      <div className="container flex justify-between">
+      <div className="flex justify-between">
         <h2 className="text-2xl font-semibold mb-4">Pomodoro Timer</h2>
         {isDesktop ? (
           <Dialog open={open} onOpenChange={setOpen}>
