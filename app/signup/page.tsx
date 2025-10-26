@@ -470,7 +470,7 @@ export default function SignupPage() {
                           </option>
                           <option value="Food Science">Food Science</option>
                           <option value="French">French</option>
-                          <option value="Further Maths">Further Maths</option>
+                          <option value="Further Mathematics">Further Mathematics</option>
                           <option value="Geography">Geography</option>
                           <option value="German">German</option>
                           <option value="Graphics Communications">
