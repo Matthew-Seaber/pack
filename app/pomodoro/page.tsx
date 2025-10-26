@@ -73,6 +73,76 @@ function PomodoroPage() {
   const [currentTime, setCurrentTime] = React.useState(focusLength * 60);
   const [mode, setMode] = React.useState<"focus" | "break">("focus");
 
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const startTimer = React.useCallback(() => {
+    const settingsButtons = document.querySelectorAll(
+      "#settingsButton"
+    ) as NodeListOf<HTMLButtonElement>;
+
+    settingsButtons.forEach((btn) => {
+      btn.disabled = true;
+      btn.classList.add("bg-gray-600");
+    });
+
+    setTimerStatus("running");
+    toast.info("Timer started.");
+  }, []);
+
+  const sectionComplete = React.useCallback(async () => {
+    setTimerStatus("stopped");
+
+    if (mode === "focus") {
+      toast.info("Focus session complete. Enjoy your well deserved break!");
+      if (user) {
+        try {
+          const res = await fetch("/api/user_stats/save_stats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: user.user_id,
+              dataToChange: "pomodoro",
+              timeRevised: focusLength,
+            }),
+          });
+
+          if (res.ok) {
+            toast.success(
+              `${focusLength} minutes have been added to your stats.`
+            );
+          } else {
+            toast.error("Failed to save stats to profile.");
+            const errorData = await res.json();
+            console.error("Stats saving error:", errorData.message);
+          }
+        } catch (error) {
+          console.error("Stats saving error (2):", error);
+          toast.error("Failed to save stats to profile.");
+        }
+      } else {
+        toast.info("Timer ended. Sign in to track your progress.");
+      }
+
+      if (breakLength > 0) {
+        setMode("break");
+        setCurrentTime(breakLength * 60);
+      } else {
+        setCurrentTime(focusLength * 60);
+      }
+
+    } else {
+      toast.info("Break over. Time for another productive focus session!");
+      setMode("focus");
+      setCurrentTime(focusLength * 60);
+    }
+
+    startTimer();
+  }, [mode, user, focusLength, breakLength, startTimer]);
+
   React.useEffect(() => {
     if (timerStatus === "stopped") {
       setCurrentTime(mode === "focus" ? focusLength * 60 : breakLength * 60);
@@ -102,7 +172,7 @@ function PomodoroPage() {
         clearInterval(interval);
       }
     };
-  }, [timerStatus, currentTime, mode, focusLength]);
+  }, [timerStatus, currentTime, sectionComplete]);
 
   // Validation for new settings
   const submitSettings = () => {
@@ -149,76 +219,6 @@ function PomodoroPage() {
     if (validCounter === 2) {
       setOpen(false);
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-
-  const sectionComplete = async () => {
-    setTimerStatus("stopped");
-
-    if (mode === "focus") {
-      toast.info("Focus session complete. Enjoy your well deserved break!");
-      if (user) {
-        try {
-          const res = await fetch("/api/user_stats/save_stats", { // Using "res" because "response" has already been used earlier
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_id: user.user_id,
-              dataToChange: "pomodoro",
-              timeRevised: focusLength,
-            }),
-          });
-
-          if (res.ok) {
-            toast.success(
-              `${focusLength} minutes have been added to your stats.`
-            );
-          } else {
-            toast.error("Failed to save stats to profile.");
-            const errorData = await res.json();
-            console.error("Stats saving error:", errorData.message);
-          }
-        } catch (error) {
-          console.error("Stats saving error (2):", error);
-          toast.error("Failed to save stats to profile.");
-        }
-      } else {
-        toast.info("Timer ended. Sign in to track your progress.");
-      }
-
-      if (breakLength > 0) {
-        setMode("break");
-        setCurrentTime(breakLength * 60);
-      } else {
-        setCurrentTime(focusLength * 60);
-      }
-
-    } else {
-      toast.info("Break over. Time for another productive focus session!");
-      setMode("focus");
-      setCurrentTime(focusLength * 60);
-    }
-
-    startTimer();
-  };
-
-  const startTimer = () => {
-    const settingsButtons = document.querySelectorAll(
-      "#settingsButton"
-    ) as NodeListOf<HTMLButtonElement>;
-
-    settingsButtons.forEach((btn) => {
-      btn.disabled = true;
-      btn.classList.add("bg-gray-600");
-    });
-
-    setTimerStatus("running");
-    toast.info("Timer started.");
   };
 
   const togglePauseTimer = () => {
