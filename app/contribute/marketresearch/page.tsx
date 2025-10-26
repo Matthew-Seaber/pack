@@ -154,8 +154,7 @@ function MarketResearchPage() {
         Pack Market Research
       </h1>
       <h2 className="text-1xl pb-5 text-center">
-        Fill in the short form below
-        to help form how Pack is developed!*
+        Fill in the short form below to help form how Pack is developed!*
       </h2>
 
       <Form {...form}>
@@ -1146,7 +1145,8 @@ function MarketResearchPage() {
       </Form>
 
       <p className="text-center text-muted-foreground">
-        *Giveaway ended at 9AM on the 15th August. The winner has been contacted and we&apos;re waiting for a response. If they don&apos;t respond within 5 days, a new winner will be selected.
+        *Giveaway ended at 9AM on the 15th August. The winner has successfully
+        received the Amazon gift card prize.
       </p>
 
       <Toaster />
