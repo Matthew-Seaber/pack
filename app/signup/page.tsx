@@ -210,9 +210,7 @@ export default function SignupPage() {
         });
         if (res.ok) {
           toast.success(`Success! Redirecting you to the dashboard...`);
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 500);
+          router.push("/dashboard");
         } else {
           toast.error("Failed to create user. Please try again.");
           const errorData = await res.json();

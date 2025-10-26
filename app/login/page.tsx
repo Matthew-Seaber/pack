@@ -23,9 +23,7 @@ export default function LoginPage() {
       });
       if (res.ok) {
         toast.success(`Success! Redirecting you to the dashboard...`);
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 500);
+        router.push("/dashboard");
       } else {
         toast.error("Login incorrect. Please check your username and password.");
       }
