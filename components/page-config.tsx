@@ -24,7 +24,7 @@ export default function ConditionalContent({
     return (
       <Providers>
         <Navbar />
-        <main className="container py-10">{children}</main>
+        <main className="max-w-[1600px] mx-auto px-6 py-10">{children}</main>
       </Providers>
     );
   }
@@ -33,7 +33,7 @@ export default function ConditionalContent({
   return (
     <Providers>
       <MainNavbar />
-      <main className="container py-10">{children}</main>
+      <main className="max-w-[1600px] mx-auto px-6 py-10">{children}</main>
     </Providers>
   );
 }
