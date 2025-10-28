@@ -19,6 +19,7 @@ import {
   Newspaper,
   Clock,
   PanelBottomOpen,
+  GraduationCap,
 } from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
@@ -33,7 +34,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SubjectsPage() {
   interface Subject {
@@ -43,6 +50,8 @@ export default function SubjectsPage() {
     examBoard: string;
     papers: string;
     examDates: ExamDate[];
+    teacherName: string | null;
+    teacherEmail: string | null;
   }
 
   interface ExamDate {
@@ -157,19 +166,21 @@ export default function SubjectsPage() {
     // Sorts by exam date using bubble sort
     for (let i = 0; i < filteredExams.length; i++) {
       for (let j = 0; j < filteredExams.length - i - 1; j++) {
-      if (
-        new Date(filteredExams[j].examDate).getTime() >
-        new Date(filteredExams[j + 1].examDate).getTime()
-      ) {
-        [filteredExams[j], filteredExams[j + 1]] = [
-        filteredExams[j + 1],
-        filteredExams[j],
-        ];
-      }
+        if (
+          new Date(filteredExams[j].examDate).getTime() >
+          new Date(filteredExams[j + 1].examDate).getTime()
+        ) {
+          [filteredExams[j], filteredExams[j + 1]] = [
+            filteredExams[j + 1],
+            filteredExams[j],
+          ];
+        }
       }
     }
 
-    return type === "next" ? filteredExams[0] : filteredExams[filteredExams.length - 1];
+    return type === "next"
+      ? filteredExams[0]
+      : filteredExams[filteredExams.length - 1];
   };
 
   // Sidebar content component
@@ -223,17 +234,19 @@ export default function SubjectsPage() {
             {selectedSubject.examBoard} {selectedSubject.name}
           </h3>
           <div className="space-y-2 text-sm">
-            {nextExam && (new Date(nextExam.examDate).getTime() - new Date().getTime() <= 21 * 24 * 60 * 60 * 1000) && ( // Within next 3 weeks
-              <div className="flex gap-2">
-              <Badge
-                backgroundColour="rgba(239, 68, 68, 0.2)"
-                textColour="#F87171"
-                className="w-auto px-3 py-1"
-              >
-                Exam soon
-              </Badge>
-              </div>
-            )}
+            {nextExam &&
+              new Date(nextExam.examDate).getTime() - new Date().getTime() <=
+                21 * 24 * 60 * 60 * 1000 && ( // Within next 3 weeks
+                <div className="flex gap-2">
+                  <Badge
+                    backgroundColour="rgba(239, 68, 68, 0.2)"
+                    textColour="#F87171"
+                    className="w-auto px-3 py-1"
+                  >
+                    Exam soon
+                  </Badge>
+                </div>
+              )}
             {nextExam && (
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4" strokeWidth={2} />
@@ -250,6 +263,20 @@ export default function SubjectsPage() {
               <Newspaper className="w-4 h-4" strokeWidth={2} />
               <p>{selectedSubject.papers} papers</p>
             </div>
+            {selectedSubject.teacherName && (
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-4 h-4" strokeWidth={2} />
+                <p>
+                  Teacher:{" "}
+                  <a
+                  href={`mailto:${selectedSubject.teacherEmail}`}
+                  className="underline"
+                  >
+                  {selectedSubject.teacherName}
+                  </a>
+                </p>
+              </div>
+            )}
             {selectedSubject.description && (
               <p className="text-muted-foreground text-xs italic">
                 {selectedSubject.description}
@@ -258,11 +285,43 @@ export default function SubjectsPage() {
           </div>
 
           <div className="mt-4 space-y-2">
-            <Button className="w-full">View Specification</Button>
-            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+            <Button
+              className="w-full"
+              onClick={() =>
+                router.push(
+                  "/specification/" +
+                    selectedSubject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    selectedSubject.examBoard.toLowerCase()
+                )
+              }
+            >
+              View Specification
+            </Button>
+            <Button
+              className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
+              onClick={() =>
+                router.push(
+                  "/resources/" +
+                    selectedSubject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    selectedSubject.examBoard.toLowerCase()
+                )
+              }
+            >
               View Resources
             </Button>
-            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+            <Button
+              className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
+              onClick={() =>
+                router.push(
+                  "/past-papers/" +
+                    selectedSubject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    selectedSubject.examBoard.toLowerCase()
+                )
+              }
+            >
               View Past Papers
             </Button>
             <Button variant="destructive" className="w-full">
@@ -290,7 +349,9 @@ export default function SubjectsPage() {
       <div
         key={subject.id}
         onClick={() => setSelectedSubject(subject)}
-        className={`relative border-4 ${extras.border} rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
+        className={`relative border-4 ${
+          extras.border
+        } rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
           selectedSubject?.id === subject.id ? "ring-2 ring-primary" : "" // Adds outline when selected
         }`}
       >
@@ -309,18 +370,21 @@ export default function SubjectsPage() {
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              onClick={() => router.push("/specification/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
             >
               Specification
             </Button>
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              onClick={() => router.push("/resources/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
             >
               Resources
             </Button>
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              onClick={() => router.push("/past-papers/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
             >
               Past papers
             </Button>
@@ -439,7 +503,7 @@ export default function SubjectsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Exam Board">Exam Board</SelectItem>
+                    <SelectItem value="Exam Board">Remaining Exam</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

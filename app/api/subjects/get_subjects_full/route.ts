@@ -19,7 +19,7 @@ export async function GET() {
     const { data: subjectsData, error: subjectFetchError } =
       await supabaseMainAdmin
         .from("subjects")
-        .select("subject_id, course_id")
+        .select("subject_id, course_id, teacher_name, teacher_email")
         .eq("user_id", user_id);
 
     if (subjectFetchError) {
@@ -43,7 +43,9 @@ export async function GET() {
     const { data: courseData, error: courseFetchError } =
       await supabaseMainAdmin
         .from("courses")
-        .select("course_id, course_name, course_description, exam_board, papers, final_year")
+        .select(
+          "course_id, course_name, course_description, exam_board, papers, final_year"
+        )
         .in("course_id", courseIDs);
 
     if (courseFetchError) {
@@ -70,7 +72,10 @@ export async function GET() {
     }
 
     // Group exam dates by course_id
-    const examDatesByCourse = new Map<number, Array<{ examDate: string; type: string }>>();
+    const examDatesByCourse = new Map<
+      number,
+      Array<{ examDate: string; type: string }>
+    >();
     examDatesData?.forEach((exam) => {
       const dates = examDatesByCourse.get(exam.course_id) || [];
       dates.push({ examDate: exam.exam_date, type: exam.type });
@@ -93,6 +98,8 @@ export async function GET() {
         examBoard: course?.exam_board || "",
         papers: course?.papers || "",
         examDates: examDatesByCourse.get(subject.course_id) || [],
+        teacherName: subject.teacher_name || "",
+        teacherEmail: subject.teacher_email || "",
       };
     });
 
