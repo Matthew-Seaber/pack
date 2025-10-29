@@ -269,10 +269,10 @@ export default function SubjectsPage() {
                 <p>
                   Teacher:{" "}
                   <a
-                  href={`mailto:${selectedSubject.teacherEmail}`}
-                  className="underline"
+                    href={`mailto:${selectedSubject.teacherEmail}`}
+                    className="underline"
                   >
-                  {selectedSubject.teacherName}
+                    {selectedSubject.teacherName}
                   </a>
                 </p>
               </div>
@@ -324,7 +324,32 @@ export default function SubjectsPage() {
             >
               View Past Papers
             </Button>
-            <Button variant="destructive" className="w-full">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => {
+                const emailSubject = encodeURIComponent(
+                  "Issue with Subject Page for " +
+                    selectedSubject.name +
+                    " (" +
+                    selectedSubject.examBoard +
+                    ")"
+                );
+                const emailBody = encodeURIComponent(`Dear Pack Support,
+
+      I believe there is an issue on the subjects page regarding the following subject:
+      - Subject: ${selectedSubject.name}
+      - Exam Board: ${selectedSubject.examBoard}
+
+      Details of the issue:
+      [Please describe the issue here]
+
+      Kind regards,
+      [Your Name]`);
+
+                window.location.href = `mailto:support@packapp.co.uk?subject=${emailSubject}&body=${emailBody}`;
+              }}
+            >
               Report Issue
             </Button>
           </div>
@@ -370,21 +395,42 @@ export default function SubjectsPage() {
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
-              onClick={() => router.push("/specification/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
+              onClick={() =>
+                router.push(
+                  "/specification/" +
+                    subject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    subject.examBoard.toLowerCase()
+                )
+              }
             >
               Specification
             </Button>
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
-              onClick={() => router.push("/resources/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
+              onClick={() =>
+                router.push(
+                  "/resources/" +
+                    subject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    subject.examBoard.toLowerCase()
+                )
+              }
             >
               Resources
             </Button>
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
-              onClick={() => router.push("/past-papers/" + subject.name.replace(/ /g, "-").toLowerCase() + "/" + subject.examBoard.toLowerCase())}
+              onClick={() =>
+                router.push(
+                  "/past-papers/" +
+                    subject.name.replace(/ /g, "-").toLowerCase() +
+                    "/" +
+                    subject.examBoard.toLowerCase()
+                )
+              }
             >
               Past papers
             </Button>

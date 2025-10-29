@@ -1,8 +1,8 @@
 "use client";
 
-import React, { use, useState } from "react";
+import React, { use, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Crosshair, Newspaper, PanelBottomOpen } from "lucide-react";
+import { Check, Crosshair, Newspaper, PanelBottomOpen } from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
@@ -43,6 +43,55 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     confidence: number;
     sessions: number;
   }
+
+  // Function to sort entries by index
+  const sortEntriesByTopic = useCallback(
+    (entries: SpecificationEntry[]): SpecificationEntry[] => {
+      return entries.sort((a, b) => {
+        const indexA = a.topic;
+        const indexB = b.topic;
+
+        // Check if the index starts with a number
+        const isNumericA = /^\d/.test(indexA);
+        const isNumericB = /^\d/.test(indexB);
+
+        // Puts text-based indexes after numeric ones
+        if (isNumericA && !isNumericB) return -1;
+        if (!isNumericA && isNumericB) return 1;
+
+        if (isNumericA && isNumericB) {
+          // If both are numeric
+          // Splits by dots and compares each section numerically
+          const partsA = indexA.split(".").map((part: string) => {
+            const num = parseInt(part);
+            return isNaN(num) ? part : num;
+          });
+          const partsB = indexB.split(".").map((part: string) => {
+            const num = parseInt(part);
+            return isNaN(num) ? part : num;
+          });
+
+          for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+            const partA = partsA[i] ?? 0;
+            const partB = partsB[i] ?? 0;
+
+            if (typeof partA === "number" && typeof partB === "number") {
+              // If both parts numbers
+              if (partA !== partB) return partA - partB;
+            } else {
+              const comparison = String(partA).localeCompare(String(partB)); // If 1 part is a number and the other is text-based
+              if (comparison !== 0) return comparison;
+            }
+          }
+          return 0;
+        }
+
+        // Sorts alphabetically if both are text-based
+        return indexA.localeCompare(indexB);
+      });
+    },
+    []
+  );
 
   const [specificationEntries, setSpecificationEntries] = useState<
     SpecificationEntry[] | null
@@ -148,8 +197,8 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             {selectedEntry.topic_name}
           </h3>
           <div className="space-y-2 text-sm">
-            {selectedEntry.common === true && (
-              <div className="flex gap-2">
+            <div className="flex gap-2">
+              {selectedEntry.common === true && (
                 <Badge
                   backgroundColour="rgba(59, 130, 246, 0.2)"
                   textColour="#3B82F6"
@@ -157,10 +206,8 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                 >
                   Common topic
                 </Badge>
-              </div>
-            )}
-            {selectedEntry.difficult === true && (
-              <div className="flex gap-2">
+              )}
+              {selectedEntry.difficult === true && (
                 <Badge
                   backgroundColour="rgba(239, 68, 68, 0.2)"
                   textColour="#F87171"
@@ -168,8 +215,8 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                 >
                   Difficult topic
                 </Badge>
-              </div>
-            )}
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <Crosshair className="w-4 h-4" strokeWidth={2} />
               <p>Section {selectedEntry.topic}</p>
@@ -202,7 +249,33 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
               Add Note
             </Button>
-            <Button variant="destructive" className="w-full">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => {
+                const emailSubject = encodeURIComponent(
+                  "Issue with Specification Page Entry for " +
+                    subject +
+                    " (" +
+                    examBoard +
+                    ")"
+                );
+                const emailBody = encodeURIComponent(`Dear Pack Support,
+
+      I believe there is an issue on the specification page for:
+      - Subject: ${subject}
+      - Exam Board: ${examBoard}
+      - Specification Entry: ${selectedEntry.topic} - ${selectedEntry.topic_name}
+
+      Details of the issue:
+      [Please describe the issue here]
+
+      Kind regards,
+      [Your Name]`);
+
+                window.location.href = `mailto:support@packapp.co.uk?subject=${emailSubject}&body=${emailBody}`;
+              }}
+            >
               Report Issue
             </Button>
           </div>
@@ -212,25 +285,6 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             <h3 className="font-semibold">Custom Insights</h3>
           </div>
           <p className="text-xs text-muted-foreground">Blah blah blah</p>
-        </div>
-      </div>
-    );
-  };
-
-  // Function to render an entry
-  const renderEntry = (entry: SpecificationEntry) => {
-    return (
-      <div
-        key={entry.id}
-        onClick={() => setSelectedEntry(entry)}
-        className={`relative border-4 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
-          selectedEntry?.id === entry.id ? "ring-2 ring-primary" : "" // Adds outline when selected
-        }`}
-      >
-        <div className="pr-20">
-          <h3 className="text-xl font-semibold">
-            {entry.topic} {entry.topic_name}
-          </h3>
         </div>
       </div>
     );
@@ -265,7 +319,10 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             setSpecificationEntries(null);
           } else {
             const specificationData = await specificationResponse.json();
-            setSpecificationEntries(specificationData.specificationEntries);
+            const sortedEntries = sortEntriesByTopic(
+              specificationData.specificationEntries
+            );
+            setSpecificationEntries(sortedEntries);
           }
         } else {
           // User not logged in
@@ -281,7 +338,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     };
 
     fetchSpecificationData();
-  }, [subject, examBoard, router]);
+  }, [subject, examBoard, router, sortEntriesByTopic]);
 
   if (loading) {
     return (
@@ -359,15 +416,123 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           </div>
 
           {specificationEntries && specificationEntries.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {specificationEntries.map((entry) => renderEntry(entry))}
+            <div className="border border-border rounded-xl overflow-hidden">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-muted border-b border-border">
+                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      INDEX
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      TOPIC
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      PAPER
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      CONFIDENCE
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold">
+                      SESSIONS
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="font-medium">
+                  {specificationEntries.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      onClick={() => setSelectedEntry(entry)}
+                      className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                        selectedEntry?.id === entry.id
+                          ? "ring-4 ring-primary ring-inset rounded-lg"
+                          : ""
+                      }`}
+                    >
+                      <td className="px-4 py-2 text-sm font-medium border-r-2 border-border rounded-l-lg">
+                        {entry.topic}
+                      </td>
+
+                      <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
+                        {entry.topic_name}
+                      </td>
+
+                      <td className="px-4 py-2 text-sm border-r-2 border-border">
+                        Paper {entry.paper}
+                      </td>
+
+                      <td className="px-4 py-2 border-r-2 border-border">
+                        <div className="flex justify-center gap-2">
+                          <div
+                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                              entry.confidence === 1
+                                ? "bg-red-500 border-red-600"
+                                : "bg-slate-100 border-red-300"
+                            }`}
+                          >
+                            {entry.confidence === 1 && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+
+                          <div
+                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                              entry.confidence === 2
+                                ? "bg-yellow-400 border-yellow-500"
+                                : "bg-slate-100 border-yellow-300"
+                            }`}
+                          >
+                            {entry.confidence === 2 && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+
+                          <div
+                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                              entry.confidence === 3
+                                ? "bg-green-500 border-green-600"
+                                : "bg-slate-100 border-green-300"
+                            }`}
+                          >
+                            {entry.confidence === 3 && (
+                              <Check
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
+                        {entry.sessions ? "|".repeat(entry.sessions) : "-"}
+                      </td>
+
+                      <td className="px-2 py-2 text-center hover:bg-gray-800">
+                        <div className="w-full h-full flex items-center justify-center">
+                          <button className="rounded text-lg font-semibold">
+                            +
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
                 There are currently no entries for this subject. This may mean
-                your subject is unsupported - please contact support so we can
-                add content from your exam board.
+                your subject is unsupported or you&apos;ve enterred an invalid
+                course/exam board combination (check spelling above) - please
+                contact support so we can add content from your exam board.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support
