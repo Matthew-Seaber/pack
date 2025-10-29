@@ -24,10 +24,8 @@ export async function POST(req: Request) {
   }
 
   // Creates session token
-  await supabaseMainAdmin.from("sessions").delete().eq("user_id", user.user_id);
-
   const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 days
 
   await supabaseMainAdmin.from("sessions").insert({
     user_id: user.user_id,

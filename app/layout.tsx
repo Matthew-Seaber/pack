@@ -7,26 +7,30 @@ import PageConfig from "../components/page-config";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-poppins",
+  display: "swap",
 });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700",],
   variable: "--font-montserrat",
+  display: "swap",
 });
 
 const roboto_mono = Roboto_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["600"],
   variable: "--font-roboto-mono",
+  display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["500"],
   variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

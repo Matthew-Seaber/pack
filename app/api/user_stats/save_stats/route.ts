@@ -29,13 +29,13 @@ export async function POST(req: Request) {
     const currentPomodoroTime = data?.pomodoro_time ?? 0;
     const newPomodoroTime = currentPomodoroTime + timeRevised;
 
-    const { error } = await supabaseMainAdmin
+    const { error: updateError } = await supabaseMainAdmin
       .from("student_stats")
       .update({ pomodoro_time: newPomodoroTime })
       .eq("user_id", user_id);
-    
-    if (error) {
-      console.error("Database error:", error);
+
+    if (updateError) {
+      console.error("Database error:", updateError);
       return NextResponse.json(
         { error: "Failed to update user stats" },
         { status: 500 }

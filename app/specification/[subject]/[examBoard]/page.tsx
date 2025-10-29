@@ -290,6 +290,82 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     );
   };
 
+  const updateSubjectLink = React.useCallback(
+    async (entryID: string, type: string, detail?: number) => {
+      if (
+        type === "confidence" &&
+        detail ===
+          specificationEntries?.find((e) => e.id === entryID)?.confidence
+      ) {
+        // Checks whether there is a change in confidence level to prevent unnecessary API calls
+        console.log("No change in confidence level detected.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/specifications/edit_subject_link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            courseName: subject,
+            examBoard: examBoard,
+            entryID: entryID,
+            type: type,
+            detail: detail || 0,
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error(`Failed to update ${type}.`);
+          const errorData = await res.json();
+          console.error("Subject link saving error:", errorData.message);
+        } else {
+          toast.success(
+            `${type.charAt(0).toUpperCase() + type.slice(1)} updated.`
+          );
+
+          // Updates UI accordingly
+          if (type === "sessions") {
+            setSpecificationEntries((prevEntries) =>
+              prevEntries
+                ? prevEntries.map((entry) =>
+                    entry.id === entryID
+                      ? { ...entry, sessions: entry.sessions + 1 }
+                      : entry
+                  )
+                : null
+            );
+
+            setSelectedEntry((prevSelected) =>
+              prevSelected?.id === entryID
+                ? { ...prevSelected, sessions: prevSelected.sessions + 1 }
+                : prevSelected
+            );
+          } else if (type === "confidence" && detail !== undefined) {
+            setSpecificationEntries((prevEntries) =>
+              prevEntries
+                ? prevEntries.map((entry) =>
+                    entry.id === entryID
+                      ? { ...entry, confidence: detail }
+                      : entry
+                  )
+                : null
+            );
+            setSelectedEntry((prevSelected) =>
+              prevSelected?.id === entryID
+                ? { ...prevSelected, confidence: detail }
+                : prevSelected
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Subject link saving error (2):", error);
+        toast.error(`Failed to save ${type}.`);
+      }
+    },
+    [examBoard, subject, specificationEntries]
+  );
+
   React.useEffect(() => {
     const fetchSpecificationData = async () => {
       try {
@@ -344,7 +420,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     return (
       <>
         <h2 className="text-3xl font-semibold mb-3">
-          {subject} Specification {examBoard}
+          {subject} Specification ({examBoard})
         </h2>
 
         <h2 className="mt-6 mb-3 text-sm">
@@ -359,8 +435,8 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     <>
       <div className="flex gap-6 pb-24 xl:pb-0">
         <div className="flex-1">
-          <h2 className="text-3xl font-semibold mb-4">
-            {subject} Specification {examBoard}
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 break-words">
+            {subject} Specification ({examBoard})
           </h2>
 
           <div className="flex flex-col xl:flex-row gap-3 mb-5">
@@ -416,115 +492,135 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           </div>
 
           {specificationEntries && specificationEntries.length > 0 ? (
-            <div className="border border-border rounded-xl overflow-hidden">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-muted border-b border-border">
-                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                      INDEX
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                      TOPIC
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                      PAPER
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                      CONFIDENCE
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold">
-                      SESSIONS
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
-                  </tr>
-                </thead>
-                <tbody className="font-medium">
-                  {specificationEntries.map((entry) => (
-                    <tr
-                      key={entry.id}
-                      onClick={() => setSelectedEntry(entry)}
-                      className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                        selectedEntry?.id === entry.id
-                          ? "ring-4 ring-primary ring-inset rounded-lg"
-                          : ""
-                      }`}
-                    >
-                      <td className="px-4 py-2 text-sm font-medium border-r-2 border-border rounded-l-lg">
-                        {entry.topic}
-                      </td>
-
-                      <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
-                        {entry.topic_name}
-                      </td>
-
-                      <td className="px-4 py-2 text-sm border-r-2 border-border">
-                        Paper {entry.paper}
-                      </td>
-
-                      <td className="px-4 py-2 border-r-2 border-border">
-                        <div className="flex justify-center gap-2">
-                          <div
-                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                              entry.confidence === 1
-                                ? "bg-red-500 border-red-600"
-                                : "bg-slate-100 border-red-300"
-                            }`}
-                          >
-                            {entry.confidence === 1 && (
-                              <Check
-                                className="w-3 h-3 text-white"
-                                strokeWidth={3}
-                              />
-                            )}
-                          </div>
-
-                          <div
-                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                              entry.confidence === 2
-                                ? "bg-yellow-400 border-yellow-500"
-                                : "bg-slate-100 border-yellow-300"
-                            }`}
-                          >
-                            {entry.confidence === 2 && (
-                              <Check
-                                className="w-3 h-3 text-white"
-                                strokeWidth={3}
-                              />
-                            )}
-                          </div>
-
-                          <div
-                            className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                              entry.confidence === 3
-                                ? "bg-green-500 border-green-600"
-                                : "bg-slate-100 border-green-300"
-                            }`}
-                          >
-                            {entry.confidence === 3 && (
-                              <Check
-                                className="w-3 h-3 text-white"
-                                strokeWidth={3}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
-                        {entry.sessions ? "|".repeat(entry.sessions) : "-"}
-                      </td>
-
-                      <td className="px-2 py-2 text-center hover:bg-gray-800">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <button className="rounded text-lg font-semibold">
-                            +
-                          </button>
-                        </div>
-                      </td>
+            <div style={{ overflowX: "auto", width: "100%" }}>
+              <div className="border border-border rounded-xl overflow-hidden">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted border-b border-border">
+                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                        INDEX
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                        TOPIC
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                        PAPER
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                        CONFIDENCE
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold">
+                        SESSIONS
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="font-medium">
+                    {specificationEntries.map((entry) => (
+                      <tr
+                        key={entry.id}
+                        onClick={() => setSelectedEntry(entry)}
+                        className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                          selectedEntry?.id === entry.id
+                            ? "ring-4 ring-primary ring-inset rounded-lg"
+                            : ""
+                        }`}
+                      >
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border rounded-l-lg">
+                          {entry.topic}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
+                          {entry.topic_name}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm border-r-2 border-border">
+                          Paper {entry.paper}
+                        </td>
+
+                        <td className="px-4 py-2 border-r-2 border-border">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSubjectLink(entry.id, "confidence", 1);
+                              }}
+                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                entry.confidence === 1
+                                  ? "bg-red-600 border-red-700"
+                                  : "bg-slate-100 border-red-400"
+                              }`}
+                            >
+                              {entry.confidence === 1 && (
+                                <Check
+                                  className="w-3 h-3 text-white"
+                                  strokeWidth={3}
+                                />
+                              )}
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSubjectLink(entry.id, "confidence", 2);
+                              }}
+                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                entry.confidence === 2
+                                  ? "bg-yellow-500 border-yellow-600"
+                                  : "bg-slate-100 border-yellow-400"
+                              }`}
+                            >
+                              {entry.confidence === 2 && (
+                                <Check
+                                  className="w-3 h-3 text-white"
+                                  strokeWidth={3}
+                                />
+                              )}
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSubjectLink(entry.id, "confidence", 3);
+                              }}
+                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                entry.confidence === 3
+                                  ? "bg-green-600 border-green-700"
+                                  : "bg-slate-100 border-green-400"
+                              }`}
+                            >
+                              {entry.confidence === 3 && (
+                                <Check
+                                  className="w-3 h-3 text-white"
+                                  strokeWidth={3}
+                                />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
+                          {entry.sessions ? "|".repeat(entry.sessions) : "-"}
+                        </td>
+
+                        <td className="px-2 py-2 text-center hover:bg-gray-800">
+                          <div className="w-full h-full flex items-center justify-center">
+                            <button
+                              className="rounded text-lg font-semibold"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSubjectLink(entry.id, "sessions");
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
