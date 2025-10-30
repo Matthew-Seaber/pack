@@ -65,9 +65,16 @@ export async function POST(req: Request) {
       const { data: confidenceData, error: confidenceError } =
         await supabaseMainAdmin
           .from("specification_subject_link")
-          .update({ confidence: detail })
-          .eq("entry_id", entryID)
-          .eq("subject_id", subjectID)
+          .upsert(
+            {
+              entry_id: entryID,
+              subject_id: subjectID,
+              confidence: detail,
+            },
+            {
+              onConflict: "entry_id,subject_id",
+            }
+          )
           .select();
 
       debugInfo.push("Confidence data:", confidenceData);
@@ -95,23 +102,25 @@ export async function POST(req: Request) {
       debugInfo.push("Get sessions data:", getSessionsData);
       debugInfo.push("Get sessions error (if applicable):", getSessionsError);
 
-      if (getSessionsError) {
-        throw getSessionsError;
-      }
-
-      let newSessions;
-      if (!getSessionsData) {
-        newSessions = 1;
-      } else {
-        newSessions = getSessionsData.sessions + 1;
+      // Calculates new sessions value (which handles both existing and non-existing records)
+      let newSessions = 1;
+      if (getSessionsData && !getSessionsError) {
+        newSessions = (getSessionsData.sessions || 0) + 1;
       }
 
       const { data: sessionsData, error: sessionsError } =
         await supabaseMainAdmin
           .from("specification_subject_link")
-          .update({ sessions: newSessions })
-          .eq("entry_id", entryID)
-          .eq("subject_id", subjectID)
+          .upsert(
+            {
+              entry_id: entryID,
+              subject_id: subjectID,
+              sessions: newSessions,
+            },
+            {
+              onConflict: "entry_id,subject_id",
+            }
+          )
           .select();
 
       debugInfo.push("Sessions data:", sessionsData);
