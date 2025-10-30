@@ -4,6 +4,8 @@ import { getUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const debugInfo = []; // Using Postman to debug API
+
     // Gets user here instead of the client for security
     const user = await getUser();
     const { courseName, examBoard, entryID, type, detail } = await req.json();
@@ -60,16 +62,19 @@ export async function POST(req: Request) {
     const subjectID = subjectData.subject_id;
 
     if (type === "confidence") {
-      const { data: confidenceData, error: confidenceError } = await supabaseMainAdmin
-        .from("specification_subject_link")
-        .update({ confidence: detail })
-        .eq("entry_id", entryID)
-        .eq("subject_id", subjectID)
-        .select();
+      const { data: confidenceData, error: confidenceError } =
+        await supabaseMainAdmin
+          .from("specification_subject_link")
+          .update({ confidence: detail })
+          .eq("entry_id", entryID)
+          .eq("subject_id", subjectID)
+          .select();
 
       if (confidenceError) {
         throw confidenceError;
       }
+
+      debugInfo.push("Confidence data:", confidenceData);
 
       if (!confidenceData || confidenceData.length === 0) {
         return NextResponse.json(
@@ -86,6 +91,9 @@ export async function POST(req: Request) {
           .eq("subject_id", subjectID)
           .single();
 
+      debugInfo.push("Get sessions data:", getSessionsData);
+      debugInfo.push("Get sessions error (if applicable):", getSessionsError);
+
       if (getSessionsError) {
         throw getSessionsError;
       }
@@ -97,12 +105,16 @@ export async function POST(req: Request) {
         newSessions = getSessionsData.sessions + 1;
       }
 
-      const { data: sessionsData, error: sessionsError } = await supabaseMainAdmin
-        .from("specification_subject_link")
-        .update({ sessions: newSessions })
-        .eq("entry_id", entryID)
-        .eq("subject_id", subjectID)
-        .select();
+      const { data: sessionsData, error: sessionsError } =
+        await supabaseMainAdmin
+          .from("specification_subject_link")
+          .update({ sessions: newSessions })
+          .eq("entry_id", entryID)
+          .eq("subject_id", subjectID)
+          .select();
+
+          debugInfo.push("Sessions data:", sessionsData);
+          debugInfo.push("Sessions error (if applicable):", sessionsError);
 
       if (sessionsError) {
         throw sessionsError;
@@ -125,9 +137,18 @@ export async function POST(req: Request) {
       message: "Successfully amended data",
     });
   } catch (error) {
-    console.error("Database error:", error);
     return NextResponse.json(
-      { error: `Failed to update subject specification link` },
+      {
+        message: `Failed to update subject specification link: ${
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : JSON.stringify(error, Object.getOwnPropertyNames(error)) ||
+              String(error)
+        }`,
+        errorDetails: error,
+      },
       { status: 500 }
     );
   }
