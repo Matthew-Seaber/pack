@@ -81,7 +81,7 @@ export default function SubjectsPage() {
       return { border: "border-orange-400", icon: Code };
     }
     // Mathematics
-    if (name.includes("mathematics")) {
+    if (name.includes("mathematics") || name.includes("math")) {
       return { border: "border-purple-500", icon: Calculator };
     }
     // Physics
