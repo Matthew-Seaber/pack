@@ -60,14 +60,22 @@ export async function POST(req: Request) {
     const subjectID = subjectData.subject_id;
 
     if (type === "confidence") {
-      const { error: confidenceError } = await supabaseMainAdmin
+      const { data: confidenceData, error: confidenceError } = await supabaseMainAdmin
         .from("specification_subject_link")
         .update({ confidence: detail })
         .eq("entry_id", entryID)
-        .eq("subject_id", subjectID);
+        .eq("subject_id", subjectID)
+        .select();
 
       if (confidenceError) {
         throw confidenceError;
+      }
+
+      if (!confidenceData || confidenceData.length === 0) {
+        return NextResponse.json(
+          { error: "No matching specification entry found" },
+          { status: 404 }
+        );
       }
     } else if (type === "sessions") {
       const { data: getSessionsData, error: getSessionsError } =
@@ -89,14 +97,22 @@ export async function POST(req: Request) {
         newSessions = getSessionsData.sessions + 1;
       }
 
-      const { error: sessionsError } = await supabaseMainAdmin
+      const { data: sessionsData, error: sessionsError } = await supabaseMainAdmin
         .from("specification_subject_link")
         .update({ sessions: newSessions })
         .eq("entry_id", entryID)
-        .eq("subject_id", subjectID);
+        .eq("subject_id", subjectID)
+        .select();
 
       if (sessionsError) {
         throw sessionsError;
+      }
+
+      if (!sessionsData || sessionsData.length === 0) {
+        return NextResponse.json(
+          { error: "No matching specification entry found" },
+          { status: 404 }
+        );
       }
     } else {
       return NextResponse.json(
