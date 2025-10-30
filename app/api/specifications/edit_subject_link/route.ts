@@ -70,11 +70,12 @@ export async function POST(req: Request) {
           .eq("subject_id", subjectID)
           .select();
 
+      debugInfo.push("Confidence data:", confidenceData);
+      debugInfo.push("Confidence error (if applicable):", confidenceError);
+
       if (confidenceError) {
         throw confidenceError;
       }
-
-      debugInfo.push("Confidence data:", confidenceData);
 
       if (!confidenceData || confidenceData.length === 0) {
         return NextResponse.json(
@@ -113,8 +114,8 @@ export async function POST(req: Request) {
           .eq("subject_id", subjectID)
           .select();
 
-          debugInfo.push("Sessions data:", sessionsData);
-          debugInfo.push("Sessions error (if applicable):", sessionsError);
+      debugInfo.push("Sessions data:", sessionsData);
+      debugInfo.push("Sessions error (if applicable):", sessionsError);
 
       if (sessionsError) {
         throw sessionsError;
