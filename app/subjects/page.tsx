@@ -395,6 +395,7 @@ export default function SubjectsPage() {
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              asChild
               onClick={() =>
                 router.push(
                   "/specification/" +
@@ -409,6 +410,7 @@ export default function SubjectsPage() {
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              asChild
               onClick={() =>
                 router.push(
                   "/resources/" +
@@ -423,6 +425,7 @@ export default function SubjectsPage() {
             <Button
               variant="link"
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
+              asChild
               onClick={() =>
                 router.push(
                   "/past-papers/" +

@@ -158,7 +158,7 @@ function PomodoroPage() {
           const newTime = oldTime - 1;
 
           if (newTime <= 0) {
-            sectionComplete();
+            sectionComplete(); // Runs due to closures
             return 0;
           }
 
@@ -172,7 +172,7 @@ function PomodoroPage() {
         clearInterval(interval);
       }
     };
-  }, [timerStatus, currentTime, sectionComplete]);
+  }, [timerStatus, currentTime, sectionComplete]); // These dependencies ensure the interval is always up to date
 
   // Validation for new settings
   const submitSettings = () => {

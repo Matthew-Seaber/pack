@@ -122,7 +122,7 @@ export default function SignupPage() {
       // Validation for empty fields
       toast.error("Please fill in all fields.");
       return;
-    } else if (username.length <= 5 || username.length >= 20) {
+    } else if (username.length < 5 || username.length > 20) {
       // Validation for username length
       toast.error("Username must be at least 5 characters (20 max).");
       return;
