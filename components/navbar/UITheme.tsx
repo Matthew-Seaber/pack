@@ -15,14 +15,6 @@ import {
 export default function ModeToggle() {
   const { setTheme } = useTheme();
 
-  const themeChange = (theme: string) => {
-    setTheme(theme);
-    // Refreshes page after updating theme to ensure it updates all UI elements
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,16 +26,16 @@ export default function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => themeChange("light")}>
+        <DropdownMenuItem onClick={() => setTheme("light")}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => themeChange("dark")}>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => themeChange("high-contrast")}>
+        <DropdownMenuItem onClick={() => setTheme("high-contrast")}>
           High contrast
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => themeChange("system")}>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>
