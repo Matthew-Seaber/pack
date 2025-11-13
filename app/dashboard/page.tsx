@@ -6,9 +6,31 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
+import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 
 export default async function Dashboard() {
   const user = await getUser();
+
+  interface TeacherClass {
+    id: string;
+    name: string;
+    memberCount: number;
+    joinCode: string;
+  }
+
+  interface TeacherSchoolwork {
+    id: string;
+    class: TeacherClass[];
+    dueDate: string;
+    name: string;
+    description: string;
+  }
+
+  interface TeacherNotification {
+    id: string;
+    class: TeacherClass[];
+    schoolwork: TeacherSchoolwork[];
+  }
 
   if (!user) {
     // Backup since middleware should ensure the user exists and is logged in
@@ -39,6 +61,18 @@ export default async function Dashboard() {
   };
 
   const getUserStats = async () => {
+    const defaultStats = {
+      tasksCompleted: 0,
+      schoolworkCompleted: 0,
+      pastPapersCompleted: 0,
+      resourcesDownloaded: 0,
+      pomodoroTime: formatTime(0),
+    };
+
+    if (user.role !== "Student") {
+      return defaultStats; // Avoids database call if user is a teacher
+    }
+
     try {
       const { data: userStats, error: fetchError } = await supabaseMainAdmin
         .from("student_stats")
@@ -50,13 +84,7 @@ export default async function Dashboard() {
 
       if (fetchError || !userStats) {
         console.error("Error getting user stats:", fetchError);
-        return {
-          tasksCompleted: 0,
-          schoolworkCompleted: 0,
-          pastPapersCompleted: 0,
-          resourcesDownloaded: 0,
-          pomodoroTime: formatTime(0),
-        };
+        return defaultStats;
       }
 
       return {
@@ -68,13 +96,142 @@ export default async function Dashboard() {
       };
     } catch (error) {
       console.error("Failed to get user stats:", error);
+      return defaultStats;
+    }
+  };
+
+  const getTeacherData = async () => {
+    if (user.role !== "Teacher") {
+      return; // Avoids database call if user is a teacher
+    }
+
+    try {
+      const { data: classData, error: classFetchError } =
+        await supabaseMainAdmin
+          .from("classes")
+          .select("class_id, class_name, join_code")
+          .eq("teacher_id", user.user_id);
+
+      if (classFetchError || !classData) {
+        console.error(
+          "Error getting teacher data or no classes exist for this teacher:",
+          classFetchError
+        );
+        return {
+          teacherClasses: [],
+          teacherSchoolworks: [],
+          teacherNotifications: [],
+        };
+      }
+
+      //
+      // teacherClasses
+      //
+
+      // Map all class IDs to fetch member counts for
+      const classIDs = classData.map((classItem) => classItem.class_id);
+
+      // Get student counts for all classes
+      const { data: classStudentLink, error: countFetchError } =
+        await supabaseMainAdmin
+          .from("class_student_link")
+          .select("class_id")
+          .in("class_id", classIDs);
+
+      if (countFetchError) {
+        console.error("Error getting class' member count:", countFetchError);
+      }
+
+      // Iterates through each returned row to count how many students belong to each class
+      const studentCountMap = new Map<string, number>();
+      classStudentLink?.forEach((link) => {
+        const currentCount = studentCountMap.get(link.class_id) || 0; // Sets count to 0 if classID not yet in map
+        studentCountMap.set(link.class_id, currentCount + 1);
+      });
+
+      // Combine class data with member counts into the required TeacherClass format
+      const teacherClasses: TeacherClass[] = classData.map((classItem) => ({
+        id: classItem.class_id,
+        name: classItem.class_name,
+        memberCount: studentCountMap.get(classItem.class_id) || 0, // Sets to 0 if no students in class
+        joinCode: classItem.join_code,
+      }));
+
+      //
+      // teacherSchoolworks
+      //
+
+      // Gets all schoolwork items for notification use
+      const { data: schoolworkItems, error: schoolworkFetchError } =
+        await supabaseMainAdmin
+          .from("class_schoolwork")
+          .select(
+            "class_schoolwork_id, class_id, due, schoolwork_name, schoolwork_description"
+          )
+          .in("class_id", classIDs);
+
+      let teacherSchoolworks: TeacherSchoolwork[] = [];
+
+      if (schoolworkFetchError || !schoolworkItems) {
+        console.error(
+          "Error getting class' schoolwork for notifications:",
+          schoolworkFetchError
+        );
+      } else {
+        // Map each schoolwork item to include its linked class object
+        teacherSchoolworks = schoolworkItems.map((schoolworkItem) => {
+          // Find the matching class from teacherClasses array
+          const linkedClass = teacherClasses.find(
+            (classItem) => classItem.id === schoolworkItem.class_id
+          );
+
+          return {
+            id: schoolworkItem.class_schoolwork_id,
+            class: linkedClass ? [linkedClass] : [],
+            dueDate: schoolworkItem.due,
+            name: schoolworkItem.schoolwork_name,
+            description: schoolworkItem.schoolwork_description,
+          };
+        });
+      }
+
+      //
+      // teacherNotifications
+      //
+
+      // Create a notification for any schoolwork due today (UK timezone)
+      const currentUKTime = new Date().toLocaleString("en-GB", { // Gets UK current time as server time will be EST
+        timeZone: "Europe/London",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+      // Convert from DD/MM/YYYY to YYYY-MM-DD for comparison below
+      const [day, month, year] = currentUKTime.split(/[/,]/);
+      const todayUKDateString = `${year}-${month}-${day}`;
+
+      const teacherNotifications: TeacherNotification[] = teacherSchoolworks
+        .filter((schoolwork) => {
+          const dueDateString = schoolwork.dueDate.split("T")[0];
+          return dueDateString === todayUKDateString; // Returns true if due today
+        })
+        .map((schoolwork, index) => ({
+          id: String(index + 1),
+          class: schoolwork.class,
+          schoolwork: [schoolwork],
+        }));
 
       return {
-        tasksCompleted: 0,
-        schoolworkCompleted: 0,
-        pastPapersCompleted: 0,
-        resourcesDownloaded: 0,
-        pomodoroTime: formatTime(0),
+        teacherClasses,
+        teacherSchoolworks,
+        teacherNotifications,
+      };
+    } catch (error) {
+      console.error("Failed to get teacher data:", error);
+      return {
+        teacherClasses: [],
+        teacherSchoolworks: [],
+        teacherNotifications: [],
       };
     }
   };
@@ -89,8 +246,14 @@ export default async function Dashboard() {
   };
 
   const statsRange = `${formatDate(joinDate)} - ${formatDate(today)}`;
-
   const usersStats = await getUserStats();
+  const teacherData = await getTeacherData();
+
+  const teacherClasses: TeacherClass[] = teacherData?.teacherClasses || [];
+  const teacherSchoolworks: TeacherSchoolwork[] =
+    teacherData?.teacherSchoolworks || [];
+  const teacherNotifications: TeacherNotification[] =
+    teacherData?.teacherNotifications || [];
 
   return (
     <>
@@ -318,9 +481,13 @@ export default async function Dashboard() {
             </Card>
           </div>
         ) : user.role === "Teacher" ? (
-          <p>Teacher dashboard under construction.</p>
+          <TeacherDashboard // Passing props to the TeacherDashboard component
+            teacherClasses={teacherClasses}
+            teacherSchoolworks={teacherSchoolworks}
+            teacherNotifications={teacherNotifications}
+          />
         ) : (
-          <h2>Error with your role. Please contact support.</h2>
+          <h2>Error with your role/permissions. Please contact support.</h2>
         )}
       </div>
     </>
