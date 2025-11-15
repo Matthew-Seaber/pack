@@ -99,7 +99,7 @@ export default function TeacherDashboard({
   const [selectedTeacherClass, setSelectedTeacherClass] =
     useState<TeacherClass | null>(null);
 
-  const sortedTeacherClasses = sortClassesByName([...teacherClasses]);
+  const sortedTeacherClasses = sortClassesByName([...teacherClasses]); // The "..." ensures the original array isn't changed (copy used instead)
 
   // Function to render a notification
   const renderTeacherNotification = (notification: TeacherNotification) => {
@@ -195,12 +195,6 @@ export default function TeacherDashboard({
               Select a class to view details.
             </p>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">Custom Insights</h3>
-            </div>
-            <p className="text-xs text-muted-foreground">Blah blah blah</p>
-          </div>
         </div>
       );
     }
@@ -267,12 +261,6 @@ export default function TeacherDashboard({
               Reset Join Code
             </Button>
           </div>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold">Custom Insights</h3>
-          </div>
-          <p className="text-xs text-muted-foreground">Blah blah blah</p>
         </div>
       </div>
     );
