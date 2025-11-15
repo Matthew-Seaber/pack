@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       return {
         id: entry.class_schoolwork_id.toString(),
         course_name: entry.course_id,
-        schoolworkType: entry.type,
+        schoolworkType: entry.type === 1 ? "Homework" : "Test",
         due: entry.due,
         issued: entry.issued,
         name: entry.schoolwork_name,

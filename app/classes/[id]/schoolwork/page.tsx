@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
-import { AlarmClock, CalendarPlus, PanelBottomOpen } from "lucide-react";
+import { AlarmClock, CalendarPlus, PanelBottomOpen, UserRoundCheck } from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
@@ -37,54 +37,45 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
 
   const { id: classID } = use(params);
 
-  // Function to sort entries by index
-  const sortEntriesByTopic = useCallback(
+  // Function to sort entries by due date (using bubble sort)
+  const sortEntriesByDueDate = useCallback(
     (entries: SchoolworkEntry[]): SchoolworkEntry[] => {
-      return entries.sort((a, b) => {
-        const nameA = a.name;
-        const nameB = b.name;
+      const sortedCopy = [...entries];
+      const sortedListLength = sortedCopy.length;
 
-        // Check if the name starts with a number
-        const isNumericA = /^\d/.test(nameA);
-        const isNumericB = /^\d/.test(nameB);
+      for (let i = 0; i < sortedListLength - 1; i++) {
+        for (let j = 0; j < sortedListLength - i - 1; j++) {
+          const dateA = new Date(sortedCopy[j].due);
+          const dateB = new Date(sortedCopy[j + 1].due);
 
-        // Puts text-based names after numeric ones
-        if (isNumericA && !isNumericB) return -1;
-        if (!isNumericA && isNumericB) return 1;
-
-        if (isNumericA && isNumericB) {
-          // If both are numeric
-          // Splits by dots and compares each section numerically
-          const partsA = nameA.split(".").map((part: string) => {
-            const num = parseInt(part);
-            return isNaN(num) ? part : num;
-          });
-          const partsB = nameB.split(".").map((part: string) => {
-            const num = parseInt(part);
-            return isNaN(num) ? part : num;
-          });
-
-          for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-            const partA = partsA[i] ?? 0;
-            const partB = partsB[i] ?? 0;
-
-            if (typeof partA === "number" && typeof partB === "number") {
-              // If both parts numbers
-              if (partA !== partB) return partA - partB;
-            } else {
-              const comparison = String(partA).localeCompare(String(partB)); // If 1 part is a number and the other is text-based
-              if (comparison !== 0) return comparison;
-            }
+          if (dateA > dateB) {
+            // Swap if date is after
+            const tempValue = sortedCopy[j];
+            sortedCopy[j] = sortedCopy[j + 1];
+            sortedCopy[j + 1] = tempValue;
           }
-          return 0;
         }
+      }
 
-        // Sorts alphabetically if both are text-based
-        return nameA.localeCompare(nameB);
-      });
+      return sortedCopy;
     },
     []
   );
+
+  // Function to convert a given timestamp to a UX-friendly format
+  const formatTimestamp = (timestamp: string | null): string => {
+    if (!timestamp) return "No date";
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "ERROR";
+
+    const weekday = date.toLocaleDateString("en-GB", { weekday: "long" });
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${weekday} ${day}/${month}/${year}`;
+  };
 
   const [schoolworkEntries, setSchoolworkEntries] = useState<
     SchoolworkEntry[] | null
@@ -159,14 +150,14 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             </div>
             <div className="flex items-center gap-3">
               <AlarmClock className="w-4 h-4" strokeWidth={2} />
-              <p>Due: {selectedEntry.due}</p>
+              <p>Due: {formatTimestamp(selectedEntry.due)}</p>
             </div>
             <div className="flex items-center gap-3">
               <CalendarPlus className="w-4 h-4" strokeWidth={2} />
-              <p>Issued: {selectedEntry.issued}</p>
+              <p>Issued: {formatTimestamp(selectedEntry.issued)}</p>
             </div>
             <div className="flex items-center gap-3">
-              <CalendarPlus className="w-4 h-4" strokeWidth={2} />
+              <UserRoundCheck className="w-4 h-4" strokeWidth={2} />
               <p>Completed: {selectedEntry.completed}</p>
             </div>
             {selectedEntry.description && (
@@ -202,7 +193,7 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             router.push("/dashboard");
             return;
           }
-          
+
           // Gets schoolwork entries and class name by classID
           const schoolworkResponse = await fetch(
             `/api/teacher_schoolwork/get_schoolwork_data?classID=${encodeURIComponent(
@@ -223,9 +214,10 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
               schoolwork: SchoolworkEntry[];
             };
 
-            const schoolworkData = await schoolworkResponse.json() as APIResponse;
+            const schoolworkData =
+              (await schoolworkResponse.json()) as APIResponse;
             setClassName(schoolworkData.className);
-            const sortedEntries = sortEntriesByTopic(
+            const sortedEntries = sortEntriesByDueDate(
               schoolworkData.schoolwork
             );
             setSchoolworkEntries(sortedEntries);
@@ -244,14 +236,12 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
     };
 
     fetchSchoolworkData();
-  }, [classID, router, sortEntriesByTopic]);
+  }, [classID, router, sortEntriesByDueDate]);
 
   if (loading) {
     return (
       <>
-        <h2 className="text-3xl font-semibold mb-3">
-          Schoolwork
-        </h2>
+        <h2 className="text-3xl font-semibold mb-3">Schoolwork</h2>
 
         <h2 className="mt-6 mb-3 text-sm">
           <Spinner className="inline mr-2" />
@@ -308,11 +298,11 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                         </td>
 
                         <td className="px-4 py-2 text-sm border-r-2 border-border">
-                          {entry.issued}
+                          {formatTimestamp(entry.issued)}
                         </td>
 
                         <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.due}
+                          {formatTimestamp(entry.due)}
                         </td>
 
                         <td className="px-4 py-2 text-sm border-r-2 border-border">
@@ -332,8 +322,8 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
                 There are currently no homeworks or tests for this class. This
-                may mean you&apos;ve entered an invalid class ID (check URL), but
-                if not, please contact support so we can assist you.
+                may mean you&apos;ve entered an invalid class ID (check URL),
+                but if not, please contact support so we can assist you.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support

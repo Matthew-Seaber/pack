@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 
 // Routes which require user to be logged in
-const protectedRoutes = ["/dashboard", "/settings", "/tasks", "/subjects", "/specification"];
+const protectedRoutes = ["/dashboard", "/settings", "/tasks", "/subjects", "/specification", "/classes"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
