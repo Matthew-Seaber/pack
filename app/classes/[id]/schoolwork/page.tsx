@@ -203,9 +203,9 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             return;
           }
           
-          // Gets specification entries and the user's personal confidence/session data by subject and exam board
+          // Gets schoolwork entries and class name by classID
           const schoolworkResponse = await fetch(
-            `/api/schoolwork/get_schoolwork_data?classID=${encodeURIComponent(
+            `/api/teacher_schoolwork/get_schoolwork_data?classID=${encodeURIComponent(
               classID
             )}`
           );
@@ -287,6 +287,9 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                       <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
                         TYPE
                       </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                        COMPLETED
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="font-medium">
@@ -300,20 +303,24 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                             : ""
                         }`}
                       >
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border rounded-l-lg">
+                        <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                           {entry.name}
                         </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
+                        <td className="px-4 py-2 text-sm border-r-2 border-border">
                           {entry.issued}
                         </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
                           {entry.due}
                         </td>
 
                         <td className="px-4 py-2 text-sm border-r-2 border-border">
                           {entry.schoolworkType}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm border-r-2 border-border">
+                          {entry.completed}
                         </td>
                       </tr>
                     ))}
@@ -325,9 +332,8 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
                 There are currently no homeworks or tests for this class. This
-                may mean you&apos;ve enterred an invalid course/exam board
-                combination (check spelling above) but if not, please contact
-                support so we can assist you.
+                may mean you&apos;ve entered an invalid class ID (check URL), but
+                if not, please contact support so we can assist you.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support

@@ -60,19 +60,25 @@ export async function GET(request: Request) {
       (entry) => entry.class_schoolwork_id
     );
 
-    // Get all student link data for schoolwork entries
-    const { data: studentLinkData, error: studentLinkFetchError } =
-      await supabaseMainAdmin
-        .from("schoolwork_student_link")
-        .select("class_schoolwork_id, completed")
-        .in("class_schoolwork_id", schoolworkIDs);
+    // Get all student link data for schoolwork entries (only if there are entries)
+    let studentLinkData: Array<{ class_schoolwork_id: number; completed: boolean }> = [];
+    
+    if (schoolworkIDs.length > 0) {
+      const { data, error: studentLinkFetchError } =
+        await supabaseMainAdmin
+          .from("schoolwork_student_link")
+          .select("class_schoolwork_id, completed")
+          .in("class_schoolwork_id", schoolworkIDs);
 
-    if (studentLinkFetchError) {
-      console.error("Error getting student links:", studentLinkFetchError);
-      return NextResponse.json(
-        { error: "Failed to get student links" },
-        { status: 500 }
-      );
+      if (studentLinkFetchError) {
+        console.error("Error getting student links:", studentLinkFetchError);
+        return NextResponse.json(
+          { error: "Failed to get student links" },
+          { status: 500 }
+        );
+      }
+
+      studentLinkData = data || [];
     }
 
     // Group student links by schoolwork ID and calculate completion statistics
@@ -103,14 +109,14 @@ export async function GET(request: Request) {
       }; // Sets to "0/0" if no students assigned to the homework/test
 
       return {
-        class_schoolwork_id: entry.class_schoolwork_id,
-        course_id: entry.course_id,
-        type: entry.type,
+        id: entry.class_schoolwork_id.toString(),
+        course_name: entry.course_id,
+        schoolworkType: entry.type,
         due: entry.due,
         issued: entry.issued,
-        schoolwork_name: entry.schoolwork_name,
-        schoolwork_description: entry.schoolwork_description,
-        completion: `${stats.completed}/${stats.total}`,
+        name: entry.schoolwork_name,
+        description: entry.schoolwork_description,
+        completed: `${stats.completed}/${stats.total}`,
       };
     });
 

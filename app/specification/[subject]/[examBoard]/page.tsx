@@ -626,7 +626,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
                 There are currently no entries for this subject. This may mean
-                your subject is unsupported or you&apos;ve enterred an invalid
+                your subject is unsupported or you&apos;ve entered an invalid
                 course/exam board combination (check spelling above) - please
                 contact support so we can add content from your exam board.
               </p>
