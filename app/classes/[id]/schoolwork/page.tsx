@@ -19,7 +19,7 @@ import {
 
 interface SchoolworkPageProps {
   params: Promise<{
-    classID: string;
+    id: string;
   }>;
 }
 
@@ -35,7 +35,7 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
     completed: string | null;
   }
 
-  const { classID } = use(params);
+  const { id: classID } = use(params);
 
   // Function to sort entries by index
   const sortEntriesByTopic = useCallback(
