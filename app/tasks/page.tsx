@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { Fab } from "@/components/ui/fab";
 import { Toaster, toast } from "sonner";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -362,6 +363,13 @@ export default function TasksPage() {
               if (response.ok) {
                 playCompletionSFX();
                 toast.success("Task complete!");
+                confetti({
+                  particleCount: 80,
+                  spread: 50,
+                  origin: { y: 0.6 },
+                  ticks: 100,
+                  gravity: 1.2,
+                });
                 // Refreshes all task lists and UI to ensure consistency before and after the transaction
                 setTasks((previous) =>
                   previous ? previous.filter((tsk) => tsk.id !== task.id) : null

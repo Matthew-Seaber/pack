@@ -45,6 +45,8 @@ export async function POST(req: Request) {
 
   // Insert user and their data into database
   let user;
+  let studentDebugInfo = null;
+
   try {
     const { data, error } = await supabaseMainAdmin
       .from("users")
@@ -229,12 +231,12 @@ export async function POST(req: Request) {
         debugInfo.push("No subject rows to insert");
       }
 
-      return NextResponse.json({
+      studentDebugInfo = {
         // Using Postman to test API and debug
         message: "Code ran without console errors",
         debug: debugInfo,
         subjectRowsCount: subjectRows.length,
-      });
+      };
     } catch (error) {
       return NextResponse.json(
         {
@@ -339,7 +341,9 @@ export async function POST(req: Request) {
   });
 
   // HTTP cookie for session
-  const res = NextResponse.json({ message: "Successfully logged in" });
+  const res = NextResponse.json(
+    studentDebugInfo || { message: "Successfully logged in" }
+  );
   const cookieAge = 30; // In days
 
   res.cookies.set({

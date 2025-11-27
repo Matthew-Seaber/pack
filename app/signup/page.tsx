@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Eye, EyeOff, Trash } from "lucide-react";
+import confetti from "canvas-confetti";
 import Image from "next/image";
 import { Toaster, toast } from "sonner";
 
@@ -210,7 +211,16 @@ export default function SignupPage() {
         });
         if (res.ok) {
           toast.success(`Success! Redirecting you to the dashboard...`);
-          router.push("/dashboard");
+          confetti({
+            particleCount: 80,
+            spread: 50,
+            origin: { y: 0.6 },
+            ticks: 100,
+            gravity: 1.2,
+          });
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1500);
         } else {
           toast.error("Failed to create user. Please try again.");
           const errorData = await res.json();
@@ -470,7 +480,9 @@ export default function SignupPage() {
                           </option>
                           <option value="Food Science">Food Science</option>
                           <option value="French">French</option>
-                          <option value="Further Mathematics">Further Mathematics</option>
+                          <option value="Further Mathematics">
+                            Further Mathematics
+                          </option>
                           <option value="Geography">Geography</option>
                           <option value="German">German</option>
                           <option value="Graphics Communications">
