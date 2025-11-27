@@ -2,7 +2,12 @@
 
 import React, { useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
-import { AlarmClock, CalendarPlus, PanelBottomOpen, UserRoundCheck } from "lucide-react";
+import {
+  AlarmClock,
+  CalendarPlus,
+  PanelBottomOpen,
+  UserRoundCheck,
+} from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
@@ -80,6 +85,8 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
   const [schoolworkEntries, setSchoolworkEntries] = useState<
     SchoolworkEntry[] | null
   >(null);
+  const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
+  const [pastEntries, setPastEntries] = useState<SchoolworkEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
     null
   );
@@ -221,6 +228,27 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
               schoolworkData.schoolwork
             );
             setSchoolworkEntries(sortedEntries);
+
+            // Split entries into future/today and past
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Start of today
+
+            const future: SchoolworkEntry[] = [];
+            const past: SchoolworkEntry[] = [];
+
+            sortedEntries.forEach((entry) => {
+              const dueDate = new Date(entry.due);
+              dueDate.setHours(0, 0, 0, 0);
+
+              if (dueDate >= now) {
+                future.push(entry);
+              } else {
+                past.push(entry);
+              }
+            });
+
+            setFutureEntries(future);
+            setPastEntries(past);
           }
         } else {
           // User not logged in
@@ -260,63 +288,134 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
           </h2>
 
           {schoolworkEntries && schoolworkEntries.length > 0 ? (
-            <div style={{ overflowX: "auto", width: "100%" }}>
-              <div className="border border-border rounded-xl overflow-hidden">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted border-b border-border">
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        NAME
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        ISSUED
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        DUE
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        TYPE
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        COMPLETED
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium">
-                    {schoolworkEntries.map((entry) => (
-                      <tr
-                        key={entry.id}
-                        onClick={() => setSelectedEntry(entry)}
-                        className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                          selectedEntry?.id === entry.id
-                            ? "ring-4 ring-primary ring-inset rounded-lg"
-                            : ""
-                        }`}
-                      >
-                        <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
-                          {entry.name}
-                        </td>
+            <div className="space-y-6">
+              {futureEntries.length > 0 && ( // Table for future entries
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">Upcoming</h3>
+                  <div style={{ overflowX: "auto", width: "100%" }}>
+                    <div className="border border-border rounded-xl overflow-hidden">
+                      <table className="w-full border-collapse" style={{ minWidth: "600px" }}>
+                        <thead>
+                          <tr className="bg-muted border-b border-border">
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "30%" }}>
+                              NAME
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                              ISSUED
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "15%" }}>
+                              DUE
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "12%" }}>
+                              TYPE
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "5%" }}>
+                              COMPLETED
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-medium">
+                          {futureEntries.map((entry) => (
+                            <tr
+                              key={entry.id}
+                              onClick={() => setSelectedEntry(entry)}
+                              className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                                selectedEntry?.id === entry.id
+                                  ? "ring-4 ring-primary ring-inset rounded-lg"
+                                  : ""
+                              }`}
+                            >
+                              <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.name}
+                              </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
-                          {formatTimestamp(entry.issued)}
-                        </td>
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {formatTimestamp(entry.issued)}
+                              </td>
 
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {formatTimestamp(entry.due)}
-                        </td>
+                              <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                                {formatTimestamp(entry.due)}
+                              </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
-                          {entry.schoolworkType}
-                        </td>
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {entry.schoolworkType}
+                              </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
-                          {entry.completed}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {entry.completed}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {pastEntries.length > 0 && ( // Table for past entries
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">Past Due</h3>
+                  <div style={{ overflowX: "auto", width: "100%" }}>
+                    <div className="border border-border rounded-xl overflow-hidden">
+                      <table className="w-full border-collapse" style={{ minWidth: "600px" }}>
+                        <thead>
+                          <tr className="bg-muted border-b border-border">
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "30%" }}>
+                              NAME
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                              ISSUED
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                              DUE
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "12%" }}>
+                              TYPE
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "5%" }}>
+                              COMPLETED
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-medium">
+                          {pastEntries.map((entry) => (
+                            <tr
+                              key={entry.id}
+                              onClick={() => setSelectedEntry(entry)}
+                              className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                                selectedEntry?.id === entry.id
+                                  ? "ring-4 ring-primary ring-inset rounded-lg"
+                                  : ""
+                              }`}
+                            >
+                              <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.name}
+                              </td>
+
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {formatTimestamp(entry.issued)}
+                              </td>
+
+                              <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                                {formatTimestamp(entry.due)}
+                              </td>
+
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {entry.schoolworkType}
+                              </td>
+
+                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                                {entry.completed}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
