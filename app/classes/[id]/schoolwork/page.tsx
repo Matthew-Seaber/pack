@@ -179,7 +179,47 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
               View student submissions
             </Button>
-            <Button variant="destructive" className="w-full">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/teacher_schoolwork/delete_schoolwork_entry", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ entryID: selectedEntry.id, classID: classID }),
+                  });
+
+                  if (response.ok) {
+                    toast.success("Schoolwork entry deleted.");
+                    // Refreshes both entry lists and UI to ensure consistency before and after the transaction
+                    setSchoolworkEntries((previous) =>
+                      previous
+                        ? previous.filter((swk) => swk.id !== selectedEntry.id)
+                        : null
+                    );
+                    setFutureEntries((previous) =>
+                      previous.filter((swk) => swk.id !== selectedEntry.id)
+                    );
+                    setPastEntries((previous) =>
+                      previous.filter((swk) => swk.id !== selectedEntry.id)
+                    );
+                    setSelectedEntry(null);
+                  } else {
+                    console.error(
+                      "Failed to delete schoolwork entry:",
+                      response.statusText
+                    );
+                    toast.error(
+                      "Failed to delete schoolwork entry. Please try again later."
+                    );
+                  }
+                } catch (error) {
+                  console.error("Error deleting schoolwork entry:", error);
+                  toast.error("Error deleting schoolwork entry. Please try again later.");
+                }
+              }}
+            >
               Delete
             </Button>
           </div>
@@ -294,22 +334,40 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                   <h3 className="text-xl font-semibold mb-3">Upcoming</h3>
                   <div style={{ overflowX: "auto", width: "100%" }}>
                     <div className="border border-border rounded-xl overflow-hidden">
-                      <table className="w-full border-collapse" style={{ minWidth: "600px" }}>
+                      <table
+                        className="w-full border-collapse"
+                        style={{ minWidth: "600px" }}
+                      >
                         <thead>
                           <tr className="bg-muted border-b border-border">
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "30%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "30%" }}
+                            >
                               NAME
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "18%" }}
+                            >
                               ISSUED
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "15%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "15%" }}
+                            >
                               DUE
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "12%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "12%" }}
+                            >
                               TYPE
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "5%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "5%" }}
+                            >
                               COMPLETED
                             </th>
                           </tr>
@@ -325,23 +383,23 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                                   : ""
                               }`}
                             >
-                              <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {formatTimestamp(entry.issued)}
                               </td>
 
-                              <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm font-medium border-r-2 border-border">
                                 {formatTimestamp(entry.due)}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {entry.schoolworkType}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {entry.completed}
                               </td>
                             </tr>
@@ -358,22 +416,40 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                   <h3 className="text-xl font-semibold mb-3">Past Due</h3>
                   <div style={{ overflowX: "auto", width: "100%" }}>
                     <div className="border border-border rounded-xl overflow-hidden">
-                      <table className="w-full border-collapse" style={{ minWidth: "600px" }}>
+                      <table
+                        className="w-full border-collapse"
+                        style={{ minWidth: "600px" }}
+                      >
                         <thead>
                           <tr className="bg-muted border-b border-border">
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "30%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "30%" }}
+                            >
                               NAME
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "18%" }}
+                            >
                               ISSUED
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "18%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "18%" }}
+                            >
                               DUE
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "12%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "12%" }}
+                            >
                               TYPE
                             </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border" style={{ width: "5%" }}>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "5%" }}
+                            >
                               COMPLETED
                             </th>
                           </tr>
@@ -389,23 +465,23 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                                   : ""
                               }`}
                             >
-                              <td className="px-4 py-2 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {formatTimestamp(entry.issued)}
                               </td>
 
-                              <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm font-medium border-r-2 border-border">
                                 {formatTimestamp(entry.due)}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {entry.schoolworkType}
                               </td>
 
-                              <td className="px-4 py-2 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm border-r-2 border-border">
                                 {entry.completed}
                               </td>
                             </tr>
