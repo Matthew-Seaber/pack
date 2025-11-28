@@ -21,6 +21,33 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { ChevronDownIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SchoolworkPageProps {
   params: Promise<{
@@ -67,6 +94,86 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
     []
   );
 
+  // Function to handle adding a new schoolwork entry
+  const handleAddEntry = async () => {
+    // Validate fields
+    if (!entryName.trim()) {
+      toast.error("Entry name is required.");
+      return;
+    }
+
+    try {
+      // Combine date and time into a timestampz
+      let dueTimestamp: string | null = null;
+      let issuedTimestamp: string | null = null;
+      const now = new Date();
+
+      if (dueDate) {
+        const combinedDate = new Date(dueDate);
+        combinedDate.setHours(23, 59, 59, 999);
+
+        if (combinedDate < now) {
+          toast.error("Due date cannot be in the past.");
+          return;
+        }
+
+        dueTimestamp = combinedDate.toISOString();
+      } else {
+        toast.error("Please enter a due date.");
+        return;
+      }
+
+      if (issuedDate) {
+        const combinedDate = new Date(issuedDate);
+        combinedDate.setHours(23, 59, 59, 999);
+        issuedTimestamp = combinedDate.toISOString();
+      } else {
+        const combinedDate = new Date(now);
+        combinedDate.setHours(23, 59, 59, 999);
+        issuedTimestamp = combinedDate.toISOString();
+      }
+
+      const response = await fetch(
+        "/api/teacher_schoolwork/add_schoolwork_entry",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            schoolwork_name: entryName.trim(),
+            schoolwork_description: entryDescription.trim() || null,
+            due: dueTimestamp,
+            issued: issuedTimestamp,
+            type: entryType,
+            course_id: null, // To be implemented in the future
+            class_id: classID,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Schoolwork entry added!");
+
+        // Add new entry to the appropriate section (updates UI without refresh for improved UX)
+        const newEntry = data.entry;
+        const sortedEntries = sortEntriesByDueDate(
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+        );
+        setSchoolworkEntries(sortedEntries);
+
+        // Categorise the new entry
+        const category = categoriseEntry(newEntry);
+        addEntryToCategory(newEntry, category);
+      } else {
+        console.error("Failed to add schoolwork entry:", response.statusText);
+        toast.error("Failed to add schoolwork entry. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error adding schoolwork entry:", error);
+      toast.error("Error adding schoolwork entry. Please try again later.");
+    }
+  };
+
   // Function to convert a given timestamp to a UX-friendly format
   const formatTimestamp = (timestamp: string | null): string => {
     if (!timestamp) return "No date";
@@ -82,6 +189,41 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
     return `${weekday} ${day}/${month}/${year}`;
   };
 
+  // Split entries into future/today and past
+  const categoriseEntry = React.useCallback(
+    (entry: SchoolworkEntry): "future" | "past" => {
+      const dueDate = new Date(entry.due);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Start of today
+      dueDate.setHours(0, 0, 0, 0); // Makes it so time of day doesn't affect categorisation
+
+      if (dueDate >= now) {
+        return "future";
+      } else {
+        return "past";
+      }
+    },
+    []
+  );
+
+  // Function to add an entry to the appropriate category
+  const addEntryToCategory = React.useCallback(
+    (entry: SchoolworkEntry, category: ReturnType<typeof categoriseEntry>) => {
+      switch (category) {
+        case "future":
+          setFutureEntries((previous) => [...previous, entry]);
+          break;
+        case "past":
+          setPastEntries((previous) => [...previous, entry]);
+          break;
+        default:
+          console.log("Entry categorisation error", category);
+          break;
+      }
+    },
+    []
+  );
+
   const [schoolworkEntries, setSchoolworkEntries] = useState<
     SchoolworkEntry[] | null
   >(null);
@@ -92,6 +234,14 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
   );
   const [className, setClassName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [entryName, setEntryName] = useState("");
+  const [entryDescription, setEntryDescription] = useState("");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
+  const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
   const router = useRouter();
 
   // Sidebar content component
@@ -100,11 +250,24 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
       return (
         <div className="space-y-4">
           <div className="flex gap-2 font-semibold">
-            <Button className="flex-1" variant="default">
+            <Button
+              className="flex-1"
+              variant="default"
+              onClick={() => {
+                setEntryType("Homework");
+                setSheetOpen(true);
+              }}
+            >
               <span className="mr-2">+</span>
               SET HOMEWORK
             </Button>
-            <Button variant="default">
+            <Button
+              variant="default"
+              onClick={() => {
+                setEntryType("Test");
+                setSheetOpen(true);
+              }}
+            >
               <span className="mr-2">+</span>
               SET TEST
             </Button>
@@ -122,11 +285,24 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
     return (
       <div className="space-y-4">
         <div className="flex gap-2 font-semibold">
-          <Button className="flex-1" variant="default">
+          <Button
+            className="flex-1"
+            variant="default"
+            onClick={() => {
+              setEntryType("Homework");
+              setSheetOpen(true);
+            }}
+          >
             <span className="mr-2">+</span>
             SET HOMEWORK
           </Button>
-          <Button variant="default">
+          <Button
+            variant="default"
+            onClick={() => {
+              setEntryType("Test");
+              setSheetOpen(true);
+            }}
+          >
             <span className="mr-2">+</span>
             SET TEST
           </Button>
@@ -184,11 +360,17 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
               className="w-full"
               onClick={async () => {
                 try {
-                  const response = await fetch("/api/teacher_schoolwork/delete_schoolwork_entry", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ entryID: selectedEntry.id, classID: classID }),
-                  });
+                  const response = await fetch(
+                    "/api/teacher_schoolwork/delete_schoolwork_entry",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        entryID: selectedEntry.id,
+                        classID: classID,
+                      }),
+                    }
+                  );
 
                   if (response.ok) {
                     toast.success("Schoolwork entry deleted.");
@@ -216,7 +398,9 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                   }
                 } catch (error) {
                   console.error("Error deleting schoolwork entry:", error);
-                  toast.error("Error deleting schoolwork entry. Please try again later.");
+                  toast.error(
+                    "Error deleting schoolwork entry. Please try again later."
+                  );
                 }
               }}
             >
@@ -269,7 +453,6 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
             );
             setSchoolworkEntries(sortedEntries);
 
-            // Split entries into future/today and past
             const now = new Date();
             now.setHours(0, 0, 0, 0); // Start of today
 
@@ -354,7 +537,7 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
                             </th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "15%" }}
+                              style={{ width: "18%" }}
                             >
                               DUE
                             </th>
@@ -511,6 +694,135 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
           <SidebarContent />
         </div>
       </div>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Add Schoolwork</SheetTitle>
+            <SheetDescription>
+              Add a new {entryType.toLowerCase()} for {className}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-3">
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="entryName">
+                Name *
+              </Label>
+              <Input
+                id="entryName"
+                value={entryName}
+                onChange={(e) => setEntryName(e.target.value)}
+              />
+            </div>
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="entryDescription">
+                Description
+              </Label>
+              <Input
+                id="entryDescription"
+                value={entryDescription}
+                onChange={(e) => setEntryDescription(e.target.value)}
+              />
+            </div>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="dueDatePicker" className="px-1">
+                    Due date *
+                  </Label>
+                  <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="dueDatePicker"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {dueDate ? dueDate.toLocaleDateString() : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select a due date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={(selectedDate) => {
+                          setDueDate(selectedDate);
+                          setCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="issuedDatePicker" className="px-1">
+                    Issued date
+                  </Label>
+                  <Dialog
+                    open={issuedCalendarOpen}
+                    onOpenChange={setIssuedCalendarOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="issuedDatePicker"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {issuedDate
+                          ? issuedDate.toLocaleDateString()
+                          : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select issued date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={issuedDate}
+                        onSelect={(selectedDate) => {
+                          setIssuedDate(selectedDate);
+                          setIssuedCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </div>
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="entryType">
+                Type *
+              </Label>
+              <Select
+                value={entryType}
+                onValueChange={(value: "Homework" | "Test") =>
+                  setEntryType(value)
+                }
+              >
+                <SelectTrigger id="entryType" className="w-32">
+                  <SelectValue placeholder={entryType} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Homework">Homework</SelectItem>
+                  <SelectItem value="Test">Test</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button onClick={handleAddEntry}>
+              Add {entryType.toLowerCase()}
+            </Button>
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <div className="md:hidden lg:hidden xl:hidden">
         <Drawer>

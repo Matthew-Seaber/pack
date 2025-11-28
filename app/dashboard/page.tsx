@@ -37,15 +37,26 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
+  const date = new Date();
   const hour = new Date().getHours();
   let greeting;
 
-  if (hour < 12) {
-    greeting = "Good morning";
-  } else if (hour < 18) {
-    greeting = "Good afternoon";
+  if (
+    date.getMonth() === 11 &&
+    (date.getDate() === 25 || date.getDate() === 24 || date.getDate() === 26) // Christmas
+  ) {
+    greeting = "Merry Christmas";
+  } else if (date.getMonth() === 0 && date.getDate() === 1) {
+    // New Year
+    greeting = "Happy New Year";
   } else {
-    greeting = "Good evening";
+    if (hour < 12) {
+      greeting = "Good morning";
+    } else if (hour < 18) {
+      greeting = "Good afternoon";
+    } else {
+      greeting = "Good evening";
+    }
   }
 
   const formatTime = (minutes: number) => {
@@ -200,11 +211,12 @@ export default async function Dashboard() {
       //
 
       // Create a notification for any schoolwork due today (UK timezone)
-      const currentUKTime = new Date().toLocaleString("en-GB", { // Gets UK current time as server time will be EST
+      const currentUKTime = new Date().toLocaleString("en-GB", {
+        // Gets UK current time as server time will be EST
         timeZone: "Europe/London",
         year: "numeric",
         month: "2-digit",
-        day: "2-digit"
+        day: "2-digit",
       });
       // Convert from DD/MM/YYYY to YYYY-MM-DD for comparison below
       const [day, month, year] = currentUKTime.split(/[/,]/);

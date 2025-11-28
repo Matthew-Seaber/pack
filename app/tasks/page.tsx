@@ -96,8 +96,8 @@ export default function TasksPage() {
     }
   };
 
-  // Function to categorize a task based on its due date/time
-  const categorizeTask = React.useCallback(
+  // Function to categorise a task based on its due date/time
+  const categoriseTask = React.useCallback(
     (
       task: Task
     ): "overdue" | "today" | "tomorrow" | "thisWeek" | "later" | "noDate" => {
@@ -155,7 +155,7 @@ export default function TasksPage() {
 
   // Function to add a task to the appropriate due category
   const addTaskToCategory = React.useCallback(
-    (task: Task, category: ReturnType<typeof categorizeTask>) => {
+    (task: Task, category: ReturnType<typeof categoriseTask>) => {
       switch (category) {
         case "overdue":
           setTasksOverdue((previous) => [...previous, task]);
@@ -237,8 +237,8 @@ export default function TasksPage() {
         const newTask = data.task;
         setTasks((previous) => (previous ? [...previous, newTask] : [newTask]));
 
-        // Categorize the new task
-        const category = categorizeTask(newTask);
+        // Categorise the new task
+        const category = categoriseTask(newTask);
         addTaskToCategory(newTask, category);
 
         // Reset form fields
@@ -442,7 +442,7 @@ export default function TasksPage() {
             const tempTasksWithoutDueDate: Task[] = [];
 
             for (const task of tasksData.tasks) {
-              const category = categorizeTask(task);
+              const category = categoriseTask(task);
 
               switch (category) {
                 case "overdue":
@@ -515,7 +515,7 @@ export default function TasksPage() {
     };
 
     fetchUserAndTasksAndSubjects();
-  }, [router, categorizeTask]);
+  }, [router, categoriseTask]);
 
   if (loading) {
     return (
