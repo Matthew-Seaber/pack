@@ -102,7 +102,7 @@ export async function POST(req: Request) {
     if (insertError) {
       console.error("Error adding entry:", insertError);
       return NextResponse.json(
-        { error: "Failed to add entry" },
+        { error: "Failed to add entry, " + insertError.message },
         { status: 500 }
       );
     }
