@@ -164,6 +164,13 @@ export default function SchoolworkPage({ params }: SchoolworkPageProps) {
         // Categorise the new entry
         const category = categoriseEntry(newEntry);
         addEntryToCategory(newEntry, category);
+
+        setEntryName("");
+        setEntryDescription("");
+        setDueDate(undefined);
+        setIssuedDate(undefined);
+        setEntryType("Homework");
+        setSheetOpen(false);
       } else {
         console.error("Failed to add schoolwork entry:", response.statusText);
         toast.error("Failed to add schoolwork entry. Please try again later.");

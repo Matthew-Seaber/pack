@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
@@ -9,7 +9,25 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter();
+
+  useEffect(() => {
+    // Checks if user is already logged in (runs in the background on page load so UI has priority since this may take time and the majority of users will be here to create an account)
+    const checkAuthStatus = async () => {
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          // User is already logged in, redirect to dashboard
+          router.push("/dashboard");
+        }
+      } catch {
+        // User is not logged in (expected result)
+      }
+    };
+
+    checkAuthStatus();
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,7 +43,9 @@ export default function LoginPage() {
         toast.success(`Success! Redirecting you to the dashboard...`);
         router.push("/dashboard");
       } else {
-        toast.error("Login incorrect. Please check your username and password.");
+        toast.error(
+          "Login incorrect. Please check your username and password."
+        );
       }
     } catch (error) {
       console.error("Login error:", error);

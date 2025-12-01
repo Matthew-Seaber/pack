@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Eye, EyeOff, Trash } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -26,6 +26,24 @@ export default function SignupPage() {
   const [classes, setClasses] = useState([""]);
 
   const router = useRouter();
+
+  useEffect(() => {
+    // Checks if user is already logged in (runs in the background on page load so UI has priority since this may take time and the majority of users will be here to create an account)
+    const checkAuthStatus = async () => {
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          // User is already logged in, redirect to dashboard
+          router.push("/dashboard");
+        }
+      } catch {
+        // User is not logged in (expected result)
+        console.log("User not logged in.");
+      }
+    };
+
+    checkAuthStatus();
+  }, [router]);
 
   const commonPasswordList = [
     "password1!",

@@ -2,6 +2,7 @@
 
 import DarkMode from "./UITheme";
 import Logo from "./Logo";
+import NavbarLinks from "./NavbarLinks";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,8 +30,10 @@ function MainNavbar() {
 
   return (
     <nav className="border-b">
-      <div className="max-w-[1600px] mx-auto px-6 flex justify-between flex-wrap py-6 gap-4">
+      <div className="max-w-[1600px] mx-auto px-6 flex justify-between items-center flex-wrap py-6 gap-4">
         <Logo />
+
+        <NavbarLinks />
 
         <div className="flex gap-4 items-center flex-shrink-0">
           <DarkMode />
