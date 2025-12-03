@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
@@ -342,7 +343,7 @@ export async function POST(req: Request) {
 
   // HTTP cookie for session
   const res = NextResponse.json(
-    studentDebugInfo || { message: "Successfully logged in" }
+    studentDebugInfo || { message: "Successfully logged in", clearCache: true }
   );
   const cookieAge = 30; // In days
 
@@ -354,6 +355,9 @@ export async function POST(req: Request) {
     maxAge: 60 * 60 * 24 * cookieAge,
     sameSite: "lax",
   });
+
+  // Clears cache (required for role-based navbar)
+  revalidatePath("/", "layout");
 
   return res;
 }

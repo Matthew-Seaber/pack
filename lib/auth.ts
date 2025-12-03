@@ -1,53 +1,56 @@
-import { cookies } from 'next/headers';
-import { supabaseMainAdmin } from '@/lib/supabaseMainAdmin';
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 
 export async function getUser() {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('sessionCookie');
-  
+  const sessionCookie = cookieStore.get("sessionCookie");
+
   if (!sessionCookie) {
     return null;
   }
-  
+
   try {
     // Check session
     const { data: session, error: sessionError } = await supabaseMainAdmin
-      .from('sessions')
-      .select('user_id, expires')
-      .eq('token', sessionCookie.value)
+      .from("sessions")
+      .select("user_id, expires")
+      .eq("token", sessionCookie.value)
       .single();
-    
+
     if (sessionError || !session) {
       return null;
     }
-    
+
     // Check if session has expired
     const now = new Date();
     const expiryDate = new Date(session.expires);
-    
+
     if (now > expiryDate) {
       // Delete session if it has expired
       await supabaseMainAdmin
-        .from('sessions')
+        .from("sessions")
         .delete()
-        .eq('token', sessionCookie.value);
+        .eq("token", sessionCookie.value);
       return null;
     }
-    
+
     // Get user information from main 'users' table
     const { data: user, error: userError } = await supabaseMainAdmin
-      .from('users')
-      .select('user_id, username, email, first_name, role, created_at, last_login')
-      .eq('user_id', session.user_id)
+      .from("users")
+      .select(
+        "user_id, username, email, first_name, role, created_at, last_login"
+      )
+      .eq("user_id", session.user_id)
       .single();
-    
+
     if (userError || !user) {
       return null;
     }
-    
+
     return user;
   } catch (error) {
-    console.error('Error getting current user:', error);
+    console.error("Error getting current user:", error);
     return null;
   }
 }
@@ -59,27 +62,30 @@ export async function isAuthenticated(): Promise<boolean> {
 
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('sessionCookie');
+  const sessionCookie = cookieStore.get("sessionCookie");
 
   // Delete session from database
   if (sessionCookie) {
     try {
       await supabaseMainAdmin
-        .from('sessions')
+        .from("sessions")
         .delete()
-        .eq('token', sessionCookie.value);
+        .eq("token", sessionCookie.value);
     } catch (error) {
-      console.error('Error deleting session from database:', error);
+      console.error("Error deleting session from database:", error);
     }
   }
 
+  // Clears cache (required for role-based navbar)
+  revalidatePath("/", "layout");
+
   // Clear the session cookie
   cookieStore.set({
-    name: 'sessionCookie',
-    value: '',
+    name: "sessionCookie",
+    value: "",
     httpOnly: true,
-    path: '/',
+    path: "/",
     maxAge: 0,
-    sameSite: 'lax',
+    sameSite: "lax",
   });
 }

@@ -26,7 +26,7 @@ function NavbarLinks() {
             sessionStorage.setItem("userRole", role);
           }
         } catch (error) {
-          console.error("Error fetching user role:", error);
+          console.error("Error fetching user role (user may not be logged in):", error);
         }
       };
 
@@ -36,11 +36,14 @@ function NavbarLinks() {
 
   return (
     <div className="flex gap-12 items-center absolute left-1/2 transform -translate-x-1/2">
-      <Link href="/calendar" className="hover:text-primary transition-colors">
-        Calendar
-      </Link>
       {userRole === "Student" && (
         <>
+          <Link
+            href="/calendar"
+            className="hover:text-primary transition-colors"
+          >
+            Calendar
+          </Link>
           <Link
             href="/subjects"
             className="hover:text-primary transition-colors"
@@ -53,11 +56,18 @@ function NavbarLinks() {
           >
             Schoolwork
           </Link>
+          <Link href="/tasks" className="hover:text-primary transition-colors">
+            Tasks
+          </Link>
+        </>
+      )}{" "}
+      {userRole === "Teacher" && (
+        <>
           <Link
-            href="/tasks"
+            href="/calendar"
             className="hover:text-primary transition-colors"
           >
-            Tasks
+            Calendar
           </Link>
         </>
       )}

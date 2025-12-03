@@ -1,4 +1,4 @@
-import { getUser, logout } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 import UpdateEmailForm from "@/components/forms/UpdateEmail";
 import UpdatePasswordForm from "@/components/forms/UpdatePassword";
 import UpdateProgressEmailsForm from "@/components/forms/UpdateProgressEmails";
+import LogoutButton from "@/components/forms/LogoutButton";
 
 export default async function SettingsPage() {
   const user = await getUser();
@@ -163,18 +164,9 @@ export default async function SettingsPage() {
         </p>
       )}
 
-      <form
-        action={async () => {
-          "use server";
-          await logout();
-          redirect("/");
-        }}
-        className="mt-10 mb-5"
-      >
-        <Button type="submit">
-          Log out
-        </Button>
-      </form>
+      <div className="mt-10 mb-5">
+        <LogoutButton />
+      </div>
     </>
   );
 }

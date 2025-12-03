@@ -40,6 +40,8 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
+        // Clears cached role
+        sessionStorage.removeItem("userRole");
         toast.success(`Success! Redirecting you to the dashboard...`);
         router.push("/dashboard");
       } else {

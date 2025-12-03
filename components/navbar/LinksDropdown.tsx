@@ -76,8 +76,10 @@ function LinksDropdown() {
             className="transform-none w-full text-left" // 'w-full' makes sure the entire button is clickable (not just test), as the normal button component isn't being used here
             onClick={async () => {
               toast.info("Logging out...");
+              // Clear cached user role
+              sessionStorage.removeItem("userRole");
               await fetch("/api/logout", { method: "POST" });
-              window.location.href = "/";
+              window.location.href = "/"; // Hard redirect to home page
             }}
           >
             Log out

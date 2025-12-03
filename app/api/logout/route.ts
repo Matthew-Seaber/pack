@@ -6,5 +6,6 @@ export async function POST() {
 
   return NextResponse.json({
     message: "Successfully logged out user",
+    clearCache: true,
   });
 }

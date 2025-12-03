@@ -228,6 +228,8 @@ export default function SignupPage() {
           }),
         });
         if (res.ok) {
+          // Clear cached user role
+          sessionStorage.removeItem("userRole");
           toast.success(`Success! Redirecting you to the dashboard...`);
           confetti({
             particleCount: 80,
