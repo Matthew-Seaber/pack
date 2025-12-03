@@ -63,6 +63,7 @@ export default function SubjectsPage() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [sortType, setSortType] = useState<string>("Alphabetical");
   const [filterType, setFilterType] = useState<string>("None");
+  const [qualification, setQualification] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -289,7 +290,7 @@ export default function SubjectsPage() {
               className="w-full"
               onClick={() =>
                 router.push(
-                  "/specification/" +
+                  `/specification/${qualification}/` +
                     selectedSubject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     selectedSubject.examBoard.toLowerCase()
@@ -302,7 +303,7 @@ export default function SubjectsPage() {
               className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
               onClick={() =>
                 router.push(
-                  "/resources/" +
+                  `/resources/${qualification}/` +
                     selectedSubject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     selectedSubject.examBoard.toLowerCase()
@@ -315,7 +316,7 @@ export default function SubjectsPage() {
               className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
               onClick={() =>
                 router.push(
-                  "/past-papers/" +
+                  `/past-papers/${qualification}/` +
                     selectedSubject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     selectedSubject.examBoard.toLowerCase()
@@ -397,7 +398,7 @@ export default function SubjectsPage() {
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
               onClick={() =>
                 router.push(
-                  "/specification/" +
+                  `/specification/${qualification}/` +
                     subject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     subject.examBoard.toLowerCase()
@@ -411,7 +412,7 @@ export default function SubjectsPage() {
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
               onClick={() =>
                 router.push(
-                  "/resources/" +
+                  `/resources/${qualification}/` +
                     subject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     subject.examBoard.toLowerCase()
@@ -425,7 +426,7 @@ export default function SubjectsPage() {
               className="justify-start pl-0 text-foreground font-normal h-auto py-0"
               onClick={() =>
                 router.push(
-                  "/past-papers/" +
+                  `/past-papers/${qualification}/` +
                     subject.name.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     subject.examBoard.toLowerCase()
@@ -479,6 +480,34 @@ export default function SubjectsPage() {
           } else {
             const subjectsData = await subjectsResponse.json();
             setSubjects(subjectsData.subjects);
+          }
+
+          // Get qualification level
+          const qualificationResponse = await fetch(
+            "/api/user/student/get_year_group",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (!qualificationResponse.ok) {
+            console.error(
+              "Error getting year group:",
+              qualificationResponse.statusText
+            );
+            toast.error("Error getting your qualification level. Please try again later.");
+          } else {
+            const qualificationData = await qualificationResponse.json();
+            const yearGroup = qualificationData.yearGroup;
+
+            if (yearGroup === 10 || yearGroup === 11) {
+              setQualification("gcse");
+            } else if (yearGroup === 12 || yearGroup === 13) {
+              setQualification("a-level");
+            } else {
+              setQualification(null);
+            }
           }
         } else {
           // User not logged in

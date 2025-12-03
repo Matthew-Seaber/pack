@@ -15,12 +15,26 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const qualification = searchParams.get("qualification");
     const courseName = searchParams.get("subject");
     const examBoard = searchParams.get("examBoard");
 
-    if (!courseName || !examBoard) {
+    if (!qualification || !courseName || !examBoard) {
       return NextResponse.json(
         { error: "Missing required parameters" },
+        { status: 400 }
+      );
+    }
+
+    let newQualification = null;
+
+    if (qualification === "gcse") {
+      newQualification = "GCSE";
+    } else if (qualification === "a-level") {
+      newQualification = "A level";
+    } else {
+      return NextResponse.json(
+        { error: "Unknown qualification type" },
         { status: 400 }
       );
     }
@@ -29,6 +43,7 @@ export async function GET(request: Request) {
       await supabaseMainAdmin
         .from("courses")
         .select("course_id")
+        .eq("qualification", newQualification)
         .eq("course_name", courseName)
         .eq("exam_board", examBoard)
         .single();

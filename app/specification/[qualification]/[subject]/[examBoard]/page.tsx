@@ -26,6 +26,7 @@ import {
 
 interface SpecificationPageProps {
   params: Promise<{
+    qualification: string;
     subject: string;
     examBoard: string;
   }>;
@@ -104,13 +105,19 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  let { subject, examBoard } = use(params);
+  const resolvedParams = use(params);
+  const qualification = resolvedParams.qualification;
+  let subject = resolvedParams.subject;
+  let examBoard = resolvedParams.examBoard;
+
   subject = subject
     .replace(/-/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase()); // Converts subject to sentence case and adds a space if required
+
   if (examBoard[0] !== "e") {
     examBoard = examBoard.toUpperCase();
   } // Capitalises exam boards that are normally capitalised (all others begin with "E")
+
 
   // Sidebar content component
   const SidebarContent = () => {
@@ -122,7 +129,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="flex-1"
               onClick={() =>
                 router.push(
-                  "/resources/" +
+                  `/resources/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     examBoard.toLowerCase()
@@ -135,7 +142,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="flex-1"
               onClick={() =>
                 router.push(
-                  "/past-papers/" +
+                  `/past-papers/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     examBoard.toLowerCase()
@@ -168,7 +175,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             className="flex-1"
             onClick={() =>
               router.push(
-                "/resources/" +
+                `/resources/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
                   examBoard.toLowerCase()
@@ -181,7 +188,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             className="flex-1"
             onClick={() =>
               router.push(
-                "/past-papers/" +
+                `/past-papers/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
                   examBoard.toLowerCase()
@@ -237,7 +244,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="w-full"
               onClick={() =>
                 router.push(
-                  "/resources/" +
+                  `/resources/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     examBoard.toLowerCase()
@@ -307,6 +314,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            qualification: qualification,
             courseName: subject,
             examBoard: examBoard,
             entryID: entryID,
@@ -363,7 +371,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
         toast.error(`Failed to save ${type}.`);
       }
     },
-    [examBoard, subject, specificationEntries]
+    [examBoard, qualification, subject, specificationEntries]
   );
 
   React.useEffect(() => {
@@ -381,7 +389,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
 
           // Gets specification entries and the user's personal confidence/session data by subject and exam board
           const specificationResponse = await fetch(
-            `/api/specifications/get_specification_data?subject=${encodeURIComponent(
+            `/api/specifications/get_specification_data?qualification=${encodeURIComponent(qualification)}&subject=${encodeURIComponent(
               subject
             )}&examBoard=${encodeURIComponent(examBoard)}`
           );
@@ -414,7 +422,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     };
 
     fetchSpecificationData();
-  }, [subject, examBoard, router, sortEntriesByTopic]);
+  }, [qualification, subject, examBoard, router, sortEntriesByTopic]);
 
   if (loading) {
     return (
@@ -627,7 +635,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               <p>
                 There are currently no entries for this subject. This may mean
                 your subject is unsupported or you&apos;ve entered an invalid
-                course/exam board combination (check spelling above) - please
+                qualification/course/exam board combination (check spelling above) - if this is not the case, please
                 contact support so we can add content from your exam board.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>

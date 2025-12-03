@@ -8,7 +8,27 @@ export async function POST(req: Request) {
 
     // Gets user here instead of the client for security
     const user = await getUser();
-    const { courseName, examBoard, entryID, type, detail } = await req.json();
+    const { qualification, courseName, examBoard, entryID, type, detail } = await req.json();
+
+    if (!qualification || !courseName || !examBoard) {
+      return NextResponse.json(
+        { error: "Missing required parameters" },
+        { status: 400 }
+      );
+    }
+
+    let newQualification = null;
+
+    if (qualification === "gcse") {
+      newQualification = "GCSE";
+    } else if (qualification === "a-level") {
+      newQualification = "A level";
+    } else {
+      return NextResponse.json(
+        { error: "Unknown qualification type" },
+        { status: 400 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -17,17 +37,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!courseName || !examBoard) {
-      return NextResponse.json(
-        { error: "Missing required parameters" },
-        { status: 400 }
-      );
-    }
-
     const { data: courseData, error: courseFetchError } =
       await supabaseMainAdmin
         .from("courses")
         .select("course_id")
+        .eq("qualification", newQualification)
         .eq("course_name", courseName)
         .eq("exam_board", examBoard)
         .single();

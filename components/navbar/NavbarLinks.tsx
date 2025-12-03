@@ -35,7 +35,7 @@ function NavbarLinks() {
   }, []);
 
   return (
-    <div className="flex gap-12 items-center absolute left-1/2 transform -translate-x-1/2">
+    <div className="hidden lg:flex gap-12 items-center absolute left-1/2 transform -translate-x-1/2">
       {userRole === "Student" && (
         <>
           <Link

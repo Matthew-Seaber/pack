@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 
 function LinksDropdown() {
   const [firstName, setFirstName] = useState<string>(""); // Empty until GET request returns name
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ function LinksDropdown() {
         if (response.ok) {
           const userData = await response.json();
           setFirstName(userData.first_name || ""); // Empty if GET request doesn't contain first name
+          setUserRole(userData.role);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -56,6 +58,43 @@ function LinksDropdown() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-30" align="start" sideOffset={10}>
+        <div className="block lg:hidden">
+          {userRole === "Student" && (
+            <>
+              <DropdownMenuItem>
+                <Link href="/calendar" className="capitalize w-full">
+                  Calendar
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/subjects" className="capitalize w-full">
+                  Subjects
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/schoolwork" className="capitalize w-full">
+                  Schoolwork
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/tasks" className="capitalize w-full">
+                  Tasks
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+          {userRole === "Teacher" && (
+            <>
+              <DropdownMenuItem>
+                <Link href="/calendar" className="capitalize w-full">
+                  Calendar
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+        </div>
         <DropdownMenuItem>
           <Link href="/pricing" className="capitalize w-full">
             🚀 UPGRADE
