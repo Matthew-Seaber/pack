@@ -261,7 +261,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="w-full"
               onClick={() => {
                 const emailSubject = encodeURIComponent(
-                  "Issue with Specification Page Entry for " +
+                  "Issue with Specification Page Entry for " + qualification + " " +
                     subject +
                     " (" +
                     examBoard +
@@ -270,6 +270,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                 const emailBody = encodeURIComponent(`Dear Pack Support,
 
       I believe there is an issue on the specification page for:
+      - Qualification: ${qualification}
       - Subject: ${subject}
       - Exam Board: ${examBoard}
       - Specification Entry: ${selectedEntry.topic} - ${selectedEntry.topic_name}

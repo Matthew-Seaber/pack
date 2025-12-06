@@ -60,12 +60,12 @@ export async function GET(request: Request) {
 
     const { data: subjectData, error: subjectFetchError } =
       await supabaseMainAdmin
-      .from("subjects")
-      .select("subject_id")
-      .eq("course_id", courseID)
-      .eq("user_id", user.user_id)
-      .limit(1)
-      .single(); // Limit(1) is used as a fallback if the user has multiple of the same course (which shouldn't occur anyway)
+        .from("subjects")
+        .select("subject_id")
+        .eq("course_id", courseID)
+        .eq("user_id", user.user_id)
+        .limit(1)
+        .single(); // Limit(1) is used as a fallback if the user has multiple of the same course (which shouldn't occur anyway)
 
     if (subjectFetchError) {
       console.error("Error getting subject:", subjectFetchError);
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
 
     const subjectID = subjectData.subject_id;
 
-    // Get course names, exam boards, papers, final year for all course IDs
+    // Get entry topic, name, description, paper, rarity, difficulty for all entries with matching course ID
     const {
       data: specificationEntryData,
       error: specificationEntryFetchError,

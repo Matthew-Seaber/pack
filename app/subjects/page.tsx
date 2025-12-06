@@ -330,7 +330,7 @@ export default function SubjectsPage() {
               className="w-full"
               onClick={() => {
                 const emailSubject = encodeURIComponent(
-                  "Issue with Subject Page for " +
+                  "Issue with Subject Page for " + qualification + " - " +
                     selectedSubject.name +
                     " (" +
                     selectedSubject.examBoard +
@@ -339,6 +339,7 @@ export default function SubjectsPage() {
                 const emailBody = encodeURIComponent(`Dear Pack Support,
 
       I believe there is an issue on the subjects page regarding the following subject:
+      - Qualification: ${qualification}
       - Subject: ${selectedSubject.name}
       - Exam Board: ${selectedSubject.examBoard}
 
