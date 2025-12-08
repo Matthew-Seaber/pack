@@ -45,6 +45,28 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
     insert_location: string | null;
   }
 
+  const [pastPaperEntries, setPastPaperEntries] = useState<
+    PastPaperEntry[] | null
+  >(null);
+  const [selectedEntry, setSelectedEntry] = useState<PastPaperEntry | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const resolvedParams = use(params);
+  const qualification = resolvedParams.qualification;
+  let subject = resolvedParams.subject;
+  let examBoard = resolvedParams.examBoard;
+
+  subject = subject
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()); // Converts subject to sentence case and adds a space if required
+
+  if (examBoard[0] !== "e") {
+    examBoard = examBoard.toUpperCase();
+  } // Capitalises exam boards that are normally capitalised (all others begin with "E")
+
   // Function to sort entries by series and resource name
   const sortEntriesBySeries = useCallback(
     (entries: PastPaperEntry[]): PastPaperEntry[] => {
@@ -112,27 +134,30 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
     []
   );
 
-  const [pastPaperEntries, setPastPaperEntries] = useState<
-    PastPaperEntry[] | null
-  >(null);
-  const [selectedEntry, setSelectedEntry] = useState<PastPaperEntry | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const downloadZIP = async (entryID: string) => {
+    const downloadResponse = await fetch(
+      `/api/past-papers/download_zip?entryID=${encodeURIComponent(entryID)}`
+    );
 
-  const resolvedParams = use(params);
-  const qualification = resolvedParams.qualification;
-  let subject = resolvedParams.subject;
-  let examBoard = resolvedParams.examBoard;
+    if (!downloadResponse.ok) {
+      console.error("Error downloading ZIP:", downloadResponse.statusText);
+      toast.error("Error downloading ZIP. Please try again later.");
+    } else {
+      toast.success("Downloading...");
+    }
+  };
 
-  subject = subject
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase()); // Converts subject to sentence case and adds a space if required
-
-  if (examBoard[0] !== "e") {
-    examBoard = examBoard.toUpperCase();
-  } // Capitalises exam boards that are normally capitalised (all others begin with "E")
+  const openFiles = async (entryID: string) => {
+    const openResponse = await fetch(
+      `/api/past-papers/open_files?entryID=${encodeURIComponent(entryID)}`
+    );
+    if (!openResponse.ok) {
+      console.error("Error opening files:", openResponse.statusText);
+      toast.error("Error opening files. Please try again later.");
+    } else {
+      toast.success("Opening files...");
+    }
+  };
 
   // Sidebar content component
   const SidebarContent = () => {
