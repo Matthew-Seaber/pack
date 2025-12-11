@@ -11,20 +11,34 @@ export async function getUser() {
   }
 
   try {
-    // Check session
-    const { data: session, error: sessionError } = await supabaseMainAdmin
+    // Single query joining 'sessions' and 'users' tables to avoid 2 consecutive queries which previously led to slow responses, negatively affecting UX
+    const { data: sessionData, error: sessionError } = await supabaseMainAdmin
       .from("sessions")
-      .select("user_id, expires")
+      .select(
+        `
+        user_id,
+        expires,
+        users!inner (
+          user_id,
+          username,
+          email,
+          first_name,
+          role,
+          created_at,
+          last_login
+        )
+      `
+      )
       .eq("token", sessionCookie.value)
       .single();
 
-    if (sessionError || !session) {
+    if (sessionError || !sessionData) {
       return null;
     }
 
     // Check if session has expired
     const now = new Date();
-    const expiryDate = new Date(session.expires);
+    const expiryDate = new Date(sessionData.expires);
 
     if (now > expiryDate) {
       // Delete session if it has expired
@@ -35,20 +49,26 @@ export async function getUser() {
       return null;
     }
 
-    // Get user information from main 'users' table
-    const { data: user, error: userError } = await supabaseMainAdmin
-      .from("users")
-      .select(
-        "user_id, username, email, first_name, role, created_at, last_login"
-      )
-      .eq("user_id", session.user_id)
-      .single();
-
-    if (userError || !user) {
+    // Extract user data from the join
+    const userData = sessionData.users;
+    
+    if (!userData) {
       return null;
     }
 
-    return user;
+    const user = Array.isArray(userData) ? userData[0] : userData;
+
+    if (!user || !user.user_id) {
+      return null;
+    }
+
+    return {
+      user_id: user.user_id,
+      username: user.username,
+      email: user.email,
+      first_name: user.first_name,
+      role: user.role,
+    };
   } catch (error) {
     console.error("Error getting current user:", error);
     return null;

@@ -139,7 +139,8 @@ export default function SignupPage() {
 
     if (!firstName || !username || !email || !password) {
       // Validation for empty fields
-      toast.error("Please fill in all fields.");
+      const emptyField = !firstName ? "first name" : !username ? "username" : !email ? "email" : "password";
+      toast.error(`Please fill in all fields (${emptyField}).`);
       return;
     } else if (username.length < 5 || username.length > 20) {
       // Validation for username length

@@ -135,15 +135,52 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
   );
 
   const downloadZIP = async (entryID: string) => {
-    const downloadResponse = await fetch(
-      `/api/past-papers/download_zip?entryID=${encodeURIComponent(entryID)}`
-    );
+    try {
+      toast.info("Preparing download...");
 
-    if (!downloadResponse.ok) {
-      console.error("Error downloading ZIP:", downloadResponse.statusText);
-      toast.error("Error downloading ZIP. Please try again later.");
-    } else {
-      toast.success("Downloading...");
+      const downloadResponse = await fetch(
+        `/api/past-papers/download_zip?entryID=${encodeURIComponent(entryID)}`
+      );
+
+      if (!downloadResponse.ok) {
+        console.error("Error downloading ZIP:", downloadResponse.statusText);
+        toast.error("Error downloading files. Please try again later.");
+        return;
+      }
+
+      const blob = await downloadResponse.blob(); // Gets the raw binary data (BLOB = Binary Large Object)
+
+      const entry = pastPaperEntries?.find((item) => item.id === entryID);
+      const words = subject.toLowerCase().split(" "); // Same logic reused from sign up page
+      let prefix = "";
+      if (words.length >= 2) {
+        prefix = words[0][0] + words[1][0];
+      } else {
+        prefix = subject.slice(0, 2);
+      }
+
+      const filename = entry
+        ? `${prefix}-${entry.series
+            .toLowerCase()
+            .replace(/\s+/g, "-")}-${entry.resource_name
+            .toLowerCase()
+            .replace(/\s+/g, "-")}.zip`
+        : "past-papers.zip"; // e.g. "cs-june-2022-paper-2.zip" so it's easily identifiable what each ZIP is in the file explorer
+
+      const url = window.URL.createObjectURL(blob);
+      const downloadObject = document.createElement("a");
+      downloadObject.href = url;
+      downloadObject.download = filename;
+      document.body.appendChild(downloadObject);
+      downloadObject.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(downloadObject);
+
+      toast.success("Download complete.");
+    } catch (error) {
+      console.error("Error downloading ZIP:", error);
+      toast.error("Error downloading files. Please try again later.");
     }
   };
 
