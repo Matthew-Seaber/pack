@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json({ locationData });
+    return NextResponse.json(locationData);
   } catch (error) {
     console.error("API Error:", error);
     return NextResponse.json(

@@ -32,12 +32,12 @@ export async function GET(request: Request) {
       for (let byte = 0; byte < 256; byte++) {
         let crc = byte;
         for (let bit = 0; bit < 8; bit++) {
-          crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1; // Checks if least significant bit is 1. If true (1), crc is shifted right by 1 bit and XORed with the polynomial constant. If false (0), crc is just shifted right by 1 bit
+          crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1; // Checks if least significant bit is 1. If true (1), crc is shifted right by 1 bit and XORed with the reversed polynomial constant. If false (0), crc is just shifted right by 1 bit
         }
         table[byte] = crc >>> 0; // Result stored in the table for quick lookup in code below (after being converted to an unsigned 32-bit integer)
       }
 
-      let crc = ~0; // Flips bits (bitwise NOT)
+      let crc = ~0; // Flips the bits (of 0 to all 1s) using the bitwise NOT
       for (let byteIndex = 0; byteIndex < buffer.length; byteIndex++) {
         crc = table[(crc ^ buffer[byteIndex]) & 0xff] ^ (crc >>> 8); // XORs crc with the current byte and masks the result of this to the lowest 8 bits (using 0xff) to ensure it is within the table's range (line 31: 0-255). This value from the table is then XORed with the value of crc shifted right by 8 bits
       }

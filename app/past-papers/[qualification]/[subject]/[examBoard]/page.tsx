@@ -139,7 +139,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
       toast.info("Preparing download...");
 
       const downloadResponse = await fetch(
-        `/api/past-papers/download_zip?entryID=${encodeURIComponent(entryID)}`
+        `/api/past_papers/download_zip?entryID=${encodeURIComponent(entryID)}`
       );
 
       if (!downloadResponse.ok) {
@@ -177,7 +177,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(downloadObject);
 
-      toast.success("Download complete.");
+      toast.success("Download complete!");
     } catch (error) {
       console.error("Error downloading ZIP:", error);
       toast.error("Error downloading files. Please try again later.");
@@ -185,15 +185,13 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
   };
 
   const openFiles = async (entryID: string) => {
-    const openResponse = await fetch(
-      `/api/past-papers/open_files?entryID=${encodeURIComponent(entryID)}`
-    );
-    if (!openResponse.ok) {
-      console.error("Error opening files:", openResponse.statusText);
-      toast.error("Error opening files. Please try again later.");
-    } else {
-      toast.success("Opening files...");
-    }
+    toast.info("Opening files...");
+
+    window.open(
+      `/past-papers/view/${entryID}/`,
+      "_blank",
+      "noopener,noreferrer"
+    ); // Opens in new tab
   };
 
   // Sidebar content component
@@ -429,7 +427,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
 
           // Gets past paper entries and their files' locations
           const pastPaperResponse = await fetch(
-            `/api/past-papers/get_past_paper_data?qualification=${encodeURIComponent(
+            `/api/past_papers/get_past_paper_data?qualification=${encodeURIComponent(
               qualification
             )}&subject=${encodeURIComponent(
               subject

@@ -12,8 +12,8 @@ export default function ConditionalContent({
 }) {
   const pathname = usePathname();
 
-  // On login and signup page, only render the children without providers/navbar
-  if (pathname === "/login" || pathname === "/signup") {
+  // On login and signup page, only render the children without providers/navbar (+ any full screen pages)
+  if (pathname === "/login" || pathname === "/signup" || pathname.startsWith("/past-papers/view/")) {
     return <>{children}</>;
   }
 
