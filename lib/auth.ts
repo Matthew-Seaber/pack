@@ -68,6 +68,7 @@ export async function getUser() {
       email: user.email,
       first_name: user.first_name,
       role: user.role,
+      created_at: user.created_at,
     };
   } catch (error) {
     console.error("Error getting current user:", error);
