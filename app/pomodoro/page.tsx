@@ -33,7 +33,7 @@ function PomodoroPage() {
   const [breakLength, setBreakLength] = React.useState(5);
   const [timerStatus, setTimerStatus] = React.useState<
     "stopped" | "running" | "paused"
-  >("stopped")
+  >("stopped");
   const isDesktop =
     typeof window !== "undefined" &&
     window.matchMedia("(min-width: 768px)").matches;
@@ -104,9 +104,8 @@ function PomodoroPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              user_id: user.user_id,
               dataToChange: "pomodoro",
-              timeRevised: focusLength,
+              extraInfo: focusLength,
             }),
           });
 
@@ -133,7 +132,6 @@ function PomodoroPage() {
       } else {
         setCurrentTime(focusLength * 60);
       }
-
     } else {
       toast.info("Break over. Time for another productive focus session!");
       setMode("focus");
@@ -252,16 +250,15 @@ function PomodoroPage() {
 
     if (user) {
       try {
-        const sessionLength = (focusLength - Math.ceil(currentTime / 60));
+        const sessionLength = focusLength - Math.ceil(currentTime / 60);
         console.log("Session length:", sessionLength);
 
         const res = await fetch("/api/user_stats/save_stats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: user.user_id,
             dataToChange: "pomodoro",
-            timeRevised: sessionLength,
+            extraInfo: sessionLength,
           }),
         });
 

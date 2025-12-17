@@ -15,6 +15,7 @@ import UpdateEmailForm from "@/components/forms/UpdateEmail";
 import UpdatePasswordForm from "@/components/forms/UpdatePassword";
 import UpdateProgressEmailsForm from "@/components/forms/UpdateProgressEmails";
 import LogoutButton from "@/components/forms/LogoutButton";
+import { Toaster } from "sonner"
 
 export default async function SettingsPage() {
   const user = await getUser();
@@ -163,6 +164,8 @@ export default async function SettingsPage() {
           No current teacher preferences. Please check back later.
         </p>
       )}
+
+      <Toaster />
 
       <div className="mt-10 mb-5">
         <LogoutButton />

@@ -395,10 +395,32 @@ export default function TasksPage() {
               } else {
                 console.error("Failed to complete task:", response.statusText);
                 toast.error("Failed to complete task. Please try again later.");
+                return;
               }
             } catch (error) {
               console.error("Error completing task:", error);
               toast.error("Error completing task. Please try again later.");
+              return;
+            }
+
+            try {
+              const res = await fetch("/api/user_stats/save_stats", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  dataToChange: "tasks_completed",
+                  extraInfo: null,
+                }),
+              });
+
+              if (!res.ok) {
+                toast.error("Failed to save task stats to profile.");
+                const errorData = await res.json();
+                console.error("Stats saving error:", errorData.message);
+              }
+            } catch (error) {
+              console.error("Error saving task stats:", error);
+              toast.error("Error saving task stats. Please try again later.");
             }
           }}
         />

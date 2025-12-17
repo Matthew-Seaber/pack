@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   try {
     // Gets user here instead of the client for security
     const user = await getUser();
-    const { user_id, dataToChange, timeRevised } = await req.json();
+    const { dataToChange, extraInfo } = await req.json();
 
     if (!user) {
       return NextResponse.json(
@@ -15,37 +15,57 @@ export async function POST(req: Request) {
       );
     }
 
-  if (dataToChange === "pomodoro") {
-    const { data, error: fetchError } = await supabaseMainAdmin
-      .from("student_stats")
-      .select("pomodoro_time")
-      .eq("user_id", user_id)
-      .single();
+    const user_id = user.user_id;
 
-    if (fetchError) {
-      throw fetchError;
-    }
+    if (dataToChange === "pomodoro") {
+      if (extraInfo === undefined || typeof extraInfo !== "number") {
+        return NextResponse.json(
+          { error: "Invalid extraInfo value" },
+          { status: 400 }
+        );
+      }
 
-    const currentPomodoroTime = data?.pomodoro_time ?? 0;
-    const newPomodoroTime = currentPomodoroTime + timeRevised;
+      const { error: updateError } = await supabaseMainAdmin.rpc(
+        "increase_pomodoro_stats",
+        {
+          inputted_user_id: user_id,
+          amount: extraInfo,
+        }
+      );
 
-    const { error: updateError } = await supabaseMainAdmin
-      .from("student_stats")
-      .update({ pomodoro_time: newPomodoroTime })
-      .eq("user_id", user_id);
+      if (updateError) {
+        console.error("Database error:", updateError);
+        return NextResponse.json(
+          { error: `Failed to update user stats ${updateError.message}` },
+          { status: 500 }
+        );
+      }
+    } else if (dataToChange === "tasks_completed") {
+      const { error: updateError } = await supabaseMainAdmin.rpc(
+        "increment_tasks_stat",
+        {
+          inputted_user_id: user_id,
+        }
+      );
 
-    if (updateError) {
-      console.error("Database error:", updateError);
+      if (updateError) {
+        console.error("Database error:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update user stats" },
+          { status: 500 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { error: "Failed to update user stats" },
-        { status: 500 }
+        { error: "Invalid dataToChange value" },
+        { status: 400 }
       );
     }
-  }
 
-  return NextResponse.json({
-    message: "Successfully amended data",
-  });
+    return NextResponse.json({
+      message: "Successfully amended data",
+      status: 200,
+    });
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(

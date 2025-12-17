@@ -255,9 +255,8 @@ export async function POST(req: Request) {
       );
     }
   } else {
-    let teacher;
     try {
-      const { data, error } = await supabaseMainAdmin
+      const { data: teacherData, error } = await supabaseMainAdmin
         .from("teachers")
         .insert([
           {
@@ -272,8 +271,7 @@ export async function POST(req: Request) {
 
       if (error) throw error;
 
-      teacher = data;
-      console.log("Successfully inserted teacher data:", teacher);
+      console.log("Successfully inserted teacher data:", teacherData);
     } catch (error) {
       // Rollback if teacher creation fails - found out in testing that user would stay in database if this section fails
       try {
