@@ -715,7 +715,7 @@ export default function TasksPage() {
           {tasksDueTomorrow.length > 0 && tasksDueTomorrow.map(renderTask)}
 
           {tasksDueThisWeek.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">Later this week</h3>
+            <h3 className="pt-10 text-lg font-semibold">Within the next week</h3>
           )}
 
           {tasksDueThisWeek.length > 0 && tasksDueThisWeek.map(renderTask)}

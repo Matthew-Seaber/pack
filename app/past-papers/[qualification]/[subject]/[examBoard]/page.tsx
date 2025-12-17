@@ -572,6 +572,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                         <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
                           <div className="w-full h-full flex items-center justify-center">
                             <button
+                              title="Download"
                               className="rounded text-lg font-semibold"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -586,6 +587,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                         <td className="px-4 py-4 text-center hover:bg-gray-800">
                           <div className="w-full h-full flex items-center justify-center">
                             <button
+                              title="Open"
                               className="rounded text-lg font-semibold"
                               onClick={(e) => {
                                 e.stopPropagation();

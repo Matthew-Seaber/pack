@@ -47,7 +47,13 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
   const [insertVisible, setInsertVisible] = useState(true);
   const [layoutStructure, setLayoutStructure] = useState<
     "Horizontal" | "Vertical"
-  >("Horizontal");
+  >(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768 ? "Vertical" : "Horizontal"; // Default layoutStructure is vertical on mobile and horizontal for larger screens since splitting a screen vertically in half on mobile will make it hard to see information on either document
+    }
+
+    return "Horizontal";
+  });
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const router = useRouter();
@@ -294,7 +300,7 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
           if (visibleCount === 1) {
             return (
               <div className="w-full h-full">
-                <iframe className="w-full h-full" />
+                <iframe className="w-full h-full" src={visiblePanels[0].url} />
               </div>
             );
           }
@@ -308,11 +314,11 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
                 }
               >
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" />
+                  <iframe className="w-full h-full" src={visiblePanels[0].url} />
                 </ResizablePanel>
-                <ResizableHandle withHandle/>
+                <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" />
+                  <iframe className="w-full h-full" src={visiblePanels[1].url} />
                 </ResizablePanel>
               </ResizablePanelGroup>
             );
@@ -323,17 +329,17 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
             return (
               <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" />
+                  <iframe className="w-full h-full" src={visiblePanels[0].url} />
                 </ResizablePanel>
-                <ResizableHandle withHandle/>
+                <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[1].url} />
                     </ResizablePanel>
-                    <ResizableHandle withHandle/>
+                    <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[2].url} />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
@@ -348,23 +354,23 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[0].url} />
                     </ResizablePanel>
-                    <ResizableHandle withHandle/>
+                    <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[1].url} />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
-                <ResizableHandle withHandle/>
+                <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[2].url} />
                     </ResizablePanel>
-                    <ResizableHandle withHandle/>
+                    <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" />
+                      <iframe className="w-full h-full" src={visiblePanels[3].url} />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
