@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutPanelLeft } from "lucide-react";
+import { House, LayoutPanelLeft } from "lucide-react";
 
 interface ViewPastPaperPageProps {
   params: Promise<{
@@ -130,18 +130,24 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
   if (loading) {
     return (
       <>
-        <h1 className="text-2xl font-semibold mb-3">Past Paper Viewer</h1>
+        <div className="flex flex-col items-start m-5 space-y-3">
+          <h1 className="text-2xl font-semibold">Past Paper Viewer</h1>
 
-        <h2 className="mt-6 mb-3 text-sm">
-          <Spinner className="inline mr-2" />
-          <i>Loading files...</i>
-        </h2>
+          <h2 className="text-sm">
+            <Spinner className="inline mr-2 align-middle" />
+            <i>Loading files...</i>
+          </h2>
+        </div>
       </>
     );
   }
 
   return (
     <>
+      <Fab position="top-left" onClick={() => router.push("/dashboard")}>
+        <House />
+      </Fab>
+
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
           <Fab>
@@ -314,11 +320,17 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
                 }
               >
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" src={visiblePanels[0].url} />
+                  <iframe
+                    className="w-full h-full"
+                    src={visiblePanels[0].url}
+                  />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" src={visiblePanels[1].url} />
+                  <iframe
+                    className="w-full h-full"
+                    src={visiblePanels[1].url}
+                  />
                 </ResizablePanel>
               </ResizablePanelGroup>
             );
@@ -329,17 +341,26 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
             return (
               <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={50}>
-                  <iframe className="w-full h-full" src={visiblePanels[0].url} />
+                  <iframe
+                    className="w-full h-full"
+                    src={visiblePanels[0].url}
+                  />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[1].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[1].url}
+                      />
                     </ResizablePanel>
                     <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[2].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[2].url}
+                      />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
@@ -354,11 +375,17 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[0].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[0].url}
+                      />
                     </ResizablePanel>
                     <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[1].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[1].url}
+                      />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
@@ -366,11 +393,17 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
                 <ResizablePanel defaultSize={50}>
                   <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[2].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[2].url}
+                      />
                     </ResizablePanel>
                     <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={50}>
-                      <iframe className="w-full h-full" src={visiblePanels[3].url} />
+                      <iframe
+                        className="w-full h-full"
+                        src={visiblePanels[3].url}
+                      />
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </ResizablePanel>
