@@ -341,8 +341,8 @@ export default function TasksPage() {
                 style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
               >
                 <i>
-                  {task.description.length > 75
-                    ? task.description.slice(0, 75) + "..."
+                  {task.description.length > 100
+                    ? task.description.slice(0, 100) + "..."
                     : task.description}
                 </i>
               </p>

@@ -1,16 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, use } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AlarmClock,
-  CalendarPlus,
-  PanelBottomOpen,
-  UserRoundCheck,
-} from "lucide-react";
+import { AlarmClock, CalendarPlus, GraduationCap, Notebook, PanelBottomOpen, Square, SquareCheck } from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -49,25 +45,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface ClassSchoolworkPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps) {
+export default function SchoolworkPage() {
   interface SchoolworkEntry {
     id: string;
-    course_name: string | null;
+    category: number; // 1 = student-managed, 2 = teacher-managed
     schoolworkType: "Homework" | "Test"; // Can be either "Homework" or "Test", restricts assigning any other value
     due: string;
     issued: string | null;
     name: string;
     description: string | null;
-    completed: string | null;
+    subject_name: string | null;
+    class_name: string | null;
+    teacher_name: string | null;
+    completed: boolean;
   }
 
-  const { id: classID } = use(params);
+  const [schoolworkEntries, setSchoolworkEntries] = useState<
+    SchoolworkEntry[] | null
+  >(null);
+  const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
+  const [overdueEntries, setOverdueEntries] = useState<SchoolworkEntry[]>([]);
+  const [completedEntries, setCompletedEntries] = useState<SchoolworkEntry[]>(
+    []
+  );
+  const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [entryName, setEntryName] = useState("");
+  const [entryDescription, setEntryDescription] = useState("");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
+  const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
+  const router = useRouter();
 
   // Function to sort entries by due date (using bubble sort)
   const sortEntriesByDueDate = useCallback(
@@ -93,6 +106,18 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
     },
     []
   );
+
+  const playCompletionSFX = () => {
+    try {
+      const audio = new Audio("/sounds/task-complete.mp3");
+      audio.volume = 0.1;
+      audio.play().catch((error) => {
+        console.log("Could not play completion SFX:", error);
+      });
+    } catch (error) {
+      console.log("Could not play completion SFX:", error);
+    }
+  };
 
   // Function to handle adding a new schoolwork entry
   const handleAddEntry = async () => {
@@ -133,22 +158,18 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
         issuedTimestamp = combinedDate.toISOString();
       }
 
-      const response = await fetch(
-        "/api/teacher_schoolwork/add_schoolwork_entry",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            schoolwork_name: entryName.trim(),
-            schoolwork_description: entryDescription.trim() || null,
-            due: dueTimestamp,
-            issued: issuedTimestamp,
-            type: entryType,
-            course_id: null, // To be implemented in the future
-            class_id: classID,
-          }),
-        }
-      );
+      const response = await fetch("/api/schoolwork/add_schoolwork_entry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          schoolwork_name: entryName.trim(),
+          schoolwork_description: entryDescription.trim() || null,
+          due: dueTimestamp,
+          issued: issuedTimestamp,
+          type: entryType,
+          subject_id: null, // To be implemented in the future
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -181,6 +202,137 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
     }
   };
 
+  const handleMarkComplete = async (entryID: string) => {
+    try {
+      const response = await fetch(
+        "/api/schoolwork/complete_schoolwork_entry",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entryID: entryID,
+            type: "complete",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        playCompletionSFX();
+        toast.success("Schoolwork completed!");
+        confetti({
+          particleCount: 80,
+          spread: 50,
+          origin: { y: 0.6 },
+          ticks: 100,
+          gravity: 1.2,
+        });
+
+        // Moves entry to completed list (updates UI without refresh for improved UX)
+        setSchoolworkEntries((previous) =>
+          previous
+            ? previous.map((entry) =>
+                entry.id === entryID ? { ...entry, completed: true } : entry
+              )
+            : null
+        );
+        setFutureEntries((previous) =>
+          previous.filter((entry) => entry.id !== entryID)
+        );
+        setOverdueEntries((previous) =>
+          previous.filter((entry) => entry.id !== entryID)
+        );
+        const completedEntry = [...futureEntries, ...overdueEntries].find(
+          (entry) => entry.id === entryID
+        ); // Finds entry from either list and adds to the completed list below
+        if (completedEntry) {
+          setCompletedEntries((previous) => [
+            ...previous,
+            { ...completedEntry, completed: true }, // Marks entry as completed
+          ]);
+        }
+        setSelectedEntry(null);
+      } else {
+        console.error(
+          "Failed to complete schoolwork entry:",
+          response.statusText
+        );
+        toast.error(
+          "Failed to complete schoolwork. Please try again later."
+        );
+      }
+    } catch (error) {
+      console.error("Error completing schoolwork entry:", error);
+      toast.error("Error completing schoolwork. Please try again later.");
+    }
+  };
+
+  const handleMarkIncomplete = async (entryID: string) => {
+    try {
+      const response = await fetch(
+        "/api/schoolwork/complete_schoolwork_entry",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entryID: entryID,
+            type: "incomplete",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Schoolwork marked as incomplete.");
+
+        setSchoolworkEntries((previous) =>
+          previous
+            ? previous.map((entry) =>
+                entry.id === entryID ? { ...entry, completed: false } : entry
+              ) // Switches 'complete' to false in master list
+            : null
+        );
+        setCompletedEntries(
+          (
+            previous // Removes entry from the completed list
+          ) => previous.filter((entry) => entry.id !== entryID)
+        );
+        // Finds the entry and categorises it based on due date (below)
+        const incompleteEntry = completedEntries.find(
+          (entry) => entry.id === entryID
+        );
+
+        if (incompleteEntry) {
+          // Moves entry to future or overdue list (updates UI without refresh for improved UX)
+          const updatedEntry = { ...incompleteEntry, completed: false };
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          const dueDate = new Date(updatedEntry.due);
+          dueDate.setHours(0, 0, 0, 0);
+
+          if (dueDate >= now) {
+            setFutureEntries((previous) => [...previous, updatedEntry]);
+          } else {
+            setOverdueEntries((previous) => [...previous, updatedEntry]);
+          }
+        }
+
+        setSelectedEntry(null);
+      } else {
+        console.error(
+          "Failed to mark schoolwork as incomplete:",
+          response.statusText
+        );
+        toast.error(
+          "Failed to mark schoolwork as incomplete. Please try again later."
+        );
+      }
+    } catch (error) {
+      console.error("Error marking schoolwork as incomplete:", error);
+      toast.error(
+        "Error marking schoolwork as incomplete. Please try again later."
+      );
+    }
+  };
+
   // Function to convert a given timestamp to a UX-friendly format
   const formatTimestamp = (timestamp: string | null): string => {
     if (!timestamp) return "No date";
@@ -196,9 +348,13 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
     return `${weekday} ${day}/${month}/${year}`;
   };
 
-  // Split entries into future/today and past
+  // Split entries into future/today, past, and completed
   const categoriseEntry = React.useCallback(
-    (entry: SchoolworkEntry): "future" | "past" => {
+    (entry: SchoolworkEntry): "future" | "past" | "completed" => {
+      if (entry.completed === true) {
+        return "completed";
+      }
+
       const dueDate = new Date(entry.due);
       const now = new Date();
       now.setHours(0, 0, 0, 0); // Start of today
@@ -221,7 +377,10 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
           setFutureEntries((previous) => [...previous, entry]);
           break;
         case "past":
-          setPastEntries((previous) => [...previous, entry]);
+          setOverdueEntries((previous) => [...previous, entry]);
+          break;
+        case "completed":
+          setCompletedEntries((previous) => [...previous, entry]);
           break;
         default:
           console.log("Entry categorisation error", category);
@@ -230,26 +389,6 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
     },
     []
   );
-
-  const [schoolworkEntries, setSchoolworkEntries] = useState<
-    SchoolworkEntry[] | null
-  >(null);
-  const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
-  const [pastEntries, setPastEntries] = useState<SchoolworkEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
-    null
-  );
-  const [className, setClassName] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [entryName, setEntryName] = useState("");
-  const [entryDescription, setEntryDescription] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
-  const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
-  const router = useRouter();
 
   // Sidebar content component
   const SidebarContent = () => {
@@ -266,7 +405,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
               }}
             >
               <span className="mr-2">+</span>
-              SET HOMEWORK
+              ADD HOMEWORK
             </Button>
             <Button
               variant="default"
@@ -276,7 +415,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
               }}
             >
               <span className="mr-2">+</span>
-              SET TEST
+              ADD TEST
             </Button>
           </div>
 
@@ -301,7 +440,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
             }}
           >
             <span className="mr-2">+</span>
-            SET HOMEWORK
+            ADD HOMEWORK
           </Button>
           <Button
             variant="default"
@@ -311,7 +450,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
             }}
           >
             <span className="mr-2">+</span>
-            SET TEST
+            ADD TEST
           </Button>
         </div>
 
@@ -319,6 +458,15 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
           <h3 className="text-lg font-semibold mb-2">{selectedEntry.name}</h3>
           <div className="space-y-2 text-sm">
             <div className="flex gap-2">
+              {selectedEntry.due < new Date().toISOString() && (
+                <Badge
+                  backgroundColour="rgba(239, 68, 68, 0.2)"
+                  textColour="#F87171"
+                  className="w-auto px-3 py-1"
+                >
+                  Overdue
+                </Badge>
+              )}
               {selectedEntry.schoolworkType === "Homework" && (
                 <Badge
                   backgroundColour="rgba(59, 130, 246, 0.2)"
@@ -337,6 +485,15 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                   Test
                 </Badge>
               )}
+              {selectedEntry.category === 2 && (
+                <Badge
+                  backgroundColour="rgba(248, 146, 26, 0.2)"
+                  textColour="#F8921A"
+                  className="w-auto px-3 py-1"
+                >
+                  Managed by teacher
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <AlarmClock className="w-4 h-4" strokeWidth={2} />
@@ -346,10 +503,26 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
               <CalendarPlus className="w-4 h-4" strokeWidth={2} />
               <p>Issued: {formatTimestamp(selectedEntry.issued)}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <UserRoundCheck className="w-4 h-4" strokeWidth={2} />
-              <p>Completed: {selectedEntry.completed}</p>
-            </div>
+            {selectedEntry.class_name ? (
+              <div className="flex items-center gap-3">
+                <Notebook className="w-4 h-4" strokeWidth={2} />
+                <p>
+                  Class: {selectedEntry.class_name}
+                  {selectedEntry.subject_name ? ` (${selectedEntry.subject_name})` : null}
+                </p>
+              </div>
+            ) : selectedEntry.subject_name ? (
+              <div className="flex items-center gap-3">
+                <Notebook className="w-4 h-4" strokeWidth={2} />
+                <p>Subject: {selectedEntry.subject_name}</p>
+              </div>
+            ) : null}
+            {selectedEntry.teacher_name && (
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-4 h-4" strokeWidth={2} />
+                <p>Teacher: {selectedEntry.teacher_name}</p>
+              </div>
+            )}
             {selectedEntry.description && (
               <p className="text-muted-foreground text-xs italic">
                 {selectedEntry.description}
@@ -358,61 +531,84 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
           </div>
 
           <div className="mt-4 space-y-2">
-            <Button className="w-full">Edit</Button>
-            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
-              View student submissions
-            </Button>
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={async () => {
-                try {
-                  const response = await fetch(
-                    "/api/teacher_schoolwork/delete_schoolwork_entry",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        entryID: selectedEntry.id,
-                        classID: classID,
-                      }),
-                    }
-                  );
+            {selectedEntry.completed === false && (
+              <Button
+                className="w-full"
+                onClick={() => handleMarkComplete(selectedEntry.id)}
+              >
+                Mark complete
+              </Button>
+            )}
+            {selectedEntry.completed === true && (
+              <Button
+                className="w-full"
+                onClick={() => handleMarkIncomplete(selectedEntry.id)}
+              >
+                Mark incomplete
+              </Button>
+            )}
+            {selectedEntry.category === 1 && ( // Only deletion of student-managed entries is allowed
+              <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+                Edit
+              </Button>
+            )}
+            {selectedEntry.category === 1 && ( // Only deletion of student-managed entries is allowed
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={async () => {
+                  try {
+                    const response = await fetch(
+                      "/api/schoolwork/delete_schoolwork_entry",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          entryID: selectedEntry.id,
+                        }),
+                      }
+                    );
 
-                  if (response.ok) {
-                    toast.success("Schoolwork entry deleted.");
-                    // Refreshes both entry lists and UI to ensure consistency before and after the transaction
-                    setSchoolworkEntries((previous) =>
-                      previous
-                        ? previous.filter((swk) => swk.id !== selectedEntry.id)
-                        : null
-                    );
-                    setFutureEntries((previous) =>
-                      previous.filter((swk) => swk.id !== selectedEntry.id)
-                    );
-                    setPastEntries((previous) =>
-                      previous.filter((swk) => swk.id !== selectedEntry.id)
-                    );
-                    setSelectedEntry(null);
-                  } else {
-                    console.error(
-                      "Failed to delete schoolwork entry:",
-                      response.statusText
-                    );
+                    if (response.ok) {
+                      toast.success("Schoolwork entry deleted.");
+                      // Refreshes all entry lists and UI to ensure consistency before and after the transaction
+                      setSchoolworkEntries((previous) =>
+                        previous
+                          ? previous.filter(
+                              (swk) => swk.id !== selectedEntry.id
+                            )
+                          : null
+                      );
+                      setFutureEntries((previous) =>
+                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                      );
+                      setOverdueEntries((previous) =>
+                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                      );
+                      setCompletedEntries((previous) =>
+                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                      );
+                      setSelectedEntry(null);
+                    } else {
+                      console.error(
+                        "Failed to delete schoolwork entry:",
+                        response.statusText
+                      );
+                      toast.error(
+                        "Failed to delete schoolwork entry. Please try again later."
+                      );
+                    }
+                  } catch (error) {
+                    console.error("Error deleting schoolwork entry:", error);
                     toast.error(
-                      "Failed to delete schoolwork entry. Please try again later."
+                      "Error deleting schoolwork entry. Please try again later."
                     );
                   }
-                } catch (error) {
-                  console.error("Error deleting schoolwork entry:", error);
-                  toast.error(
-                    "Error deleting schoolwork entry. Please try again later."
-                  );
-                }
-              }}
-            >
-              Delete
-            </Button>
+                }}
+              >
+                Delete
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -426,17 +622,15 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
         if (response.ok) {
           const userData = await response.json();
 
-          // Check if user is a student (since this is a teacher-only page)
-          if (userData.role === "Student") {
+          // Check if user is a teacher (since this is a student-only page)
+          if (userData.role === "Teacher") {
             router.push("/dashboard");
             return;
           }
 
-          // Gets schoolwork entries and class name by classID
+          // Gets schoolwork entries for the student
           const schoolworkResponse = await fetch(
-            `/api/teacher_schoolwork/get_schoolwork_data?classID=${encodeURIComponent(
-              classID
-            )}`
+            `/api/schoolwork/get_schoolwork_data`
           );
 
           if (!schoolworkResponse.ok) {
@@ -448,13 +642,11 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
             setSchoolworkEntries(null);
           } else {
             type APIResponse = {
-              className: string;
               schoolwork: SchoolworkEntry[];
             };
 
             const schoolworkData =
               (await schoolworkResponse.json()) as APIResponse;
-            setClassName(schoolworkData.className);
             const sortedEntries = sortEntriesByDueDate(
               schoolworkData.schoolwork
             );
@@ -465,20 +657,26 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
 
             const future: SchoolworkEntry[] = [];
             const past: SchoolworkEntry[] = [];
+            const completed: SchoolworkEntry[] = [];
 
             sortedEntries.forEach((entry) => {
-              const dueDate = new Date(entry.due);
-              dueDate.setHours(0, 0, 0, 0);
-
-              if (dueDate >= now) {
-                future.push(entry);
+              if (entry.completed) {
+                completed.push(entry);
               } else {
-                past.push(entry);
+                const dueDate = new Date(entry.due);
+                dueDate.setHours(0, 0, 0, 0);
+
+                if (dueDate >= now) {
+                  future.push(entry);
+                } else {
+                  past.push(entry);
+                }
               }
             });
 
             setFutureEntries(future);
-            setPastEntries(past);
+            setOverdueEntries(past);
+            setCompletedEntries(completed);
           }
         } else {
           // User not logged in
@@ -494,7 +692,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
     };
 
     fetchSchoolworkData();
-  }, [classID, router, sortEntriesByDueDate]);
+  }, [router, sortEntriesByDueDate]);
 
   if (loading) {
     return (
@@ -514,7 +712,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
       <div className="flex gap-6 pb-24 xl:pb-0">
         <div className="flex-1">
           <h2 className="text-2xl sm:text-3xl font-semibold mb-4 break-words">
-            Schoolwork for {className}
+            Schoolwork
           </h2>
 
           {schoolworkEntries && schoolworkEntries.length > 0 ? (
@@ -531,6 +729,10 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                         <thead>
                           <tr className="bg-muted border-b border-border">
                             <th
+                              className="px-4 py-3 text-center text-sm font-semibold w-12 border-r-2 border-border"
+                              style={{ width: "5%" }}
+                            ></th>
+                            <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
                               style={{ width: "30%" }}
                             >
@@ -549,16 +751,10 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                               DUE
                             </th>
                             <th
-                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              className="px-4 py-3 text-center text-sm font-semibold"
                               style={{ width: "12%" }}
                             >
                               TYPE
-                            </th>
-                            <th
-                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "5%" }}
-                            >
-                              COMPLETED
                             </th>
                           </tr>
                         </thead>
@@ -568,11 +764,26 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                               key={entry.id}
                               onClick={() => setSelectedEntry(entry)}
                               className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                                selectedEntry?.id === entry.id
+                                selectedEntry?.id === entry.id &&
+                                selectedEntry?.category === entry.category
                                   ? "ring-4 ring-primary ring-inset rounded-lg"
                                   : ""
                               }`}
                             >
+                              <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <button
+                                    title="Open"
+                                    className="rounded text-lg font-semibold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMarkIncomplete(entry.id);
+                                    }}
+                                  >
+                                    <Square />
+                                  </button>
+                                </div>
+                              </td>
                               <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
                               </td>
@@ -585,12 +796,8 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                                 {formatTimestamp(entry.due)}
                               </td>
 
-                              <td className="px-4 py-4 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm">
                                 {entry.schoolworkType}
-                              </td>
-
-                              <td className="px-4 py-4 text-sm border-r-2 border-border">
-                                {entry.completed}
                               </td>
                             </tr>
                           ))}
@@ -601,9 +808,9 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                 </div>
               )}
 
-              {pastEntries.length > 0 && ( // Table for past entries
+              {overdueEntries.length > 0 && ( // Table for overdue entries
                 <div>
-                  <h3 className="text-xl font-semibold mb-3">Past Due</h3>
+                  <h3 className="text-xl font-semibold mb-3">Overdue</h3>
                   <div style={{ overflowX: "auto", width: "100%" }}>
                     <div className="border border-border rounded-xl overflow-hidden">
                       <table
@@ -612,6 +819,10 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                       >
                         <thead>
                           <tr className="bg-muted border-b border-border">
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold w-12 border-r-2 border-border"
+                              style={{ width: "5%" }}
+                            ></th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
                               style={{ width: "30%" }}
@@ -631,30 +842,39 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                               DUE
                             </th>
                             <th
-                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              className="px-4 py-3 text-center text-sm font-semibold"
                               style={{ width: "12%" }}
                             >
                               TYPE
                             </th>
-                            <th
-                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "5%" }}
-                            >
-                              COMPLETED
-                            </th>
                           </tr>
                         </thead>
                         <tbody className="font-medium">
-                          {pastEntries.map((entry) => (
+                          {overdueEntries.map((entry) => (
                             <tr
                               key={entry.id}
                               onClick={() => setSelectedEntry(entry)}
                               className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                                selectedEntry?.id === entry.id
+                                selectedEntry?.id === entry.id &&
+                                selectedEntry?.category === entry.category
                                   ? "ring-4 ring-primary ring-inset rounded-lg"
                                   : ""
                               }`}
                             >
+                              <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <button
+                                    title="Open"
+                                    className="rounded text-lg font-semibold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMarkIncomplete(entry.id);
+                                    }}
+                                  >
+                                    <Square />
+                                  </button>
+                                </div>
+                              </td>
                               <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
                               </td>
@@ -667,12 +887,99 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
                                 {formatTimestamp(entry.due)}
                               </td>
 
-                              <td className="px-4 py-4 text-sm border-r-2 border-border">
+                              <td className="px-4 py-4 text-sm">
                                 {entry.schoolworkType}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {completedEntries.length > 0 && ( // Table for completed entries
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">Completed</h3>
+                  <div style={{ overflowX: "auto", width: "100%" }}>
+                    <div className="border border-border rounded-xl overflow-hidden">
+                      <table
+                        className="w-full border-collapse"
+                        style={{ minWidth: "600px" }}
+                      >
+                        <thead>
+                          <tr className="bg-muted border-b border-border">
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold w-12 border-r-2 border-border"
+                              style={{ width: "5%" }}
+                            ></th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "30%" }}
+                            >
+                              NAME
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "18%" }}
+                            >
+                              ISSUED
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "18%" }}
+                            >
+                              DUE
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold"
+                              style={{ width: "12%" }}
+                            >
+                              TYPE
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-medium">
+                          {completedEntries.map((entry) => (
+                            <tr
+                              key={entry.id}
+                              onClick={() => setSelectedEntry(entry)}
+                              className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                                selectedEntry?.id === entry.id &&
+                                selectedEntry?.category === entry.category
+                                  ? "ring-4 ring-primary ring-inset rounded-lg"
+                                  : ""
+                              }`}
+                            >
+                              <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <button
+                                    title="Open"
+                                    className="rounded text-lg font-semibold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMarkIncomplete(entry.id);
+                                    }}
+                                  >
+                                    <SquareCheck />
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.name}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
-                                {entry.completed}
+                                {formatTimestamp(entry.issued)}
+                              </td>
+
+                              <td className="px-4 py-4 text-sm font-medium border-r-2 border-border">
+                                {formatTimestamp(entry.due)}
+                              </td>
+
+                              <td className="px-4 py-4 text-sm">
+                                {entry.schoolworkType}
                               </td>
                             </tr>
                           ))}
@@ -686,9 +993,9 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
-                There are currently no homeworks or tests for this class. This
-                may mean you&apos;ve entered an invalid class ID (check URL),
-                but if not, please contact support so we can assist you.
+                There are currently no homeworks or tests linked to your
+                account. If you believe this is an error, please contact support
+                so we can assist you.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support
@@ -707,7 +1014,7 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
           <SheetHeader>
             <SheetTitle>Add Schoolwork</SheetTitle>
             <SheetDescription>
-              Add a new {entryType.toLowerCase()} for {className}
+              Add a new {entryType.toLowerCase()}
             </SheetDescription>
           </SheetHeader>
           <div className="py-3">
