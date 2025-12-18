@@ -777,7 +777,7 @@ export default function SchoolworkPage() {
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleMarkIncomplete(entry.id);
+                                      handleMarkComplete(entry.id);
                                     }}
                                   >
                                     <Square />
@@ -868,7 +868,7 @@ export default function SchoolworkPage() {
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleMarkIncomplete(entry.id);
+                                      handleMarkComplete(entry.id);
                                     }}
                                   >
                                     <Square />
