@@ -33,13 +33,13 @@ export async function GET() {
       });
     }
 
-    const courseIds = subjectsData.map(subject => subject.course_id);
+    const courseIDs = subjectsData.map(subject => subject.course_id);
 
     // Get course names for all course IDs
     const { data: courseData, error: courseFetchError } = await supabaseMainAdmin
       .from("courses")
       .select("course_id, course_name")
-      .in("course_id", courseIds);
+      .in("course_id", courseIDs);
 
     if (courseFetchError) {
       console.error("Error getting courses:", courseFetchError);

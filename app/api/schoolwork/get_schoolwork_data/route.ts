@@ -18,7 +18,7 @@ export async function GET() {
       await supabaseMainAdmin
         .from("schoolwork")
         .select(
-          `schoolwork_id, type, completed, due, issued, schoolwork_name, schoolwork_description, subjects!subject_id(
+          `schoolwork_id, type, completed, due, issued, schoolwork_name, schoolwork_description, subjects!subject_id(teacher_name,
             courses!course_id(
               course_name
         ))`
@@ -55,6 +55,7 @@ export async function GET() {
       const studentSchoolworkEntries = primarySchoolworkData.map(
         (entry) => {
           const courseName = entry.subjects?.courses?.course_name || null;
+          const teacherName = entry.subjects?.teacher_name || null;
           return {
             id: entry.schoolwork_id.toString(),
             category: 1,
@@ -65,7 +66,7 @@ export async function GET() {
             name: entry.schoolwork_name,
             description: entry.schoolwork_description,
             class_name: null,
-            teacher_name: null,
+            teacher_name: teacherName,
             subject_name: courseName,
           };
         }
@@ -123,6 +124,7 @@ export async function GET() {
 
     // Format student-managed schoolwork entries
     const studentSchoolworkEntries = primarySchoolworkData.map((entry) => {
+      const teacherName = entry.subjects?.teacher_name || null;
       const courseName = entry.subjects?.courses?.course_name || null;
 
       return {
@@ -135,7 +137,7 @@ export async function GET() {
         name: entry.schoolwork_name,
         description: entry.schoolwork_description,
         class_name: null as string | null,
-        teacher_name: null as string | null,
+        teacher_name: teacherName,
         subject_name: courseName,
       };
     });

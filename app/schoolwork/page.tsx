@@ -2,7 +2,15 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { AlarmClock, CalendarPlus, GraduationCap, Notebook, PanelBottomOpen, Square, SquareCheck } from "lucide-react";
+import {
+  AlarmClock,
+  CalendarPlus,
+  GraduationCap,
+  Notebook,
+  PanelBottomOpen,
+  Square,
+  SquareCheck,
+} from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
@@ -60,9 +68,15 @@ export default function SchoolworkPage() {
     completed: boolean;
   }
 
+  interface Subject {
+    id: string;
+    name: string;
+  }
+
   const [schoolworkEntries, setSchoolworkEntries] = useState<
     SchoolworkEntry[] | null
   >(null);
+  const [subjects, setSubjects] = useState<Subject[] | null>(null);
   const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
   const [overdueEntries, setOverdueEntries] = useState<SchoolworkEntry[]>([]);
   const [completedEntries, setCompletedEntries] = useState<SchoolworkEntry[]>(
@@ -78,6 +92,7 @@ export default function SchoolworkPage() {
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
   const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
+  const [subjectID, setSubjectID] = useState<string | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
   const router = useRouter();
@@ -167,7 +182,7 @@ export default function SchoolworkPage() {
           due: dueTimestamp,
           issued: issuedTimestamp,
           type: entryType,
-          subject_id: null, // To be implemented in the future
+          subject_id: subjectID || null,
         }),
       });
 
@@ -191,6 +206,7 @@ export default function SchoolworkPage() {
         setDueDate(undefined);
         setIssuedDate(undefined);
         setEntryType("Homework");
+        setSubjectID(undefined);
         setSheetOpen(false);
       } else {
         console.error("Failed to add schoolwork entry:", response.statusText);
@@ -202,7 +218,7 @@ export default function SchoolworkPage() {
     }
   };
 
-  const handleMarkComplete = async (entryID: string) => {
+  const handleMarkComplete = async (entryID: string, entryCategory: number) => {
     try {
       const response = await fetch(
         "/api/schoolwork/complete_schoolwork_entry",
@@ -210,8 +226,9 @@ export default function SchoolworkPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            entryID: entryID,
-            type: "complete",
+            schoolworkID: entryID,
+            category: entryCategory,
+            complete: true,
           }),
         }
       );
@@ -231,18 +248,26 @@ export default function SchoolworkPage() {
         setSchoolworkEntries((previous) =>
           previous
             ? previous.map((entry) =>
-                entry.id === entryID ? { ...entry, completed: true } : entry
+                entry.id === entryID && entry.category === entryCategory
+                  ? { ...entry, completed: true }
+                  : entry
               )
             : null
         );
         setFutureEntries((previous) =>
-          previous.filter((entry) => entry.id !== entryID)
+          previous.filter(
+            (entry) =>
+              !(entry.id === entryID && entry.category === entryCategory)
+          )
         );
         setOverdueEntries((previous) =>
-          previous.filter((entry) => entry.id !== entryID)
+          previous.filter(
+            (entry) =>
+              !(entry.id === entryID && entry.category === entryCategory)
+          )
         );
         const completedEntry = [...futureEntries, ...overdueEntries].find(
-          (entry) => entry.id === entryID
+          (entry) => entry.id === entryID && entry.category === entryCategory
         ); // Finds entry from either list and adds to the completed list below
         if (completedEntry) {
           setCompletedEntries((previous) => [
@@ -256,9 +281,7 @@ export default function SchoolworkPage() {
           "Failed to complete schoolwork entry:",
           response.statusText
         );
-        toast.error(
-          "Failed to complete schoolwork. Please try again later."
-        );
+        toast.error("Failed to complete schoolwork. Please try again later.");
       }
     } catch (error) {
       console.error("Error completing schoolwork entry:", error);
@@ -266,7 +289,10 @@ export default function SchoolworkPage() {
     }
   };
 
-  const handleMarkIncomplete = async (entryID: string) => {
+  const handleMarkIncomplete = async (
+    entryID: string,
+    entryCategory: number
+  ) => {
     try {
       const response = await fetch(
         "/api/schoolwork/complete_schoolwork_entry",
@@ -274,8 +300,9 @@ export default function SchoolworkPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            entryID: entryID,
-            type: "incomplete",
+            schoolworkID: entryID,
+            category: entryCategory,
+            complete: false,
           }),
         }
       );
@@ -286,18 +313,24 @@ export default function SchoolworkPage() {
         setSchoolworkEntries((previous) =>
           previous
             ? previous.map((entry) =>
-                entry.id === entryID ? { ...entry, completed: false } : entry
+                entry.id === entryID && entry.category === entryCategory
+                  ? { ...entry, completed: false }
+                  : entry
               ) // Switches 'complete' to false in master list
             : null
         );
         setCompletedEntries(
           (
             previous // Removes entry from the completed list
-          ) => previous.filter((entry) => entry.id !== entryID)
+          ) =>
+            previous.filter(
+              (entry) =>
+                !(entry.id === entryID && entry.category === entryCategory)
+            )
         );
         // Finds the entry and categorises it based on due date (below)
         const incompleteEntry = completedEntries.find(
-          (entry) => entry.id === entryID
+          (entry) => entry.id === entryID && entry.category === entryCategory
         );
 
         if (incompleteEntry) {
@@ -508,7 +541,9 @@ export default function SchoolworkPage() {
                 <Notebook className="w-4 h-4" strokeWidth={2} />
                 <p>
                   Class: {selectedEntry.class_name}
-                  {selectedEntry.subject_name ? ` (${selectedEntry.subject_name})` : null}
+                  {selectedEntry.subject_name
+                    ? ` (${selectedEntry.subject_name})`
+                    : null}
                 </p>
               </div>
             ) : selectedEntry.subject_name ? (
@@ -534,7 +569,9 @@ export default function SchoolworkPage() {
             {selectedEntry.completed === false && (
               <Button
                 className="w-full"
-                onClick={() => handleMarkComplete(selectedEntry.id)}
+                onClick={() =>
+                  handleMarkComplete(selectedEntry.id, selectedEntry.category)
+                }
               >
                 Mark complete
               </Button>
@@ -542,7 +579,9 @@ export default function SchoolworkPage() {
             {selectedEntry.completed === true && (
               <Button
                 className="w-full"
-                onClick={() => handleMarkIncomplete(selectedEntry.id)}
+                onClick={() =>
+                  handleMarkIncomplete(selectedEntry.id, selectedEntry.category)
+                }
               >
                 Mark incomplete
               </Button>
@@ -564,7 +603,7 @@ export default function SchoolworkPage() {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          entryID: selectedEntry.id,
+                          schoolworkID: selectedEntry.id,
                         }),
                       }
                     );
@@ -575,18 +614,40 @@ export default function SchoolworkPage() {
                       setSchoolworkEntries((previous) =>
                         previous
                           ? previous.filter(
-                              (swk) => swk.id !== selectedEntry.id
+                              (swk) =>
+                                !(
+                                  swk.id === selectedEntry.id &&
+                                  swk.category === selectedEntry.category
+                                )
                             )
                           : null
                       );
                       setFutureEntries((previous) =>
-                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                        previous.filter(
+                          (swk) =>
+                            !(
+                              swk.id === selectedEntry.id &&
+                              swk.category === selectedEntry.category
+                            )
+                        )
                       );
                       setOverdueEntries((previous) =>
-                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                        previous.filter(
+                          (swk) =>
+                            !(
+                              swk.id === selectedEntry.id &&
+                              swk.category === selectedEntry.category
+                            )
+                        )
                       );
                       setCompletedEntries((previous) =>
-                        previous.filter((swk) => swk.id !== selectedEntry.id)
+                        previous.filter(
+                          (swk) =>
+                            !(
+                              swk.id === selectedEntry.id &&
+                              swk.category === selectedEntry.category
+                            )
+                        )
                       );
                       setSelectedEntry(null);
                     } else {
@@ -677,6 +738,25 @@ export default function SchoolworkPage() {
             setFutureEntries(future);
             setOverdueEntries(past);
             setCompletedEntries(completed);
+
+            const subjectsResponse = await fetch("/api/subjects/get_subjects", {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            });
+
+            if (!subjectsResponse.ok) {
+              console.error(
+                "Error getting subjects:",
+                subjectsResponse.statusText
+              );
+              toast.error(
+                "Error getting your subjects for schoolwork creation. Please try again later"
+              );
+              setSubjects(null);
+            } else {
+              const subjectsData = await subjectsResponse.json();
+              setSubjects(subjectsData.subjects);
+            }
           }
         } else {
           // User not logged in
@@ -734,9 +814,15 @@ export default function SchoolworkPage() {
                             ></th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "30%" }}
+                              style={{ width: "20%" }}
                             >
                               NAME
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "10%" }}
+                            >
+                              SUBJECT
                             </th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
@@ -761,7 +847,7 @@ export default function SchoolworkPage() {
                         <tbody className="font-medium">
                           {futureEntries.map((entry) => (
                             <tr
-                              key={entry.id}
+                              key={`${entry.id}-${entry.category}`}
                               onClick={() => setSelectedEntry(entry)}
                               className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
                                 selectedEntry?.id === entry.id &&
@@ -777,7 +863,10 @@ export default function SchoolworkPage() {
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleMarkComplete(entry.id);
+                                      handleMarkComplete(
+                                        entry.id,
+                                        entry.category
+                                      );
                                     }}
                                   >
                                     <Square />
@@ -786,6 +875,10 @@ export default function SchoolworkPage() {
                               </td>
                               <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
+                              </td>
+
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
@@ -825,9 +918,15 @@ export default function SchoolworkPage() {
                             ></th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "30%" }}
+                              style={{ width: "20%" }}
                             >
                               NAME
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "10%" }}
+                            >
+                              SUBJECT
                             </th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
@@ -852,7 +951,7 @@ export default function SchoolworkPage() {
                         <tbody className="font-medium">
                           {overdueEntries.map((entry) => (
                             <tr
-                              key={entry.id}
+                              key={`${entry.id}-${entry.category}`}
                               onClick={() => setSelectedEntry(entry)}
                               className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
                                 selectedEntry?.id === entry.id &&
@@ -868,7 +967,10 @@ export default function SchoolworkPage() {
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleMarkComplete(entry.id);
+                                      handleMarkComplete(
+                                        entry.id,
+                                        entry.category
+                                      );
                                     }}
                                   >
                                     <Square />
@@ -877,6 +979,10 @@ export default function SchoolworkPage() {
                               </td>
                               <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
+                              </td>
+
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
@@ -916,9 +1022,15 @@ export default function SchoolworkPage() {
                             ></th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                              style={{ width: "30%" }}
+                              style={{ width: "20%" }}
                             >
                               NAME
+                            </th>
+                            <th
+                              className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                              style={{ width: "10%" }}
+                            >
+                              SUBJECT
                             </th>
                             <th
                               className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
@@ -943,7 +1055,7 @@ export default function SchoolworkPage() {
                         <tbody className="font-medium">
                           {completedEntries.map((entry) => (
                             <tr
-                              key={entry.id}
+                              key={`${entry.id}-${entry.category}`}
                               onClick={() => setSelectedEntry(entry)}
                               className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
                                 selectedEntry?.id === entry.id &&
@@ -959,7 +1071,10 @@ export default function SchoolworkPage() {
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleMarkIncomplete(entry.id);
+                                      handleMarkIncomplete(
+                                        entry.id,
+                                        entry.category
+                                      );
                                     }}
                                   >
                                     <SquareCheck />
@@ -968,6 +1083,10 @@ export default function SchoolworkPage() {
                               </td>
                               <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
                                 {entry.name}
+                              </td>
+
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                                {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
@@ -1107,24 +1226,51 @@ export default function SchoolworkPage() {
                 </div>
               </div>
             </div>
-            <div className="py-2 flex flex-col gap-3 mb-2">
-              <Label className="px-1" htmlFor="entryType">
-                Type *
-              </Label>
-              <Select
-                value={entryType}
-                onValueChange={(value: "Homework" | "Test") =>
-                  setEntryType(value)
-                }
-              >
-                <SelectTrigger id="entryType" className="w-32">
-                  <SelectValue placeholder={entryType} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Homework">Homework</SelectItem>
-                  <SelectItem value="Test">Test</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="entryType">
+                    Type *
+                  </Label>
+                  <Select
+                    value={entryType}
+                    onValueChange={(value: "Homework" | "Test") =>
+                      setEntryType(value)
+                    }
+                  >
+                    <SelectTrigger id="entryType" className="w-32">
+                      <SelectValue placeholder={entryType} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Homework">Homework</SelectItem>
+                      <SelectItem value="Test">Test</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="subject">
+                    Subject
+                  </Label>
+                  <Select value={subjectID} onValueChange={setSubjectID}>
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects && subjects.length > 0 ? (
+                        subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-subjects" disabled>
+                          No subjects available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
           <SheetFooter>
