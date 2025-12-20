@@ -104,14 +104,14 @@ export async function POST(req: Request) {
       issued: schoolworkData.issued,
       name: schoolworkData.schoolwork_name,
       description: schoolworkData.schoolwork_description || null,
-      subject_name: schoolworkData.subjects?.courses?.course_name || null,
+      subject_name: schoolworkData.subjects?.[0]?.courses?.[0]?.course_name || null,
       class_name: null,
-      teacher_name: schoolworkData.subjects?.teacher_name || null,
+      teacher_name: schoolworkData.subjects?.[0]?.teacher_name || null,
       completed: false,
     };
 
     return NextResponse.json({
-      schoolwork: newSchoolwork,
+      entry: newSchoolwork,
       message: "Schoolwork entry successfully added",
     });
   } catch (error) {

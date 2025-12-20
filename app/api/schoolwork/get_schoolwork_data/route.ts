@@ -54,8 +54,8 @@ export async function GET() {
       // Format student schoolwork entries
       const studentSchoolworkEntries = primarySchoolworkData.map(
         (entry) => {
-          const courseName = entry.subjects?.courses?.course_name || null;
-          const teacherName = entry.subjects?.teacher_name || null;
+          const courseName = entry.subjects?.[0]?.courses?.[0]?.course_name || null;
+          const teacherName = entry.subjects?.[0]?.teacher_name || null;
           return {
             id: entry.schoolwork_id.toString(),
             category: 1,
@@ -124,8 +124,8 @@ export async function GET() {
 
     // Format student-managed schoolwork entries
     const studentSchoolworkEntries = primarySchoolworkData.map((entry) => {
-      const teacherName = entry.subjects?.teacher_name || null;
-      const courseName = entry.subjects?.courses?.course_name || null;
+      const teacherName = entry.subjects?.[0]?.teacher_name || null;
+      const courseName = entry.subjects?.[0]?.courses?.[0]?.course_name || null;
 
       return {
         id: entry.schoolwork_id.toString(),
@@ -157,15 +157,15 @@ export async function GET() {
           title?: string | null;
           surname?: string | null;
           subject?: string | null;
-        };
-      };
+        }[];
+      }[];
     };
 
     // Format teacher-managed schoolwork entries with joined data
     const teacherSchoolworkEntries = (teacherSchoolworkData || []).map(
       (entry: TeacherSchoolworkEntry) => {
-        const classData = entry.classes;
-        const teacherData = classData?.teachers;
+        const classData = entry.classes?.[0];
+        const teacherData = classData?.teachers?.[0];
         const teacherName =
           teacherData?.title && teacherData?.surname
             ? `${teacherData.title} ${teacherData.surname}`

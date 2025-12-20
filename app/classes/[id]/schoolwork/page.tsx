@@ -55,7 +55,9 @@ interface ClassSchoolworkPageProps {
   }>;
 }
 
-export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps) {
+export default function ClassSchoolworkPage({
+  params,
+}: ClassSchoolworkPageProps) {
   interface SchoolworkEntry {
     id: string;
     course_name: string | null;
@@ -131,6 +133,11 @@ export default function ClassSchoolworkPage({ params }: ClassSchoolworkPageProps
         const combinedDate = new Date(now);
         combinedDate.setHours(23, 59, 59, 999);
         issuedTimestamp = combinedDate.toISOString();
+      }
+
+      if (issuedTimestamp > dueTimestamp) {
+        toast.error("Issued date cannot be after the due date.");
+        return;
       }
 
       const response = await fetch(

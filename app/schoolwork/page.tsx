@@ -173,6 +173,11 @@ export default function SchoolworkPage() {
         issuedTimestamp = combinedDate.toISOString();
       }
 
+      if (issuedTimestamp > dueTimestamp) {
+        toast.error("Issued date cannot be after the due date.");
+        return;
+      }
+
       const response = await fetch("/api/schoolwork/add_schoolwork_entry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
