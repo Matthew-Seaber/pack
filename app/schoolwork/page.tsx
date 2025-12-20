@@ -878,11 +878,11 @@ export default function SchoolworkPage() {
                                   </button>
                                 </div>
                               </td>
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.name}
                               </td>
 
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 
@@ -982,11 +982,11 @@ export default function SchoolworkPage() {
                                   </button>
                                 </div>
                               </td>
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.name}
                               </td>
 
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 
@@ -1086,11 +1086,11 @@ export default function SchoolworkPage() {
                                   </button>
                                 </div>
                               </td>
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.name}
                               </td>
 
-                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border rounded-l-lg">
+                              <td className="px-4 py-4 text-sm font-semibold border-r-2 border-border">
                                 {entry.subject_name ?? <i>No linked subject</i>}
                               </td>
 

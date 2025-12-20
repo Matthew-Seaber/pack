@@ -2,7 +2,14 @@
 
 import React, { use, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Crosshair, Newspaper, PanelBottomOpen } from "lucide-react";
+import {
+  Clock,
+  Crosshair,
+  Download,
+  Newspaper,
+  PanelBottomOpen,
+  Shapes,
+} from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
@@ -24,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface SpecificationPageProps {
+interface ResourcesPageProps {
   params: Promise<{
     qualification: string;
     subject: string;
@@ -32,25 +39,70 @@ interface SpecificationPageProps {
   }>;
 }
 
-export default function SpecificationPage({ params }: SpecificationPageProps) {
-  interface SpecificationEntry {
+export default function ResourcesPage({ params }: ResourcesPageProps) {
+  interface ResourceEntry {
     id: string;
-    topic: string;
-    topic_name: string;
-    description: string | null;
-    paper: string;
-    common: boolean;
-    difficult: boolean;
-    confidence: number;
-    sessions: number;
+    resource_name: string;
+    resource_description: string | null;
+    location: string;
+    topic: string | null;
+    paper: string | null;
+    uploaded_at: string;
+    type: string;
+    creator: string;
+    commonTopic: boolean;
+    difficultTopic: boolean;
   }
+
+  const [resourceEntries, setResourceEntries] = useState<
+    ResourceEntry[] | null
+  >(null);
+  const [selectedEntry, setSelectedEntry] = useState<ResourceEntry | null>(
+    null
+  );
+  const [sortType, setSortType] = useState<string>("Topic");
+  const [filterType, setFilterType] = useState<string>("None");
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const resolvedParams = use(params);
+  const qualification = resolvedParams.qualification;
+  let subject = resolvedParams.subject;
+  let examBoard = resolvedParams.examBoard;
+
+  subject = subject
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()); // Converts subject to sentence case and adds a space if required
+
+  if (examBoard[0] !== "e") {
+    examBoard = examBoard.toUpperCase();
+  } // Capitalises exam boards that are normally capitalised (all others begin with "E")
+
+  // Function to convert a given timestamp to a UX-friendly format
+  const formatTimestamp = (timestamp: string | null): string => {
+    if (!timestamp) return "No date";
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "ERROR";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year.toString().slice(-2)}`;
+  };
 
   // Function to sort entries by index
   const sortEntriesByTopic = useCallback(
-    (entries: SpecificationEntry[]): SpecificationEntry[] => {
+    (entries: ResourceEntry[]): ResourceEntry[] => {
       return entries.sort((a, b) => {
         const indexA = a.topic;
         const indexB = b.topic;
+
+        // Move topics to the end if their value is null
+        if (indexA === null && indexB === null) return 0;
+        if (indexA === null) return 1;
+        if (indexB === null) return -1;
 
         // Check if the index starts with a number
         const isNumericA = /^\d/.test(indexA);
@@ -94,30 +146,44 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     []
   );
 
-  const [specificationEntries, setSpecificationEntries] = useState<
-    SpecificationEntry[] | null
-  >(null);
-  const [selectedEntry, setSelectedEntry] = useState<SpecificationEntry | null>(
-    null
-  );
-  const [sortType, setSortType] = useState<string>("Topic");
-  const [filterType, setFilterType] = useState<string>("None");
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const downloadFile = async (entryID: string) => {
+    try {
+      toast.info("Preparing download...");
 
-  const resolvedParams = use(params);
-  const qualification = resolvedParams.qualification;
-  let subject = resolvedParams.subject;
-  let examBoard = resolvedParams.examBoard;
+      const downloadResponse = await fetch(
+        `/api/resources/download_file?entryID=${encodeURIComponent(entryID)}`
+      );
 
-  subject = subject
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase()); // Converts subject to sentence case and adds a space if required
+      if (!downloadResponse.ok) {
+        console.error("Error downloading file:", downloadResponse.statusText);
+        toast.error("Error downloading file. Please try again later.");
+        return;
+      }
 
-  if (examBoard[0] !== "e") {
-    examBoard = examBoard.toUpperCase();
-  } // Capitalises exam boards that are normally capitalised (all others begin with "E")
+      const blob = await downloadResponse.blob(); // Gets the raw binary data (BLOB = Binary Large Object)
 
+      const entry = resourceEntries?.find((item) => item.id === entryID);
+
+      const filename = entry
+        ? `${entry.resource_name.toLowerCase().replace(/\s+/g, "-")}.zip`
+        : "resource.zip"; // e.g. "fde-cycle-song.zip" so it's easily identifiable what each ZIP is in the file explorer
+
+      const url = window.URL.createObjectURL(blob);
+      const downloadObject = document.createElement("a");
+      downloadObject.href = url;
+      downloadObject.download = filename;
+      document.body.appendChild(downloadObject);
+      downloadObject.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(downloadObject);
+
+      toast.success("Download complete!");
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      toast.error("Error downloading file. Please try again later.");
+    }
+  };
 
   // Sidebar content component
   const SidebarContent = () => {
@@ -129,14 +195,14 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="flex-1"
               onClick={() =>
                 router.push(
-                  `/resources/${qualification}/` +
+                  `/specification/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
                     examBoard.toLowerCase()
                 )
               }
             >
-              RESOURCES
+              SPECIFICATION
             </Button>
             <Button
               className="flex-1"
@@ -175,14 +241,14 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             className="flex-1"
             onClick={() =>
               router.push(
-                `/resources/${qualification}/` +
+                `/specification/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
                   examBoard.toLowerCase()
               )
             }
           >
-            RESOURCES
+            SPECIFICATION
           </Button>
           <Button
             className="flex-1"
@@ -201,11 +267,11 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
 
         <div className="bg-card border border-border rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-2">
-            {selectedEntry.topic_name}
+            {selectedEntry.resource_name}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex gap-2">
-              {selectedEntry.common === true && (
+              {selectedEntry.commonTopic && (
                 <Badge
                   backgroundColour="rgba(59, 130, 246, 0.2)"
                   textColour="#3B82F6"
@@ -214,10 +280,10 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                   Common topic
                 </Badge>
               )}
-              {selectedEntry.difficult === true && (
+              {selectedEntry.difficultTopic && (
                 <Badge
                   backgroundColour="rgba(239, 68, 68, 0.2)"
-                  textColour="#F87171"
+                  textColour="#EF4444"
                   className="w-auto px-3 py-1"
                 >
                   Difficult topic
@@ -226,15 +292,23 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             </div>
             <div className="flex items-center gap-3">
               <Crosshair className="w-4 h-4" strokeWidth={2} />
-              <p>Section {selectedEntry.topic}</p>
+              <p>Section: {selectedEntry.topic}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="w-4 h-4" strokeWidth={2} />
+              <p>Uploaded: {formatTimestamp(selectedEntry.uploaded_at)}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Shapes className="w-4 h-4" strokeWidth={2} />
+              <p>Type: {selectedEntry.type}</p>
             </div>
             <div className="flex items-center gap-3">
               <Newspaper className="w-4 h-4" strokeWidth={2} />
               <p>Paper {selectedEntry.paper}</p>
             </div>
-            {selectedEntry.description && (
+            {selectedEntry.resource_description && (
               <p className="text-muted-foreground text-xs italic">
-                {selectedEntry.description}
+                {selectedEntry.resource_description}
               </p>
             )}
           </div>
@@ -242,16 +316,12 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           <div className="mt-4 space-y-2">
             <Button
               className="w-full"
-              onClick={() =>
-                router.push(
-                  `/resources/${qualification}/` +
-                    subject.replace(/ /g, "-").toLowerCase() +
-                    "/" +
-                    examBoard.toLowerCase()
-                )
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadFile(selectedEntry.id);
+              }}
             >
-              View Resources
+              Download File
             </Button>
             <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
               Add Note
@@ -261,7 +331,9 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="w-full"
               onClick={() => {
                 const emailSubject = encodeURIComponent(
-                  "Issue with Specification Page Entry for " + qualification + " " +
+                  "Issue with Resource Entry for " +
+                    qualification +
+                    " " +
                     subject +
                     " (" +
                     examBoard +
@@ -269,12 +341,11 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                 );
                 const emailBody = encodeURIComponent(`Dear Pack Support,
 
-      I believe there is an issue on the specification page for:
+      I believe there is an issue on the resource page for:
       - Qualification: ${qualification}
       - Subject: ${subject}
       - Exam Board: ${examBoard}
-      - Specification Entry: ${selectedEntry.topic} - ${selectedEntry.topic_name}
-
+      - Resource Entry: ${selectedEntry.topic} - ${selectedEntry.resource_name}
       Details of the issue:
       [Please describe the issue here]
 
@@ -298,85 +369,8 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     );
   };
 
-  const updateSubjectLink = React.useCallback(
-    async (entryID: string, type: string, detail?: number) => {
-      if (
-        type === "confidence" &&
-        detail ===
-          specificationEntries?.find((e) => e.id === entryID)?.confidence
-      ) {
-        // Checks whether there is a change in confidence level to prevent unnecessary API calls
-        console.log("No change in confidence level detected.");
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/specifications/edit_subject_link", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            qualification: qualification,
-            courseName: subject,
-            examBoard: examBoard,
-            entryID: entryID,
-            type: type,
-            detail: detail || 0,
-          }),
-        });
-
-        if (!res.ok) {
-          toast.error(`Failed to update ${type}.`);
-          const errorData = await res.json();
-          console.error("Subject link saving error:", errorData.message);
-        } else {
-          toast.success(
-            `${type.charAt(0).toUpperCase() + type.slice(1)} updated.`
-          );
-
-          // Updates UI accordingly
-          if (type === "sessions") {
-            setSpecificationEntries((prevEntries) =>
-              prevEntries
-                ? prevEntries.map((entry) =>
-                    entry.id === entryID
-                      ? { ...entry, sessions: entry.sessions + 1 }
-                      : entry
-                  )
-                : null
-            );
-
-            setSelectedEntry((prevSelected) =>
-              prevSelected?.id === entryID
-                ? { ...prevSelected, sessions: prevSelected.sessions + 1 }
-                : prevSelected
-            );
-          } else if (type === "confidence" && detail !== undefined) {
-            setSpecificationEntries((prevEntries) =>
-              prevEntries
-                ? prevEntries.map((entry) =>
-                    entry.id === entryID
-                      ? { ...entry, confidence: detail }
-                      : entry
-                  )
-                : null
-            );
-            setSelectedEntry((prevSelected) =>
-              prevSelected?.id === entryID
-                ? { ...prevSelected, confidence: detail }
-                : prevSelected
-            );
-          }
-        }
-      } catch (error) {
-        console.error("Subject link saving error (2):", error);
-        toast.error(`Failed to save ${type}.`);
-      }
-    },
-    [examBoard, qualification, subject, specificationEntries]
-  );
-
   React.useEffect(() => {
-    const fetchSpecificationData = async () => {
+    const fetchResourceData = async () => {
       try {
         const response = await fetch("/api/user");
         if (response.ok) {
@@ -388,26 +382,28 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             return;
           }
 
-          // Gets specification entries and the user's personal confidence/session data by subject and exam board
-          const specificationResponse = await fetch(
-            `/api/specifications/get_specification_data?qualification=${encodeURIComponent(qualification)}&subject=${encodeURIComponent(
+          // Gets past paper entries and their files' locations
+          const resourceResponse = await fetch(
+            `/api/resources/get_resource_data?qualification=${encodeURIComponent(
+              qualification
+            )}&subject=${encodeURIComponent(
               subject
             )}&examBoard=${encodeURIComponent(examBoard)}`
           );
 
-          if (!specificationResponse.ok) {
+          if (!resourceResponse.ok) {
             console.error(
-              "Error getting specification entries:",
-              specificationResponse.statusText
+              "Error getting resource entries:",
+              resourceResponse.statusText
             );
-            toast.error("Error getting specification. Please try again later.");
-            setSpecificationEntries(null);
+            toast.error("Error getting resource data. Please try again later.");
+            setResourceEntries(null);
           } else {
-            const specificationData = await specificationResponse.json();
+            const resourceData = await resourceResponse.json();
             const sortedEntries = sortEntriesByTopic(
-              specificationData.specificationEntries
+              resourceData.resourceEntries
             );
-            setSpecificationEntries(sortedEntries);
+            setResourceEntries(sortedEntries);
           }
         } else {
           // User not logged in
@@ -416,25 +412,25 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           return;
         }
       } catch (error) {
-        console.error("Error getting user or specification entries:", error);
+        console.error("Error getting user or resource entries:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSpecificationData();
+    fetchResourceData();
   }, [qualification, subject, examBoard, router, sortEntriesByTopic]);
 
   if (loading) {
     return (
       <>
         <h2 className="text-3xl font-semibold mb-3">
-          {subject} Specification ({examBoard})
+          {subject} Resources ({examBoard})
         </h2>
 
         <h2 className="mt-6 mb-3 text-sm">
           <Spinner className="inline mr-2" />
-          <i>Loading specification...</i>
+          <i>Loading resources...</i>
         </h2>
       </>
     );
@@ -445,18 +441,17 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
       <div className="flex gap-6 pb-24 xl:pb-0">
         <div className="flex-1">
           <h2 className="text-2xl sm:text-3xl font-semibold mb-4 break-words">
-            {subject} Specification ({examBoard})
+            {subject} Resources ({examBoard})
           </h2>
 
           <div className="flex flex-col xl:flex-row gap-3 mb-5">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search specification..."
+                placeholder="Search resources..."
                 className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-
             <div className="bg-card border border-border rounded-lg px-4 h-[42px] flex items-center gap-4 text-sm xl:w-auto">
               <div className="flex items-center gap-2">
                 <label className="text-muted-foreground" htmlFor="sort">
@@ -469,7 +464,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                   <SelectContent>
                     <SelectItem value="Topic">Topic</SelectItem>
                     <SelectItem value="Paper">Paper</SelectItem>
-                    <SelectItem value="Sessions">Sessions</SelectItem>
+                    <SelectItem value="Uploaded">Uploaded</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -483,49 +478,65 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Low confidence">
-                      Confidence - low
-                    </SelectItem>
-                    <SelectItem value="Medium confidence">
-                      Confidence - medium
-                    </SelectItem>
-                    <SelectItem value="High confidence">
-                      Confidence - high
-                    </SelectItem>
                     <SelectItem value="Rarity">Common topics</SelectItem>
                     <SelectItem value="Difficulty">Difficult topics</SelectItem>
+                    <SelectItem value="Creator: Pack">Creator: Pack</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
 
-          {specificationEntries && specificationEntries.length > 0 ? (
+          {resourceEntries && resourceEntries.length > 0 ? (
             <div style={{ overflowX: "auto", width: "100%" }}>
               <div className="border border-border rounded-xl overflow-hidden">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-muted border-b border-border">
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "10%" }}
+                      >
                         INDEX
                       </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        TOPIC
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "30%" }}
+                      >
+                        NAME
                       </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "15%" }}
+                      >
+                        TYPE
+                      </th>
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "10%" }}
+                      >
                         PAPER
                       </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        CONFIDENCE
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "15%" }}
+                      >
+                        CREATOR
                       </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold">
-                        SESSIONS
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                        style={{ width: "15%" }}
+                      >
+                        UPLOADED
                       </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
+                      <th
+                        className="px-4 py-3 text-center text-sm font-semibold w-12"
+                        style={{ width: "5%" }}
+                      ></th>
                     </tr>
                   </thead>
                   <tbody className="font-medium">
-                    {specificationEntries.map((entry) => (
+                    {resourceEntries.map((entry) => (
                       <tr
                         key={entry.id}
                         onClick={() => setSelectedEntry(entry)}
@@ -539,89 +550,37 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                           {entry.topic}
                         </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
-                          {entry.topic_name}
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                          {entry.resource_name}
                         </td>
 
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                          {entry.type}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
                           Paper {entry.paper}
                         </td>
 
-                        <td className="px-4 py-2 border-r-2 border-border">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 1);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 1
-                                  ? "bg-red-600 border-red-700"
-                                  : "bg-slate-100 border-red-400"
-                              }`}
-                            >
-                              {entry.confidence === 1 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 2);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 2
-                                  ? "bg-yellow-500 border-yellow-600"
-                                  : "bg-slate-100 border-yellow-400"
-                              }`}
-                            >
-                              {entry.confidence === 2 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 3);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 3
-                                  ? "bg-green-600 border-green-700"
-                                  : "bg-slate-100 border-green-400"
-                              }`}
-                            >
-                              {entry.confidence === 3 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-                          </div>
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                          {entry.creator}
                         </td>
 
-                        <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
-                          {entry.sessions ? "|".repeat(entry.sessions) : "-"}
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                          {entry.uploaded_at}
                         </td>
 
-                        <td className="px-2 py-2 text-center hover:bg-gray-800">
+                        <td className="px-4 py-4 text-center hover:bg-gray-800">
                           <div className="w-full h-full flex items-center justify-center">
                             <button
+                              title="Download"
                               className="rounded text-lg font-semibold"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                updateSubjectLink(entry.id, "sessions");
+                                downloadFile(entry.id);
                               }}
                             >
-                              +
+                              <Download />
                             </button>
                           </div>
                         </td>
@@ -634,10 +593,11 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
-                There are currently no entries for this subject. This may mean
+                There are currently no resources for this subject. This may mean
                 your subject is unsupported or you&apos;ve entered an invalid
-                qualification/course/exam board combination (check spelling above) - if this is not the case, please
-                contact support so we can add content from your exam board.
+                qualification/course/exam board combination (check spelling
+                above) - if this is not the case, please contact support so we
+                can add content from your exam board.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support

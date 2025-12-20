@@ -541,7 +541,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                             : ""
                         }`}
                       >
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border rounded-l-lg">
+                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
                           {entry.series} {entry.resource_name}
                         </td>
 
