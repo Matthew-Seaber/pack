@@ -4,6 +4,7 @@ import React, { useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlarmClock,
+  Bell,
   CalendarPlus,
   PanelBottomOpen,
   UserRoundCheck,
@@ -32,10 +33,13 @@ import {
 } from "@/components/ui/sheet";
 import {
   Dialog,
+  DialogDescription,
   DialogContent,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
@@ -48,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 interface ClassSchoolworkPageProps {
   params: Promise<{
@@ -69,7 +74,36 @@ export default function ClassSchoolworkPage({
     completed: string | null;
   }
 
+  interface Student {
+    student_id: string;
+    name: string;
+  }
+
   const { id: classID } = use(params);
+
+  const [schoolworkEntries, setSchoolworkEntries] = useState<
+    SchoolworkEntry[] | null
+  >(null);
+  const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
+  const [pastEntries, setPastEntries] = useState<SchoolworkEntry[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
+    null
+  );
+  const [className, setClassName] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [incompleteStudents, setIncompleteStudents] = useState<Student[]>([]);
+  const [completedStudents, setCompletedStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [entryName, setEntryName] = useState("");
+  const [entryDescription, setEntryDescription] = useState("");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
+  const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
+  const router = useRouter();
 
   // Function to sort entries by due date (using bubble sort)
   const sortEntriesByDueDate = useCallback(
@@ -189,18 +223,127 @@ export default function ClassSchoolworkPage({
   };
 
   // Function to convert a given timestamp to a UX-friendly format
-  const formatTimestamp = (timestamp: string | null): string => {
+  const formatTimestamp = (timestamp: string | null, type: number): string => {
     if (!timestamp) return "No date";
 
     const date = new Date(timestamp);
+    const now = new Date();
     if (Number.isNaN(date.getTime())) return "ERROR";
 
-    const weekday = date.toLocaleDateString("en-GB", { weekday: "long" });
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
+    if (type === 1) {
+      const weekday = date.toLocaleDateString("en-GB", { weekday: "long" });
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
 
-    return `${weekday} ${day}/${month}/${year}`;
+      return `${weekday} ${day}/${month}/${year}`;
+    } else if (type === 2) {
+      // Relative format (e.g. in 3 days) so students can quickly compare the age of different resources (only for dates in the future)
+      const msDifference = date.getTime() - now.getTime();
+      if (msDifference <= 0) return "ERROR";
+
+      const seconds = Math.floor(msDifference / 1000);
+      if (seconds < 60) return "in a few seconds";
+
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const weeks = Math.floor(days / 7);
+      const months = Math.floor(days / 30);
+      const years = Math.floor(days / 365);
+
+      const format = (value: number, unit: string) =>
+        `in ${value} ${unit}${value !== 1 ? "s" : ""}`;
+
+      if (minutes < 60) return format(minutes, "minute");
+      if (hours < 24) return format(hours, "hour");
+      if (days < 7) return format(days, "day");
+      if (weeks < 5) return format(weeks, "week");
+      if (months < 12) return format(months, "month");
+      return format(years, "year");
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  // Function to fetch students' submission statuses for a specific schoolwork entry
+  const fetchStudentSubmissions = async (schoolworkID: string) => {
+    setLoadingStudents(true);
+    try {
+      const response = await fetch(
+        `/api/teacher_schoolwork/get_student_submissions?schoolworkID=${encodeURIComponent(
+          schoolworkID
+        )}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIncompleteStudents(data.incompleteStudents || []);
+        setCompletedStudents(data.completedStudents || []);
+      } else {
+        console.error(
+          "Failed to fetch student submissions:",
+          response.statusText
+        );
+        toast.error("Error getting student submissions.");
+        setIncompleteStudents([]);
+        setCompletedStudents([]);
+      }
+    } catch (error) {
+      console.error("Error fetching student submissions:", error);
+      toast.error("Error getting student submissions.");
+      setIncompleteStudents([]);
+      setCompletedStudents([]);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const sendReminder = async (schoolworkID: string, studentID: string) => {
+    let studentIDs: string[] = [];
+
+    if (studentID === "all") {
+      studentIDs = incompleteStudents.map((student) => student.student_id);
+    } else {
+      studentIDs = [studentID];
+    }
+
+    if (studentIDs.length === 0) {
+      console.log("Empty list of students to notify.");
+      toast.error("Error notifying students.");
+      return;
+    }
+
+    const message = `Reminder sent by your teacher from ${className}: your homework "${
+      selectedEntry?.name
+    }" is due ${
+      selectedEntry ? formatTimestamp(selectedEntry.due, 2) : "soon"
+    }`;
+
+    try {
+      const response = await fetch(
+        "/api/user/notifications/send_notification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ recipients: studentIDs, message }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success(
+          studentID === "all" ? "Reminders sent." : "Reminder sent."
+        );
+      } else {
+        console.error("Failed to send reminder:", response.statusText);
+        toast.error("Error sending reminder.");
+      }
+    } catch (error) {
+      console.error("Error sending reminder :", error);
+      toast.error("Error sending reminder.");
+    }
   };
 
   // Split entries into future/today and past
@@ -237,26 +380,6 @@ export default function ClassSchoolworkPage({
     },
     []
   );
-
-  const [schoolworkEntries, setSchoolworkEntries] = useState<
-    SchoolworkEntry[] | null
-  >(null);
-  const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
-  const [pastEntries, setPastEntries] = useState<SchoolworkEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
-    null
-  );
-  const [className, setClassName] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [entryName, setEntryName] = useState("");
-  const [entryDescription, setEntryDescription] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [issuedDate, setIssuedDate] = useState<Date | undefined>(undefined);
-  const [entryType, setEntryType] = useState<"Homework" | "Test">("Homework");
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
-  const router = useRouter();
 
   // Sidebar content component
   const SidebarContent = () => {
@@ -347,11 +470,11 @@ export default function ClassSchoolworkPage({
             </div>
             <div className="flex items-center gap-3">
               <AlarmClock className="w-4 h-4" strokeWidth={2} />
-              <p>Due: {formatTimestamp(selectedEntry.due)}</p>
+              <p>Due: {formatTimestamp(selectedEntry.due, 1)}</p>
             </div>
             <div className="flex items-center gap-3">
               <CalendarPlus className="w-4 h-4" strokeWidth={2} />
-              <p>Issued: {formatTimestamp(selectedEntry.issued)}</p>
+              <p>Issued: {formatTimestamp(selectedEntry.issued, 1)}</p>
             </div>
             <div className="flex items-center gap-3">
               <UserRoundCheck className="w-4 h-4" strokeWidth={2} />
@@ -366,9 +489,17 @@ export default function ClassSchoolworkPage({
 
           <div className="mt-4 space-y-2">
             <Button className="w-full">Edit</Button>
-            <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
-              View student submissions
-            </Button>
+            {selectedEntry.schoolworkType === "Homework" && (
+              <Button
+                className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
+                onClick={() => {
+                  fetchStudentSubmissions(selectedEntry.id);
+                  setDialogOpen(true);
+                }}
+              >
+                View student submissions
+              </Button>
+            )}
             <Button
               variant="destructive"
               className="w-full"
@@ -422,6 +553,125 @@ export default function ClassSchoolworkPage({
             </Button>
           </div>
         </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Student Submissions - {selectedEntry.name}
+              </DialogTitle>
+              <DialogDescription>
+                View students&apos; progress on homework and send reminders.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="my-4 space-y-4">
+              {loadingStudents ? (
+                <div className="text-center py-4">
+                  <Spinner className="inline mr-2" />
+                  <span className="text-muted-foreground">
+                    Loading student submissions...
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {incompleteStudents.length === 0 &&
+                  completedStudents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No students have been assigned to this homework.
+                    </p>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold">
+                            Incomplete [{incompleteStudents.length}]
+                          </h3>
+                          {incompleteStudents.length > 0 && (
+                            <Button
+                              variant="link"
+                              onClick={() =>
+                                sendReminder(selectedEntry.id, "all")
+                              }
+                            >
+                              Notify all below
+                            </Button>
+                          )}
+                        </div>
+                        {incompleteStudents.length > 0 ? (
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mt-3">
+                              {incompleteStudents.map((student) => (
+                                <Card key={student.student_id} className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between w-full">
+                                      <h4 className="text-md font-semibold">
+                                        {student.name}
+                                      </h4>
+                                      <button
+                                        onClick={() =>
+                                          sendReminder(
+                                            selectedEntry.id,
+                                            student.student_id
+                                          )
+                                        }
+                                      >
+                                        <Bell></Bell>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            All students have completed this homework!
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">
+                          Completed [{completedStudents.length}]
+                        </h3>
+                        {completedStudents.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {completedStudents.map((student) => (
+                              <Card key={student.student_id} className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <h4 className="text-md font-semibold">
+                                      {student.name}
+                                    </h4>
+                                    <div>
+                                      <button disabled>
+                                        <Bell className="text-gray-500"></Bell>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No students have completed this homework yet.
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button>Done</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   };
@@ -585,11 +835,11 @@ export default function ClassSchoolworkPage({
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
-                                {formatTimestamp(entry.issued)}
+                                {formatTimestamp(entry.issued, 1)}
                               </td>
 
                               <td className="px-4 py-4 text-sm font-medium border-r-2 border-border">
-                                {formatTimestamp(entry.due)}
+                                {formatTimestamp(entry.due, 1)}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
@@ -667,11 +917,11 @@ export default function ClassSchoolworkPage({
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">
-                                {formatTimestamp(entry.issued)}
+                                {formatTimestamp(entry.issued, 1)}
                               </td>
 
                               <td className="px-4 py-4 text-sm font-medium border-r-2 border-border">
-                                {formatTimestamp(entry.due)}
+                                {formatTimestamp(entry.due, 1)}
                               </td>
 
                               <td className="px-4 py-4 text-sm border-r-2 border-border">

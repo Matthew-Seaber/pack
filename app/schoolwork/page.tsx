@@ -36,10 +36,13 @@ import {
 } from "@/components/ui/sheet";
 import {
   Dialog,
+  DialogDescription,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
@@ -52,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 export default function SchoolworkPage() {
   interface SchoolworkEntry {
@@ -73,6 +77,12 @@ export default function SchoolworkPage() {
     name: string;
   }
 
+  interface TeacherClass {
+    id: string;
+    name: string;
+    teacher: string;
+  }
+
   const [schoolworkEntries, setSchoolworkEntries] = useState<
     SchoolworkEntry[] | null
   >(null);
@@ -87,6 +97,7 @@ export default function SchoolworkPage() {
   );
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [entryName, setEntryName] = useState("");
   const [entryDescription, setEntryDescription] = useState("");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
@@ -95,6 +106,8 @@ export default function SchoolworkPage() {
   const [subjectID, setSubjectID] = useState<string | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
+  const [joinCode, setJoinCode] = useState("");
   const router = useRouter();
 
   // Function to sort entries by due date (using bubble sort)
@@ -274,6 +287,7 @@ export default function SchoolworkPage() {
         const completedEntry = [...futureEntries, ...overdueEntries].find(
           (entry) => entry.id === entryID && entry.category === entryCategory
         ); // Finds entry from either list and adds to the completed list below
+
         if (completedEntry) {
           setCompletedEntries((previous) => [
             ...previous,
@@ -281,6 +295,26 @@ export default function SchoolworkPage() {
           ]);
         }
         setSelectedEntry(null);
+
+        try {
+          const res = await fetch("/api/user_stats/save_stats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              dataToChange: "schoolworks_completed",
+              extraInfo: null,
+            }),
+          });
+
+          if (!res.ok) {
+            toast.error("Failed to save schoolwork stats to profile.");
+            const errorData = await res.json();
+            console.error("Stats saving error:", errorData.message);
+          }
+        } catch (error) {
+          console.error("Error saving schoolwork stats:", error);
+          toast.error("Error saving schoolwork stats. Please try again later.");
+        }
       } else {
         console.error(
           "Failed to complete schoolwork entry:",
@@ -427,6 +461,58 @@ export default function SchoolworkPage() {
     },
     []
   );
+
+  // Function to add a student to a teacher-managed class
+  const handleJoinClass = async () => {
+    if (joinCode.trim() === "" || joinCode.trim().length !== 8) {
+      toast.error("Join code invalid.");
+      return;
+    } else {
+      try {
+        const response = await fetch("/api/schoolwork/join_class", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ joinCode: joinCode.trim() }),
+        });
+        if (response.ok) {
+          toast.success("Successfully joined class!");
+          setJoinCode("");
+          setDialogOpen(false);
+          // Refresh class list by refreshing page
+          setTimeout(() => window.location.reload(), 1500); // Gives student time to read the toast
+        } else {
+          console.error("Failed to join class:", response.statusText);
+          toast.error("Failed to join class. Please check the join code.");
+        }
+      } catch (error) {
+        console.error("Error joining class:", error);
+        toast.error("Error joining class. Please try again later.");
+      }
+    }
+  };
+
+  // Function to remove a student from a teacher-managed class
+  const handleLeaveClass = async (classID: string) => {
+    try {
+      const response = await fetch("/api/schoolwork/leave_class", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classID }),
+      });
+      if (response.ok) {
+        toast.success("Successfully left class!");
+        setTeacherClasses((previous) =>
+          previous.filter((clss) => clss.id !== classID)
+        );
+      } else {
+        console.error("Failed to leave class:", response.statusText);
+        toast.error("Failed to leave class. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error leaving class:", error);
+      toast.error("Error leaving class. Please try again later.");
+    }
+  };
 
   // Sidebar content component
   const SidebarContent = () => {
@@ -776,7 +862,35 @@ export default function SchoolworkPage() {
       }
     };
 
-    fetchSchoolworkData();
+    const fetchTeacherClasses = async () => {
+      try {
+        const classesResponse = await fetch("/api/schoolwork/get_classes", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!classesResponse.ok) {
+          console.error(
+            "Error getting your linked teacher classes:",
+            classesResponse.statusText
+          );
+          toast.error(
+            "Error getting your linked teacher classes. Please try again later."
+          );
+          setTeacherClasses([]);
+        } else {
+          const classesData = await classesResponse.json();
+          setTeacherClasses(classesData.classes || []);
+        }
+      } catch (error) {
+        console.error("Error fetching teacher classes:", error);
+        setTeacherClasses([]);
+      }
+    };
+
+    fetchSchoolworkData().then(() => {
+      fetchTeacherClasses();
+    });
   }, [router, sortEntriesByDueDate]);
 
   if (loading) {
@@ -796,9 +910,14 @@ export default function SchoolworkPage() {
     <>
       <div className="flex gap-6 pb-24 xl:pb-0">
         <div className="flex-1">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 break-words">
-            Schoolwork
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl sm:text-3xl font-semibold break-words">
+              Schoolwork
+            </h2>
+            <Button variant="secondary" onClick={() => setDialogOpen(true)}>
+              MANAGE CLASSES
+            </Button>
+          </div>
 
           {schoolworkEntries && schoolworkEntries.length > 0 ? (
             <div className="space-y-6">
@@ -1288,6 +1407,90 @@ export default function SchoolworkPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage Classes</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Join and leave teacher-managed classes.
+          </DialogDescription>
+          <div className="my-4">
+            <label
+              className="block text-sm font-medium mb-3"
+              htmlFor="newClassInput"
+            >
+              Join new class
+            </label>
+            <div className="flex items-center gap-4 mb-3">
+              <Input
+                id="newClassInput"
+                type="text"
+                name="newClassInput"
+                placeholder="Enter your class' unique join code"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleJoinClass}>Join</Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              <i>
+                Note: joining a class will share your first name and schoolwork
+                status with the teacher of the class.
+              </i>
+            </p>
+
+            <h2 className="font-medium">Classes</h2>
+            {teacherClasses && teacherClasses.length > 0 ? (
+              <>
+                {teacherClasses.map((teacherClass) => (
+                  <div key={teacherClass.id}>
+                    <Card className="p-4 my-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold">
+                            {teacherClass.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {teacherClass.teacher}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleLeaveClass(teacherClass.id)}
+                          >
+                            Leave Class
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+                <p className="text-sm text-muted-foreground mt-3">
+                  <i>
+                    Note: leaving a class won&apos;t remove any existing
+                    schoolwork.
+                  </i>
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 mt-2">
+                You have not yet joined any classes.
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Done</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="md:hidden lg:hidden xl:hidden">
         <Drawer>

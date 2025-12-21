@@ -1,6 +1,7 @@
 "use client";
 
-import DarkMode from "./UITheme";
+import ThemeSwitcher from "./UITheme";
+import NotificationBox from "./NotificationBox";
 import Logo from "./Logo";
 import NavbarLinks from "./NavbarLinks";
 import Link from "next/link";
@@ -15,10 +16,10 @@ function MainNavbar() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        const response = await fetch('/api/user');
+        const response = await fetch("/api/user");
         setIsAuthenticated(response.ok);
       } catch (error) {
-        console.error('Error checking authentication:', error);
+        console.error("Error checking authentication:", error);
         setIsAuthenticated(false);
       }
 
@@ -32,19 +33,22 @@ function MainNavbar() {
     <nav className="border-b">
       <div className="max-w-[1600px] mx-auto px-6 flex justify-between items-center flex-wrap py-6 gap-4">
         <Logo />
-
         <NavbarLinks />
 
         <div className="flex gap-4 items-center flex-shrink-0">
-          <DarkMode />
           {authLoading ? (
             <Skeleton className="w-36 h-10" />
           ) : isAuthenticated ? (
-            <Button asChild size="lg">
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
+            <>
+              <NotificationBox />
+              <ThemeSwitcher />
+              <Button asChild size="lg">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            </>
           ) : (
             <>
+              <ThemeSwitcher />
               <Button variant="outline" asChild size="lg">
                 <Link href="/login">Log in</Link>
               </Button>

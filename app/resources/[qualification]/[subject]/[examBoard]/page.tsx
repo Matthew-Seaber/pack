@@ -79,17 +79,54 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
   } // Capitalises exam boards that are normally capitalised (all others begin with "E")
 
   // Function to convert a given timestamp to a UX-friendly format
-  const formatTimestamp = (timestamp: string | null): string => {
+  const formatTimestamp = (timestamp: string | null, type: number): string => {
     if (!timestamp) return "No date";
 
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return "ERROR";
 
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
+    if (type === 1) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
 
-    return `${day}/${month}/${year.toString().slice(-2)}`;
+      return `${day}/${month}/${year.toString().slice(-2)}`;
+    } else if (type === 2) {
+      // Relative format (e.g. 3 days ago) so students can quickly compare the age of different resources
+      const now = new Date();
+      const msDifference = now.getTime() - date.getTime();
+      if (msDifference <= 0) return "ERROR";
+
+      const seconds = Math.floor(msDifference / 1000);
+      if (seconds < 60) return "a few seconds ago";
+
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const weeks = Math.floor(days / 7);
+      const months = Math.floor(days / 30);
+      const years = Math.floor(days / 365);
+
+      const format = (value: number, unit: string) =>
+        `${value} ${unit}${value !== 1 ? "s" : ""} ago`;
+
+      if (minutes < 60) return format(minutes, "minute");
+      if (hours < 24) return format(hours, "hour");
+      if (days < 7) return format(days, "day");
+      if (weeks < 5) return format(weeks, "week");
+      if (months < 12) return format(months, "month");
+      return format(years, "year");
+    } else {
+      const options: Intl.DateTimeFormatOptions = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
+
+      return date.toLocaleString(undefined, options);
+    }
   };
 
   // Function to sort entries by index
@@ -179,6 +216,26 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
       document.body.removeChild(downloadObject);
 
       toast.success("Download complete!");
+
+      try {
+        const res = await fetch("/api/user_stats/save_stats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dataToChange: "resources_downloaded",
+            extraInfo: null,
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error("Failed to save resource stats to profile.");
+          const errorData = await res.json();
+          console.error("Stats saving error:", errorData.message);
+        }
+      } catch (error) {
+        console.error("Error saving resource stats:", error);
+        toast.error("Error saving resource stats. Please try again later.");
+      }
     } catch (error) {
       console.error("Error downloading file:", error);
       toast.error("Error downloading file. Please try again later.");
@@ -296,7 +353,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
             </div>
             <div className="flex items-center gap-3">
               <Clock className="w-4 h-4" strokeWidth={2} />
-              <p>Uploaded: {formatTimestamp(selectedEntry.uploaded_at)}</p>
+              <p>Uploaded: {formatTimestamp(selectedEntry.uploaded_at, 1)}</p>
             </div>
             <div className="flex items-center gap-3">
               <Shapes className="w-4 h-4" strokeWidth={2} />
@@ -566,8 +623,14 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                           {entry.creator}
                         </td>
 
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.uploaded_at}
+                        <td
+                          className="px-4 py-2 text-sm font-medium border-r-2 border-border"
+                          title={formatTimestamp(entry.uploaded_at, 0)}
+                        >
+                          {" "}
+                          {/* Reveals long date on hover */}
+                          {formatTimestamp(entry.uploaded_at, 2)}{" "}
+                          {/* Relative format */}
                         </td>
 
                         <td className="px-4 py-4 text-center hover:bg-gray-800">

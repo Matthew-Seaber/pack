@@ -384,7 +384,7 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition"
+                className="w-full py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-500/85 transition-colors duration-150"
               >
                 Next
               </button>
@@ -571,7 +571,7 @@ export default function SignupPage() {
                 {/* Button added during testing when wanting to change previous details. Using the browser's back button goes to the page before the Signup page (because the URL doesn't change)*/}
                 <button
                   type="submit"
-                  className="w-3/4 py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition"
+                  className="w-3/4 py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-500/85 transition-colors duration-150"
                 >
                   Sign up
                 </button>
@@ -760,7 +760,7 @@ export default function SignupPage() {
                 {/* Button added during testing when wanting to change previous details. Using the browser's back button goes to the page before the Signup page (because the URL doesn't change)*/}
                 <button
                   type="submit"
-                  className="w-3/4 py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition"
+                  className="w-3/4 py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-500/85 transition-colors duration-150"
                 >
                   Sign up
                 </button>

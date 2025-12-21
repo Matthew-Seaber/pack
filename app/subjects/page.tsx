@@ -131,20 +131,52 @@ export default function SubjectsPage() {
   };
 
   // Function to convert a given timestamp to a UX-friendly format
-  const formatTimestamp = (timestamp: string): string => {
-    const now = new Date();
+  const formatTimestamp = (timestamp: string, type: number): string => {
+    if (!timestamp) return "No date";
+
     const date = new Date(timestamp);
-    const year = now.getFullYear();
-    const inputYear = date.getFullYear();
+    if (Number.isNaN(date.getTime())) return "ERROR";
+    const now = new Date();
 
-    const day = date.getDate();
-    const month = date.toLocaleDateString("en-GB", { month: "short" });
+    if (type === 1) {
+      const year = now.getFullYear();
+      const inputYear = date.getFullYear();
 
-    // Include year if it's not due the current year
-    if (inputYear !== year) {
-      return `${day} ${month} ${inputYear}`;
+      const day = date.getDate();
+      const month = date.toLocaleDateString("en-GB", { month: "short" });
+
+      // Include year if it's not due the current year
+      if (inputYear !== year) {
+        return `${day} ${month} ${inputYear}`;
+      } else {
+        return `${day} ${month}`;
+      }
+    } else if (type === 2) {
+      // Relative format (e.g. in 3 days) so students can quickly compare the age of different resources (only for dates in the future)
+      const msDifference = date.getTime() - now.getTime();
+      if (msDifference <= 0) return "ERROR";
+
+      const seconds = Math.floor(msDifference / 1000);
+      if (seconds < 60) return "in a few seconds";
+
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const weeks = Math.floor(days / 7);
+      const months = Math.floor(days / 30);
+      const years = Math.floor(days / 365);
+
+      const format = (value: number, unit: string) =>
+        `in ${value} ${unit}${value !== 1 ? "s" : ""}`;
+
+      if (minutes < 60) return format(minutes, "minute");
+      if (hours < 24) return format(hours, "hour");
+      if (days < 7) return format(days, "day");
+      if (weeks < 5) return format(weeks, "week");
+      if (months < 12) return format(months, "month");
+      return format(years, "year");
     } else {
-      return `${day} ${month}`;
+      return date.toLocaleDateString();
     }
   };
 
@@ -251,13 +283,13 @@ export default function SubjectsPage() {
             {nextExam && (
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4" strokeWidth={2} />
-                <p>Next exam: {formatTimestamp(nextExam.examDate)}</p>
+                <p>Next exam: {formatTimestamp(nextExam.examDate, 1)}</p>
               </div>
             )}
             {finalExam && (
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4" strokeWidth={2} />
-                <p>Final exam: {formatTimestamp(finalExam.examDate)}</p>
+                <p>Final exam: {formatTimestamp(finalExam.examDate, 1)}</p>
               </div>
             )}
             <div className="flex items-center gap-3">
@@ -330,7 +362,9 @@ export default function SubjectsPage() {
               className="w-full"
               onClick={() => {
                 const emailSubject = encodeURIComponent(
-                  "Issue with Subject Page for " + qualification + " - " +
+                  "Issue with Subject Page for " +
+                    qualification +
+                    " - " +
                     selectedSubject.name +
                     " (" +
                     selectedSubject.examBoard +
@@ -379,7 +413,7 @@ export default function SubjectsPage() {
         className={`relative border-4 ${
           extras.border
         } rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
-          selectedSubject?.id === subject.id ? "ring-2 ring-primary" : "" // Adds outline when selected
+          selectedSubject?.id === subject.id ? "ring-4 ring-primary" : "" // Adds outline when selected
         }`}
       >
         <div className="absolute top-5 right-5">
@@ -440,7 +474,8 @@ export default function SubjectsPage() {
 
           {nextExam && (
             <p className="text-xs mt-4 text-muted-foreground">
-              Next exam: {formatTimestamp(nextExam.examDate)}
+              Next exam: {formatTimestamp(nextExam.examDate, 1)} (
+              {formatTimestamp(nextExam.examDate, 2)})
             </p>
           )}
         </div>
@@ -497,7 +532,9 @@ export default function SubjectsPage() {
               "Error getting year group:",
               qualificationResponse.statusText
             );
-            toast.error("Error getting your qualification level. Please try again later.");
+            toast.error(
+              "Error getting your qualification level. Please try again later."
+            );
           } else {
             const qualificationData = await qualificationResponse.json();
             const yearGroup = qualificationData.yearGroup;

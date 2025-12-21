@@ -51,11 +51,27 @@ export async function GET() {
     }
 
     if (!schoolworkLinkData || schoolworkLinkData.length === 0) {
+      type StudentSchoolworkEntry = {
+        schoolwork_id: number | string;
+        type: number | null;
+        completed: boolean;
+        due: string | null;
+        issued: string | null;
+        schoolwork_name: string | null;
+        schoolwork_description: string | null;
+        subjects: {
+          teacher_name?: string | null;
+          courses: {
+            course_name?: string | null;
+          } | null;
+        } | null;
+      };
+
       // Format student schoolwork entries
-      const studentSchoolworkEntries = primarySchoolworkData.map(
+      const studentSchoolworkEntries = (primarySchoolworkData as unknown as StudentSchoolworkEntry[]).map(
         (entry) => {
-          const courseName = entry.subjects?.[0]?.courses?.[0]?.course_name || null;
-          const teacherName = entry.subjects?.[0]?.teacher_name || null;
+          const courseName = entry.subjects?.courses?.course_name || null;
+          const teacherName = entry.subjects?.teacher_name || null;
           return {
             id: entry.schoolwork_id.toString(),
             category: 1,
@@ -122,10 +138,26 @@ export async function GET() {
       );
     }
 
+    type StudentSchoolworkEntry = {
+      schoolwork_id: number | string;
+      type: number | null;
+      completed: boolean;
+      due: string | null;
+      issued: string | null;
+      schoolwork_name: string | null;
+      schoolwork_description: string | null;
+      subjects: {
+        teacher_name?: string | null;
+        courses: {
+          course_name?: string | null;
+        } | null;
+      } | null;
+    };
+
     // Format student-managed schoolwork entries
-    const studentSchoolworkEntries = primarySchoolworkData.map((entry) => {
-      const teacherName = entry.subjects?.[0]?.teacher_name || null;
-      const courseName = entry.subjects?.[0]?.courses?.[0]?.course_name || null;
+    const studentSchoolworkEntries = (primarySchoolworkData as unknown as StudentSchoolworkEntry[]).map((entry) => {
+      const teacherName = entry.subjects?.teacher_name || null;
+      const courseName = entry.subjects?.courses?.course_name || null;
 
       return {
         id: entry.schoolwork_id.toString(),
@@ -157,15 +189,15 @@ export async function GET() {
           title?: string | null;
           surname?: string | null;
           subject?: string | null;
-        }[];
-      }[];
+        } | null;
+      } | null;
     };
 
     // Format teacher-managed schoolwork entries with joined data
-    const teacherSchoolworkEntries = (teacherSchoolworkData || []).map(
-      (entry: TeacherSchoolworkEntry) => {
-        const classData = entry.classes?.[0];
-        const teacherData = classData?.teachers?.[0];
+    const teacherSchoolworkEntries = ((teacherSchoolworkData || []) as unknown as TeacherSchoolworkEntry[]).map(
+      (entry) => {
+        const classData = entry.classes;
+        const teacherData = classData?.teachers;
         const teacherName =
           teacherData?.title && teacherData?.surname
             ? `${teacherData.title} ${teacherData.surname}`

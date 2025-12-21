@@ -55,6 +55,36 @@ export async function POST(req: Request) {
           { status: 500 }
         );
       }
+    } else if (dataToChange === "schoolworks_completed") {
+      const { error: updateError } = await supabaseMainAdmin.rpc(
+        "increment_schoolwork_stat",
+        {
+          inputted_user_id: user_id,
+        }
+      );
+
+      if (updateError) {
+        console.error("Database error:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update user stats" },
+          { status: 500 }
+        );
+      }
+    } else if (dataToChange === "resources_downloaded") {
+      const { error: updateError } = await supabaseMainAdmin.rpc(
+        "increment_resources_stat",
+        {
+          inputted_user_id: user_id,
+        }
+      );
+
+      if (updateError) {
+        console.error("Database error:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update user stats" },
+          { status: 500 }
+        );
+      }
     } else {
       return NextResponse.json(
         { error: "Invalid dataToChange value" },
