@@ -6,10 +6,12 @@ export async function POST(req: Request) {
 
     // Gets a user's stats via user_id
     const { data: user_stats, error: fetchError } = await supabaseMainAdmin
-    .from("student_stats")
-    .select("streak, tasks_completed, schoolwork_completed, past_papers_completed, resources_downloaded, pomodoro_time")
-    .eq("user_id", user_id)
-    .single();
+      .from("student_stats")
+      .select(
+        "streak, tasks_completed, schoolwork_completed, past_papers_downloaded_opened, resources_downloaded, pomodoro_time"
+      )
+      .eq("user_id", user_id)
+      .single();
 
   if (fetchError || !user_stats) {
     return NextResponse.json({ error: "Error getting user stats" }, { status: 500 });

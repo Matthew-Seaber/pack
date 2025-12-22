@@ -138,7 +138,10 @@ export default function NotificationBox() {
           {/* Text for screen readers only - helps with accessibility */}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="max-w-[300px] sm:max-w-[400px] md:max-w-[500px] max-h-[300px]" align="end">
+      <DropdownMenuContent
+        className="max-w-[300px] sm:max-w-[400px] md:max-w-[500px] max-h-[300px]"
+        align="end"
+      >
         {newNotifications && newNotifications.length > 0 ? (
           newNotifications.map((notification) => (
             <div
@@ -181,6 +184,10 @@ export default function NotificationBox() {
             ))}
           </>
         )}
+
+        <p className="text-sm text-muted-foreground px-4 py-4">
+          <i>Note: notifications are automatically deleted after 7 days.</i>
+        </p>
       </DropdownMenuContent>
     </DropdownMenu>
   );

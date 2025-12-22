@@ -110,6 +110,28 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
             setMarkSchemeLocation(pastPapersData.mark_scheme_location);
             setModelAnswersLocation(pastPapersData.model_answers_location);
             setInsertLocation(pastPapersData.insert_location);
+
+            try {
+              const res = await fetch("/api/user_stats/save_stats", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  dataToChange: "past_papers_downloaded_opened",
+                  extraInfo: null,
+                }),
+              });
+
+              if (!res.ok) {
+                toast.error("Failed to save past paper stats to profile.");
+                const errorData = await res.json();
+                console.error("Stats saving error:", errorData.message);
+              }
+            } catch (error) {
+              console.error("Error saving past paper stats:", error);
+              toast.error(
+                "Error saving past paper stats. Please try again later."
+              );
+            }
           }
         } else {
           // User not logged in

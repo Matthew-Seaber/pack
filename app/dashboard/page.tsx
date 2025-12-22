@@ -88,7 +88,7 @@ export default async function Dashboard() {
       const { data: userStats, error: fetchError } = await supabaseMainAdmin
         .from("student_stats")
         .select(
-          "streak, tasks_completed, schoolwork_completed, past_papers_completed, resources_downloaded, pomodoro_time"
+          "streak, tasks_completed, schoolwork_completed, past_papers_downloaded_opened, resources_downloaded, pomodoro_time"
         )
         .eq("user_id", user.user_id)
         .single();
@@ -101,7 +101,7 @@ export default async function Dashboard() {
       return {
         tasksCompleted: userStats.tasks_completed || 0,
         schoolworkCompleted: userStats.schoolwork_completed || 0,
-        pastPapersCompleted: userStats.past_papers_completed || 0,
+        pastPapersCompleted: userStats.past_papers_downloaded_opened || 0,
         resourcesDownloaded: userStats.resources_downloaded || 0,
         pomodoroTime: formatTime(userStats.pomodoro_time || 0),
       };
@@ -398,7 +398,7 @@ export default async function Dashboard() {
                 className="flex justify-between bg-[#42AAFF]/20 rounded-md mb-2 p-3"
                 style={{ color: "#A6E4FF" }}
               >
-                <p className="text-[13px] font-medium">Past papers completed</p>
+                <p className="text-[13px] font-medium">Past papers accessed</p>
                 <p
                   className="text-xs font-regular pr-1 tabular-nums"
                   style={{ transform: "translateX(3px)" }}

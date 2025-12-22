@@ -682,7 +682,9 @@ export default function TasksPage() {
             </div>
           </div>
           <SheetFooter>
-            <Button onClick={handleAddTask}>Add task</Button>
+            <Button className="mt-2 sm:mt-0" onClick={handleAddTask}>
+              Add task
+            </Button>
             <SheetClose asChild>
               <Button variant="outline">Cancel</Button>
             </SheetClose>
@@ -715,7 +717,9 @@ export default function TasksPage() {
           {tasksDueTomorrow.length > 0 && tasksDueTomorrow.map(renderTask)}
 
           {tasksDueThisWeek.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">Within the next week</h3>
+            <h3 className="pt-10 text-lg font-semibold">
+              Within the next week
+            </h3>
           )}
 
           {tasksDueThisWeek.length > 0 && tasksDueThisWeek.map(renderTask)}

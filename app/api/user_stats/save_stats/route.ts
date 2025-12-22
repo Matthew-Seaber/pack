@@ -85,6 +85,21 @@ export async function POST(req: Request) {
           { status: 500 }
         );
       }
+    } else if (dataToChange === "past_papers_downloaded_opened") {
+      const { error: updateError } = await supabaseMainAdmin.rpc(
+        "increment_past_papers_stat",
+        {
+          inputted_user_id: user_id,
+        }
+      );
+
+      if (updateError) {
+        console.error("Database error:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update user stats" },
+          { status: 500 }
+        );
+      }
     } else {
       return NextResponse.json(
         { error: "Invalid dataToChange value" },

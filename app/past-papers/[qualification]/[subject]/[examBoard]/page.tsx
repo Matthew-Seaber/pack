@@ -178,6 +178,26 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
       document.body.removeChild(downloadObject);
 
       toast.success("Download complete!");
+
+      try {
+        const res = await fetch("/api/user_stats/save_stats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dataToChange: "past_papers_downloaded_opened",
+            extraInfo: null,
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error("Failed to save past paper stats to profile.");
+          const errorData = await res.json();
+          console.error("Stats saving error:", errorData.message);
+        }
+      } catch (error) {
+        console.error("Error saving past paper stats:", error);
+        toast.error("Error saving past paper stats. Please try again later.");
+      }
     } catch (error) {
       console.error("Error downloading ZIP:", error);
       toast.error("Error downloading files. Please try again later.");
