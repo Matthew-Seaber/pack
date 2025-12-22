@@ -254,7 +254,13 @@ export default async function Dashboard() {
   const formatDate = (date: Date) => {
     const day = date.getDate();
     const month = date.toLocaleString("en-US", { month: "long" });
-    return `${day} ${month}`;
+    const year = date.getFullYear();
+
+    if (date.getFullYear() !== today.getFullYear()) {
+      return `${day} ${month} ${year}`;
+    } else {
+      return `${day} ${month}`;
+    }
   };
 
   const statsRange = `${formatDate(joinDate)} - ${formatDate(today)}`;

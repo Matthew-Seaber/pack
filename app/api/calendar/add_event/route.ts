@@ -40,6 +40,16 @@ export async function POST(req: Request) {
       );
     }
 
+    let finalLocation = 0;
+
+    if (locationType === "In-person") {
+      finalLocation = 1;
+    } else if (locationType === "Virtual") {
+      finalLocation = 2;
+    } else {
+      finalLocation = 0;
+    }
+      
     // Insert the new task into the database
     const { data: calendarData, error: insertError } = await supabaseMainAdmin
       .from("calendar_events")
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
         event_end: end,
         type: type || null,
         subject_id: subjectID || null,
-        location_type: locationType || 0,
+        location_type: finalLocation,
         location: location || null,
       })
       .select(
