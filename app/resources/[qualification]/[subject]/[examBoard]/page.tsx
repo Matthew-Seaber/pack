@@ -633,7 +633,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                           {/* Relative format */}
                         </td>
 
-                        <td className="px-4 py-4 text-center hover:bg-gray-800">
+                        <td className="p-4 text-center hover:bg-gray-800">
                           <div className="w-full h-full flex items-center justify-center">
                             <button
                               title="Download"

@@ -612,7 +612,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                           {entry.sessions ? "|".repeat(entry.sessions) : "-"}
                         </td>
 
-                        <td className="px-2 py-2 text-center hover:bg-gray-800">
+                        <td className="p-2 text-center hover:bg-gray-800">
                           <div className="w-full h-full flex items-center justify-center">
                             <button
                               className="rounded text-lg font-semibold"
