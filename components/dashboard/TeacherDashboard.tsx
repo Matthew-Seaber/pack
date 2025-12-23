@@ -98,7 +98,6 @@ export default function TeacherDashboard({
 
   const [selectedTeacherClass, setSelectedTeacherClass] =
     useState<TeacherClass | null>(null);
-
   const sortedTeacherClasses = sortClassesByName([...teacherClasses]); // The "..." ensures the original array isn't changed (copy used instead)
 
   // Function to render a notification
@@ -257,7 +256,48 @@ export default function TeacherDashboard({
             >
               Copy Join Code
             </Button>
-            <Button variant="destructive" className="w-full">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={async () => {
+                try {
+                  const response = await fetch(
+                    "/api/teacher_schoolwork/reset_join_code",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        classID: selectedTeacherClass.id,
+                      }),
+                    }
+                  );
+
+                  if (response.ok) {
+                    const newCode = (await response.json()).new_code;
+                    selectedTeacherClass.joinCode = newCode;
+                    try {
+                      await navigator.clipboard.writeText(newCode);
+                      toast.success(
+                        "Join code reset. New code copied to clipboard!"
+                      );
+                      setTimeout(() => window.location.reload(), 1000); // Gives the user time to read the toast
+                    } catch (err) {
+                      console.error("Failed to copy new join code: ", err);
+                      toast.error("Join code reset.");
+                    }
+
+                    setTimeout(() => window.location.reload(), 1000); // Gives the user time to read the toast
+                  } else {
+                    toast.error("Failed to reset join code.");
+                    const errorData = await response.json();
+                    console.error("Join code reset error:", errorData.message);
+                  }
+                } catch (error) {
+                  console.error("Join code reset error (2):", error);
+                  toast.error("Failed to reset join code.");
+                }
+              }}
+            >
               Reset Join Code
             </Button>
           </div>
@@ -296,7 +336,7 @@ export default function TeacherDashboard({
               </div>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No items due today
+                No schoolwork due today
               </p>
             )}
           </div>

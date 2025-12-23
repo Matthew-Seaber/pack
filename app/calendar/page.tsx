@@ -111,6 +111,10 @@ export default function CalendarPage() {
     return now;
   });
   const [theme, setTheme] = React.useState<string | null>(null);
+  const [currentMinutes, setCurrentMinutes] = React.useState(() => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
   const router = useRouter();
 
   // Gets theme from localStorage and listens for changes
@@ -238,6 +242,16 @@ export default function CalendarPage() {
     return () => {
       window.removeEventListener("keydown", onTKeyDown);
     };
+  }, []);
+
+  React.useEffect(() => {
+    const updateCurrentTime = () => {
+      const now = new Date();
+      setCurrentMinutes(now.getHours() * 60 + now.getMinutes());
+    };
+
+    const interval = setInterval(updateCurrentTime, 1 * 60 * 1000); // Updates current time line every 1 minute
+    return () => clearInterval(interval);
   }, []);
 
   // Function to handle adding a new calendar event
@@ -384,17 +398,24 @@ export default function CalendarPage() {
 
       const startTime = new Date(event.start);
       const endTime = new Date(event.end);
+      const now = new Date();
 
       const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
       const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
 
       const distanceFromTop = startMinutes * (hourHeight / 60);
-      const eventHeight = (endMinutes - startMinutes) * (hourHeight / 60);
+      const eventHeight = (endMinutes - startMinutes) * (hourHeight / 60) - 4; // Adds a small gap between events for visual clarity
+
+      const isPastEvent = endTime < now;
 
       return (
         <div
           key={event.id}
-          className={`absolute left-0 right-0 flex items-start justify-between border-l-4 ${colours.border} ${colours.bg} rounded-md p-2 text-foreground/97 mr-1`}
+          className={`absolute left-0 right-0 flex items-start justify-between border-l-4 ${
+            colours.border
+          } ${colours.bg} rounded-md p-2 text-foreground/97 mr-1 ${
+            isPastEvent ? "opacity-50" : ""
+          }`}
           style={{ top: `${distanceFromTop}px`, height: `${eventHeight}px` }}
         >
           <div className="flex-1 min-w-0">
@@ -858,6 +879,12 @@ export default function CalendarPage() {
                       />
                     )
                   )}
+                  {isToday && (
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-slate-200 z-20"
+                      style={{ top: `${currentMinutes}px` }}
+                    ></div>
+                  )}
                   <div className="relative h-full">{renderDay(dayDate)}</div>
                 </div>
               </div>
@@ -927,6 +954,12 @@ export default function CalendarPage() {
                         style={{ top: `${hourIndex * 60}px`, height: "60px" }}
                       />
                     )
+                  )}
+                  {isToday && (
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-slate-200 z-20"
+                      style={{ top: `${currentMinutes}px` }}
+                    ></div>
                   )}
                   <div className="relative h-full">{renderDay(dayDate)}</div>
                 </div>

@@ -59,16 +59,38 @@ export default async function Dashboard() {
     }
   }
 
-  const formatTime = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes} mins`;
-    }
+  const formatTime = (
+    minutes: number | null,
+    timestamp: string | null,
+    type: number
+  ) => {
+    if (type === 1) {
+      if (minutes === null) return "ERROR";
 
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours} hr${hours > 1 ? "s" : ""},${
-      remainingMinutes ? ` ${remainingMinutes} mins` : ""
-    }`;
+      if (minutes < 60) {
+        return `${minutes} mins`;
+      }
+
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return `${hours} hr${hours > 1 ? "s" : ""},${
+        remainingMinutes ? ` ${remainingMinutes} mins` : ""
+      }`;
+    } else if (type === 2) {
+      if (!timestamp || timestamp === "") return "ERROR";
+
+      const date = new Date(timestamp);
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const option = hours >= 12 ? "PM" : "AM";
+
+      if (hours > 12) {
+        // Adjusts to a 12-hour format
+        hours = hours - 12;
+      }
+
+      return `${hours}:${minutes < 10 ? `0${minutes}` : minutes} ${option}`; // Final formatting
+    }
   };
 
   const getUserStats = async () => {
@@ -77,7 +99,7 @@ export default async function Dashboard() {
       schoolworkCompleted: 0,
       pastPapersCompleted: 0,
       resourcesDownloaded: 0,
-      pomodoroTime: formatTime(0),
+      pomodoroTime: formatTime(0, null, 1),
     };
 
     if (user.role !== "Student") {
@@ -103,11 +125,97 @@ export default async function Dashboard() {
         schoolworkCompleted: userStats.schoolwork_completed || 0,
         pastPapersCompleted: userStats.past_papers_downloaded_opened || 0,
         resourcesDownloaded: userStats.resources_downloaded || 0,
-        pomodoroTime: formatTime(userStats.pomodoro_time || 0),
+        pomodoroTime: formatTime(userStats.pomodoro_time || 0, null, 1),
       };
     } catch (error) {
       console.error("Failed to get user stats:", error);
       return defaultStats;
+    }
+  };
+
+  const getNextCalendarEvent = async () => {
+    let event = {
+      name: "",
+      description: null as string | null,
+      start: "",
+      end: "",
+      location_type: null as string | null,
+      location: "",
+      course_name: null as string | null,
+    };
+
+    if (user.role !== "Student") {
+      return event; // Avoids database call if user is a teacher
+    }
+
+    try {
+      const { data: eventsData, error: fetchError } = await supabaseMainAdmin
+        .from("calendar_events")
+        .select(
+          "event_name, event_description, event_start, event_end, location_type, location, subjects!subject_id(courses!course_id(course_name))"
+        )
+        .eq("user_id", user.user_id);
+
+      if (fetchError) {
+        console.error("Error getting calendar events:", fetchError);
+        return event;
+      }
+
+      if (!eventsData || eventsData.length === 0) {
+        console.log("No calendar events found.");
+        return event;
+      }
+
+      // Find next upcoming event
+      const now = new Date();
+      const upcomingEvents = eventsData.filter(
+        (event) => new Date(event.event_start) > now
+      );
+
+      if (upcomingEvents.length === 0) {
+        console.log("No upcoming calendar events found.");
+        return event;
+      }
+
+      upcomingEvents.sort((a, b) => {
+        return (
+          new Date(a.event_start).getTime() - new Date(b.event_start).getTime()
+        );
+      });
+      const nextEvent = upcomingEvents[0];
+
+      type EventSubject = typeof nextEvent & {
+        subjects?: {
+          courses?: {
+            course_name?: string | null;
+          } | null;
+        } | null;
+      };
+
+      let final_location_type: string | null = null;
+      if (nextEvent.location_type === 1) {
+        final_location_type = "In-person";
+      } else if (nextEvent.location_type === 2) {
+        final_location_type = "Virtual";
+      } else {
+        final_location_type = null;
+      }
+
+      event = {
+        name: nextEvent.event_name,
+        description: nextEvent.event_description || null,
+        start: nextEvent.event_start,
+        end: nextEvent.event_end,
+        location_type: final_location_type,
+        location: nextEvent.location || "",
+        course_name:
+          (nextEvent as EventSubject).subjects?.courses?.course_name || null,
+      };
+
+      return event;
+    } catch (error) {
+      console.error("Failed to get next calendar event:", error);
+      return event;
     }
   };
 
@@ -265,6 +373,7 @@ export default async function Dashboard() {
 
   const statsRange = `${formatDate(joinDate)} - ${formatDate(today)}`;
   const usersStats = await getUserStats();
+  const nextCalendarEvent = await getNextCalendarEvent();
   const teacherData = await getTeacherData();
 
   const teacherClasses: TeacherClass[] = teacherData?.teacherClasses || [];
@@ -293,52 +402,71 @@ export default async function Dashboard() {
               <p className="text-xs text-muted-foreground text-center mb-4">
                 UP NEXT
               </p>
-              <h2 className="text-3xl font-medium">Music Lesson</h2>
-              <Separator className="my-2 w-1/4" />
-              <div className="flex gap-2 mt-1">
-                <Badge
-                  backgroundColour="rgba(255, 204, 63, 0.36)"
-                  textColour="#FFDB49"
-                  className="w-auto px-3 py-1"
-                >
-                  Music
-                </Badge>
-                <Badge
-                  backgroundColour="rgba(223, 97, 210, 0.36)"
-                  textColour="#FF66DD"
-                  className="w-auto px-3 py-1"
-                >
-                  ⛳ In-person
-                </Badge>
-              </div>
-              <div className="my-4 space-y-3 text-sm font-medium">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5" strokeWidth={2.5} />
-                  <p>School, Room C02</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5" strokeWidth={2.5} />
-                  <p>Starts: 10:45 AM</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5" strokeWidth={2.5} />
-                  <p>Ends: 11:45 AM</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                FROM TEACHER: This lesson we&apos;ll cover some of pop&apos;s
-                most inspiring musicians with special guest Miss Carpenter, an
-                upcoming artist in the local area! If you want to support her,
-                she&apos;s performing her new single “Espresso” at the village
-                hall next Tuesday.
-              </p>
-              <Button
-                asChild
-                className="mt-4 text-white bg-[#1E56E8] hover:bg-[#1850df] drop-shadow-lg"
-                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.4)" }}
-              >
-                <a href="/calendar">Open Calendar</a>
-              </Button>
+              {nextCalendarEvent ? (
+                <>
+                  <h2 className="text-3xl font-medium">
+                    {nextCalendarEvent?.name || "No upcoming events"}
+                  </h2>
+                  <Separator className="my-2 w-1/4" />
+                  <div className="flex gap-2 mt-1">
+                    {nextCalendarEvent.course_name && (
+                      <Badge
+                        backgroundColour="rgba(255, 204, 63, 0.36)"
+                        textColour="#FFDB49"
+                        className="w-auto px-3 py-1"
+                      >
+                        {nextCalendarEvent.course_name}
+                      </Badge>
+                    )}
+                    {nextCalendarEvent.location_type !== null && (
+                      <Badge
+                        backgroundColour="rgba(223, 97, 210, 0.36)"
+                        textColour="#FF66DD"
+                        className="w-auto px-3 py-1"
+                      >
+                        {nextCalendarEvent.location_type === "In-person"
+                          ? "⛳ "
+                          : "💻 "}
+                        {nextCalendarEvent.location_type}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="my-4 space-y-3 text-sm font-medium">
+                    {nextCalendarEvent.location && (
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-5 h-5" strokeWidth={2.5} />
+                        <p>{nextCalendarEvent.location}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5" strokeWidth={2.5} />
+                      <p>
+                        Starts: {formatTime(null, nextCalendarEvent.start, 2)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5" strokeWidth={2.5} />
+                      <p>Ends: {formatTime(null, nextCalendarEvent.end, 2)}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {nextCalendarEvent.description || (
+                      <i>No description provided.</i>
+                    )}
+                  </p>
+                  <Button
+                    asChild
+                    className="mt-4 text-white bg-[#1E56E8] hover:bg-[#1850df] drop-shadow-lg"
+                    style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.4)" }}
+                  >
+                    <a href="/calendar">Open Calendar</a>
+                  </Button>
+                </>
+              ) : (
+                <p className="text-center mt-8 text-sm text-muted-foreground">
+                  You have no upcoming events. Enjoy your day!
+                </p>
+              )}
             </Card>
             <Card
               className="flex flex-col p-4"

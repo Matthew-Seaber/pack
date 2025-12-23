@@ -229,7 +229,7 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="w-full flex justify-center mt-24 py-8 border-t border-border">
+      <div className="w-full flex justify-center mt-24 pt-8 border-t border-border">
         <p className="text-xs font-medium text-[#B4B4B4]">
           By accessing this website, you agree to our{" "}
           <a
