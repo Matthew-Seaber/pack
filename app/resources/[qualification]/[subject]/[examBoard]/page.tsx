@@ -633,19 +633,17 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                           {/* Relative format */}
                         </td>
 
-                        <td className="p-4 text-center hover:bg-gray-800">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <button
-                              title="Download"
-                              className="rounded text-lg font-semibold"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadFile(entry.id);
-                              }}
-                            >
-                              <Download />
-                            </button>
-                          </div>
+                        <td className=" text-center hover:bg-gray-800">
+                          <button
+                            title="Download"
+                            className="p-4 rounded text-lg font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadFile(entry.id);
+                            }}
+                          >
+                            <Download />
+                          </button>
                         </td>
                       </tr>
                     ))}

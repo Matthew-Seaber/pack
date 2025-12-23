@@ -118,7 +118,6 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     examBoard = examBoard.toUpperCase();
   } // Capitalises exam boards that are normally capitalised (all others begin with "E")
 
-
   // Sidebar content component
   const SidebarContent = () => {
     if (!selectedEntry) {
@@ -261,7 +260,9 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               className="w-full"
               onClick={() => {
                 const emailSubject = encodeURIComponent(
-                  "Issue with Specification Page Entry for " + qualification + " " +
+                  "Issue with Specification Page Entry for " +
+                    qualification +
+                    " " +
                     subject +
                     " (" +
                     examBoard +
@@ -390,7 +391,9 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
 
           // Gets specification entries and the user's personal confidence/session data by subject and exam board
           const specificationResponse = await fetch(
-            `/api/specifications/get_specification_data?qualification=${encodeURIComponent(qualification)}&subject=${encodeURIComponent(
+            `/api/specifications/get_specification_data?qualification=${encodeURIComponent(
+              qualification
+            )}&subject=${encodeURIComponent(
               subject
             )}&examBoard=${encodeURIComponent(examBoard)}`
           );
@@ -612,18 +615,16 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                           {entry.sessions ? "|".repeat(entry.sessions) : "-"}
                         </td>
 
-                        <td className="p-2 text-center hover:bg-gray-800">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <button
-                              className="rounded text-lg font-semibold"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "sessions");
-                              }}
-                            >
-                              +
-                            </button>
-                          </div>
+                        <td className="text-center hover:bg-gray-800">
+                          <button
+                            className="w-full h-full p-2 rounded text-lg font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateSubjectLink(entry.id, "sessions");
+                            }}
+                          >
+                            +
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -636,8 +637,9 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               <p>
                 There are currently no entries for this subject. This may mean
                 your subject is unsupported or you&apos;ve entered an invalid
-                qualification/course/exam board combination (check spelling above) - if this is not the case, please
-                contact support so we can add content from your exam board.
+                qualification/course/exam board combination (check spelling
+                above) - if this is not the case, please contact support so we
+                can add content from your exam board.
               </p>
               <Button className="mt-3" onClick={() => router.push("/support")}>
                 Contact Support

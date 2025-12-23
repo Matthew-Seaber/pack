@@ -589,34 +589,30 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                           )}
                         </td>
 
-                        <td className="p-4 text-center hover:bg-gray-800 border-r-2 border-border">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <button
-                              title="Download"
-                              className="w-full h-full rounded text-lg font-semibold flex items-center justify-center"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadZIP(entry.id);
-                              }}
-                            >
-                              <Download />
-                            </button>
-                          </div>
+                        <td className="text-center hover:bg-gray-800 border-r-2 border-border">
+                          <button
+                            title="Download"
+                            className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadZIP(entry.id);
+                            }}
+                          >
+                            <Download />
+                          </button>
                         </td>
 
-                        <td className="p-4 text-center hover:bg-gray-800">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <button
-                              title="Open"
-                              className="w-full h-full rounded text-lg font-semibold flex items-center justify-center"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openFiles(entry.id);
-                              }}
-                            >
-                              <SquareArrowOutUpRight />
-                            </button>
-                          </div>
+                        <td className="text-center hover:bg-gray-800">
+                          <button
+                            title="Open"
+                            className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openFiles(entry.id);
+                            }}
+                          >
+                            <SquareArrowOutUpRight />
+                          </button>
                         </td>
                       </tr>
                     ))}
