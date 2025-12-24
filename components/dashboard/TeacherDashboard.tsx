@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { PanelBottomOpen, UserRound } from "lucide-react";
 import { Fab } from "@/components/ui/fab";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,15 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 
 interface TeacherClass {
   id: string;
@@ -98,6 +108,9 @@ export default function TeacherDashboard({
 
   const [selectedTeacherClass, setSelectedTeacherClass] =
     useState<TeacherClass | null>(null);
+  const [removeMode, setRemoveMode] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
   const sortedTeacherClasses = sortClassesByName([...teacherClasses]); // The "..." ensures the original array isn't changed (copy used instead)
 
   // Function to render a notification
@@ -127,16 +140,97 @@ export default function TeacherDashboard({
     );
   };
 
+  // Function to add a class to a teacher's account
+    const handleAddClass = async () => {
+      if (newClassName.trim() === "") {
+        toast.error("Invalid class name.");
+        return;
+      } else {
+        if (
+          // Check to see if the class is already linked to their account
+          teacherClasses?.some(
+            (teacherClass) =>
+              teacherClass.name === newClassName.trim()
+          )
+        ) {
+          toast.error("Class already exists in your library.");
+          return;
+        }
+  
+        try {
+          const response = await fetch("/api/teacher_schoolwork/add_class", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              className: newClassName.trim(),
+            }),
+          });
+          if (response.ok) {
+            toast.success("Successfully added class!");
+            setNewClassName("");
+            setDialogOpen(false);
+            // Refresh class list by refreshing page
+            setTimeout(() => window.location.reload(), 1000); // Gives teacher time to read the toast
+          } else {
+            console.error("Failed to add class:", response.statusText);
+            toast.error(
+              "Failed to add class. Please try again later."
+            );
+          }
+        } catch (error) {
+          console.error("Error adding class:", error);
+          toast.error("Error adding class. Please try again later.");
+        }
+      }
+    };
+
   // Function to render a teacher's class
   const renderTeacherClass = (teacherClass: TeacherClass) => {
     return (
       <div
         key={teacherClass.id}
-        onClick={() => setSelectedTeacherClass(teacherClass)}
+        onClick={async () => {
+          if (removeMode) {
+            const confirmation = window.confirm(
+              `Are you sure you want to permanently remove the class '${teacherClass.name}' from your account?`
+            );
+            if (confirmation) {
+              try {
+                const response = await fetch(
+                  "/api/teacher_schoolwork/remove_class",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ classID: teacherClass.id }),
+                  }
+                );
+
+                if (response.ok) {
+                  toast.success("Class deleted.");
+                  setTimeout(() => window.location.reload(), 1000); // Gives the user time to read the toast
+                } else {
+                  console.error("Failed to delete class:", response.statusText);
+                  toast.error(
+                    "Failed to delete class. Please try again later."
+                  );
+                  return;
+                }
+              } catch (error) {
+                console.error("Error deleting class:", error);
+                toast.error("Error deleting class. Please try again later.");
+                return;
+              }
+            }
+          } else {
+            setSelectedTeacherClass(teacherClass);
+          }
+        }}
         className={`relative border-4 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
-          selectedTeacherClass?.id === teacherClass.id
-            ? "ring-2 ring-primary"
+          selectedTeacherClass?.id === teacherClass.id && !removeMode
+            ? "ring-4 ring-primary"
             : ""
+        }  ${
+          removeMode ? "hover:ring-4 hover:ring-red-500 hover:opacity-80" : ""
         }`}
       >
         <div className="pr-20">
@@ -179,13 +273,24 @@ export default function TeacherDashboard({
       return (
         <div className="space-y-4">
           <div className="flex gap-2 font-semibold">
-            <Button className="flex-1" variant="default">
+            <Button
+              className="flex-1"
+              variant="default"
+              onClick={() => setDialogOpen(true)}
+            >
               <span className="mr-2">+</span>
               ADD CLASS
             </Button>
-            <Button className="text-foreground" variant="destructive">
+            <Button
+              className="text-foreground"
+              variant={removeMode ? "outline" : "destructive"}
+              onClick={() => {
+                setRemoveMode(!removeMode);
+                setSelectedTeacherClass(null);
+              }}
+            >
               <span className="mr-2">-</span>
-              REMOVE
+              {removeMode ? "CANCEL" : "REMOVE"}
             </Button>
           </div>
 
@@ -201,13 +306,24 @@ export default function TeacherDashboard({
     return (
       <div className="space-y-4">
         <div className="flex gap-2 font-semibold">
-          <Button className="flex-1" variant="default">
+          <Button
+            className="flex-1"
+            variant="default"
+            onClick={() => setDialogOpen(true)}
+          >
             <span className="mr-2">+</span>
             ADD CLASS
           </Button>
-          <Button className="text-foreground" variant="destructive">
+          <Button
+            className="text-foreground"
+            variant={removeMode ? "outline" : "destructive"}
+            onClick={() => {
+              setRemoveMode(!removeMode);
+              setSelectedTeacherClass(null);
+            }}
+          >
             <span className="mr-2">-</span>
-            REMOVE
+            {removeMode ? "CANCEL" : "REMOVE"}
           </Button>
         </div>
         <div className="bg-card border border-border rounded-lg p-4">
@@ -346,6 +462,24 @@ export default function TeacherDashboard({
         <div className="flex-1">
           <h2 className="text-3xl font-semibold mb-3">My Classes</h2>
 
+          {removeMode && (
+            <div className="mb-4 p-4 bg-red-500/10 border-2 border-red-500 rounded-lg">
+              <div className="flex items-center gap-4">
+                <p className="text-red-500 font-semibold flex items-center gap-2 m-0">
+                  ⚠️ Remove Mode - clicking on a class will permanently remove
+                  it from your profile
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-0 ml-auto"
+                  onClick={() => setRemoveMode(false)}
+                >
+                  CANCEL
+                </Button>
+              </div>
+            </div>
+          )}
+
           {sortedTeacherClasses && sortedTeacherClasses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {sortedTeacherClasses.map((classObject) =>
@@ -355,7 +489,9 @@ export default function TeacherDashboard({
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>You have no classes linked to your profile.</p>
-              <Button className="mt-3">Add Class</Button>
+              <Button className="mt-3" onClick={() => setDialogOpen(true)}>
+                Add Class
+              </Button>
             </div>
           )}
         </div>
@@ -364,6 +500,42 @@ export default function TeacherDashboard({
           <SidebarContent />
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Class</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Add a new class to your account.
+          </DialogDescription>
+          <div className="my-4">
+            <label
+              className="block text-sm font-medium mb-3"
+              htmlFor="newClassInput"
+            >
+              Class Name
+            </label>
+            <div className="flex items-center gap-4">
+              <Input
+                id="newClassInput"
+                type="text"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+                required
+                placeholder="New class name"
+              />
+              <Button onClick={handleAddClass}>Add</Button>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Done</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="md:hidden lg:hidden xl:hidden">
         <Drawer>

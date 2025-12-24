@@ -193,7 +193,7 @@ export default function SubjectsPage() {
     }
   };
 
-  // Function to add a student to a teacher-managed class
+  // Function to add a subject to a student's account
   const handleAddSubject = async () => {
     if (newSubjectExamBoard.trim() === "" || newSubjectName.trim() === "") {
       toast.error("Invalid exam board or subject name.");
@@ -790,79 +790,109 @@ export default function SubjectsPage() {
             Add a new subject to your library.
           </DialogDescription>
           <div className="my-4">
-            <label
-              className="block text-sm font-medium mb-3"
-              htmlFor="newSubjectInput"
-            >
+            <label className="block text-sm font-medium mb-3">
               Subject details
             </label>
-            <div className="flex items-center gap-4">
-              <select
-                value={newSubjectExamBoard}
-                onChange={(e) => setNewSubjectExamBoard(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm rounded-md border appearance-none"
-              >
-                <option value="AQA">AQA</option>
-                <option value="CCEA">CCEA</option>
-                <option value="Edexcel">Edexcel</option>
-                <option value="Eduqas">Eduqas</option>
-                <option value="OCR">OCR</option>
-                <option value="WJEC">WJEC</option>
-              </select>
-              <select
-                value={newSubjectName}
-                onChange={(e) => setNewSubjectName(e.target.value)}
-                required
-                className="flex-1 px-3 py-2 pl-4 text-sm rounded-md border appearance-none pr-10"
-              >
-                <option value="Biology">Biology</option>
-                <option value="Business">Business</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Citizenship">Citizenship</option>
-                <option value="Classical Civilisation">
-                  Classical Civilisation
-                </option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Criminology">Criminology</option>
-                <option value="Drama">Drama</option>
-                <option value="Economics">Economics</option>
-                <option value="English Language">English Language</option>
-                <option value="English Literature">English Literature</option>
-                <option value="Fine Art">Fine Art</option>
-                <option value="Food Preparation and Nutrition">
-                  Food Preparation and Nutrition
-                </option>
-                <option value="Food Science">Food Science</option>
-                <option value="French">French</option>
-                <option value="Further Mathematics">Further Mathematics</option>
-                <option value="Geography">Geography</option>
-                <option value="German">German</option>
-                <option value="Graphics Communications">
-                  Graphics Communications
-                </option>
-                <option value="History">History</option>
-                <option value="Latin">Latin</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Music">Music</option>
-                <option value="Philosophy">Philosophy</option>
-                <option value="Physical Education">Physical Education</option>
-                <option value="Physics">Physics</option>
-                <option value="Politics">Politics</option>
-                <option value="Product Design">Product Design</option>
-                <option value="Psychology">Psychology</option>
-                <option value="Religious Studies">Religious Studies</option>
-                <option value="Science">Science (Combined)</option>
-                <option value="Sociology">Sociology</option>
-                <option value="Spanish">Spanish</option>
-                <option value="Statistics">Statistics</option>
-                <option value="Textiles">Textiles</option>
-              </select>
-              <Button onClick={handleAddSubject}>Add</Button>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Select
+                  value={newSubjectExamBoard}
+                  onValueChange={setNewSubjectExamBoard}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Exam board" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AQA">AQA</SelectItem>
+                    <SelectItem value="CCEA">CCEA</SelectItem>
+                    <SelectItem value="Edexcel">Edexcel</SelectItem>
+                    <SelectItem value="Eduqas">Eduqas</SelectItem>
+                    <SelectItem value="OCR">OCR</SelectItem>
+                    <SelectItem value="WJEC">WJEC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <Select
+                  value={newSubjectName}
+                  onValueChange={setNewSubjectName}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Subject name" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Biology">Biology</SelectItem>
+                    <SelectItem value="Business">Business</SelectItem>
+                    <SelectItem value="Chemistry">Chemistry</SelectItem>
+                    <SelectItem value="Citizenship">Citizenship</SelectItem>
+                    <SelectItem value="Classical Civilisation">
+                      Classical Civilisation
+                    </SelectItem>
+                    <SelectItem value="Computer Science">
+                      Computer Science
+                    </SelectItem>
+                    <SelectItem value="Criminology">Criminology</SelectItem>
+                    <SelectItem value="Drama">Drama</SelectItem>
+                    <SelectItem value="Economics">Economics</SelectItem>
+                    <SelectItem value="English Language">
+                      English Language
+                    </SelectItem>
+                    <SelectItem value="English Literature">
+                      English Literature
+                    </SelectItem>
+                    <SelectItem value="Fine Art">Fine Art</SelectItem>
+                    <SelectItem value="Food Preparation and Nutrition">
+                      Food Preparation and Nutrition
+                    </SelectItem>
+                    <SelectItem value="Food Science">Food Science</SelectItem>
+                    <SelectItem value="French">French</SelectItem>
+                    <SelectItem value="Further Mathematics">
+                      Further Mathematics
+                    </SelectItem>
+                    <SelectItem value="Geography">Geography</SelectItem>
+                    <SelectItem value="German">German</SelectItem>
+                    <SelectItem value="Graphics Communications">
+                      Graphics Communications
+                    </SelectItem>
+                    <SelectItem value="History">History</SelectItem>
+                    <SelectItem value="Latin">Latin</SelectItem>
+                    <SelectItem value="Mathematics">Mathematics</SelectItem>
+                    <SelectItem value="Music">Music</SelectItem>
+                    <SelectItem value="Philosophy">Philosophy</SelectItem>
+                    <SelectItem value="Physical Education">
+                      Physical Education
+                    </SelectItem>
+                    <SelectItem value="Physics">Physics</SelectItem>
+                    <SelectItem value="Politics">Politics</SelectItem>
+                    <SelectItem value="Product Design">
+                      Product Design
+                    </SelectItem>
+                    <SelectItem value="Psychology">Psychology</SelectItem>
+                    <SelectItem value="Religious Studies">
+                      Religious Studies
+                    </SelectItem>
+                    <SelectItem value="Science">Science (Combined)</SelectItem>
+                    <SelectItem value="Sociology">Sociology</SelectItem>
+                    <SelectItem value="Spanish">Spanish</SelectItem>
+                    <SelectItem value="Statistics">Statistics</SelectItem>
+                    <SelectItem value="Textiles">Textiles</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={handleAddSubject} className="whitespace-nowrap ml-2">
+                Add
+              </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-3">
               <i>
                 Note: Pack currently only supports a limited number of subjects.
-                You can see the full list <a className="underline font-medium" href="/support">here</a>.
+                You can see the full list{" "}
+                <a className="underline font-medium" href="/support">
+                  here
+                </a>
+                .
               </i>
             </p>
           </div>

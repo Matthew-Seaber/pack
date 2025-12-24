@@ -5,7 +5,7 @@ function ContributePage() {
       <div>
         Have some time? Good, because you&apos;ll need a lot of it to fill in the{" "}
         <a
-          href="https://www.packapp.co.uk/contribute/marketresearch"
+          href="/contribute/marketresearch"
           className="text-blue-600 underline"
         >
           Market Research Form
