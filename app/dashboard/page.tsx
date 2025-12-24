@@ -402,10 +402,10 @@ export default async function Dashboard() {
               <p className="text-xs text-muted-foreground text-center mb-4">
                 UP NEXT
               </p>
-              {nextCalendarEvent ? (
+              {nextCalendarEvent?.name ? (
                 <>
                   <h2 className="text-3xl font-medium">
-                    {nextCalendarEvent?.name || "No upcoming events"}
+                    {nextCalendarEvent.name || "No upcoming events"}
                   </h2>
                   <Separator className="my-2 w-1/4" />
                   <div className="flex gap-2 mt-1">

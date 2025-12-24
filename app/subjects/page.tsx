@@ -41,6 +41,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function SubjectsPage() {
   interface Subject {
@@ -60,11 +69,15 @@ export default function SubjectsPage() {
   }
 
   const [subjects, setSubjects] = useState<Subject[] | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [sortType, setSortType] = useState<string>("Alphabetical");
   const [filterType, setFilterType] = useState<string>("None");
   const [qualification, setQualification] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [removeMode, setRemoveMode] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [newSubjectExamBoard, setNewSubjectExamBoard] = useState("");
   const router = useRouter();
 
   // Function mapping subjects to their corresponding icon/colour
@@ -180,6 +193,53 @@ export default function SubjectsPage() {
     }
   };
 
+  // Function to add a student to a teacher-managed class
+  const handleAddSubject = async () => {
+    if (newSubjectExamBoard.trim() === "" || newSubjectName.trim() === "") {
+      toast.error("Invalid exam board or subject name.");
+      return;
+    } else {
+      if (
+        // Check to see if the subject is already linked to their account
+        subjects?.some(
+          (subject) =>
+            subject.name === newSubjectName.trim() &&
+            subject.examBoard === newSubjectExamBoard.trim()
+        )
+      ) {
+        toast.error("Subject already exists in your library.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/subjects/add_subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subjectName: newSubjectName.trim(),
+            examBoard: newSubjectExamBoard.trim(),
+          }),
+        });
+        if (response.ok) {
+          toast.success("Successfully added subject!");
+          setNewSubjectExamBoard("");
+          setNewSubjectName("");
+          setDialogOpen(false);
+          // Refresh class list by refreshing page
+          setTimeout(() => window.location.reload(), 1000); // Gives student time to read the toast
+        } else {
+          console.error("Failed to add subject:", response.statusText);
+          toast.error(
+            "Failed to add subject. This may mean the subject is currently unsupported."
+          );
+        }
+      } catch (error) {
+        console.error("Error adding subject:", error);
+        toast.error("Error adding subject. Please try again later.");
+      }
+    }
+  };
+
   // Function to get the next or final exam for a subject
   const getExam = (
     examDates: ExamDate[],
@@ -222,13 +282,24 @@ export default function SubjectsPage() {
       return (
         <div className="space-y-4">
           <div className="flex gap-2 font-semibold">
-            <Button className="flex-1" variant="default">
+            <Button
+              className="flex-1"
+              variant="default"
+              onClick={() => setDialogOpen(true)}
+            >
               <span className="mr-2">+</span>
               ADD SUBJECT
             </Button>
-            <Button className="text-foreground" variant="destructive">
+            <Button
+              className="text-foreground"
+              variant={removeMode ? "outline" : "destructive"}
+              onClick={() => {
+                setRemoveMode(!removeMode);
+                setSelectedSubject(null);
+              }}
+            >
               <span className="mr-2">-</span>
-              REMOVE
+              {removeMode ? "CANCEL" : "REMOVE"}
             </Button>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center py-12">
@@ -252,13 +323,24 @@ export default function SubjectsPage() {
     return (
       <div className="space-y-4">
         <div className="flex gap-2 font-semibold">
-          <Button className="flex-1" variant="default">
+          <Button
+            className="flex-1"
+            variant="default"
+            onClick={() => setDialogOpen(true)}
+          >
             <span className="mr-2">+</span>
             ADD SUBJECT
           </Button>
-          <Button className="text-foreground" variant="destructive">
+          <Button
+            className="text-foreground"
+            variant={removeMode ? "outline" : "destructive"}
+            onClick={() => {
+              setRemoveMode(!removeMode);
+              setSelectedSubject(null);
+            }}
+          >
             <span className="mr-2">-</span>
-            REMOVE
+            {removeMode ? "CANCEL" : "REMOVE"}
           </Button>
         </div>
 
@@ -409,11 +491,50 @@ export default function SubjectsPage() {
     return (
       <div
         key={subject.id}
-        onClick={() => setSelectedSubject(subject)}
+        onClick={async () => {
+          if (removeMode) {
+            const confirmation = window.confirm(
+              `Are you sure you want to permanently remove the subject '${subject.examBoard} ${subject.name}' from your profile?`
+            );
+            if (confirmation) {
+              try {
+                const response = await fetch("/api/subjects/remove_subject", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ subjectID: subject.id }),
+                });
+
+                if (response.ok) {
+                  toast.success("Subject deleted.");
+                  setTimeout(() => window.location.reload(), 1000); // Gives the user time to read the toast
+                } else {
+                  console.error(
+                    "Failed to delete subject:",
+                    response.statusText
+                  );
+                  toast.error(
+                    "Failed to delete subject. Please try again later."
+                  );
+                  return;
+                }
+              } catch (error) {
+                console.error("Error deleting subject:", error);
+                toast.error("Error deleting subject. Please try again later.");
+                return;
+              }
+            }
+          } else {
+            setSelectedSubject(subject);
+          }
+        }}
         className={`relative border-4 ${
           extras.border
         } rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg ${
-          selectedSubject?.id === subject.id ? "ring-4 ring-primary" : "" // Adds outline when selected
+          selectedSubject?.id === subject.id && !removeMode
+            ? "ring-4 ring-primary"
+            : ""
+        } ${
+          removeMode ? "hover:ring-4 hover:ring-red-500 hover:opacity-80" : ""
         }`}
       >
         <div className="absolute top-5 right-5">
@@ -623,6 +744,24 @@ export default function SubjectsPage() {
             </div>
           </div>
 
+          {removeMode && (
+            <div className="mb-4 p-4 bg-red-500/10 border-2 border-red-500 rounded-lg">
+              <div className="flex items-center gap-4">
+                <p className="text-red-500 font-semibold flex items-center gap-2 m-0">
+                  ⚠️ Remove Mode - clicking on a subject will permanently remove
+                  it from your profile
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-0 ml-auto"
+                  onClick={() => setRemoveMode(false)}
+                >
+                  CANCEL
+                </Button>
+              </div>
+            </div>
+          )}
+
           {subjects && subjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {subjects.map((subject) => renderSubject(subject))}
@@ -630,7 +769,9 @@ export default function SubjectsPage() {
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>You have no subjects linked to your profile.</p>
-              <Button className="mt-3">Add Subject</Button>
+              <Button className="mt-3" onClick={() => setDialogOpen(true)}>
+                Add Subject
+              </Button>
             </div>
           )}
         </div>
@@ -639,6 +780,100 @@ export default function SubjectsPage() {
           <SidebarContent />
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Subject</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Add a new subject to your library.
+          </DialogDescription>
+          <div className="my-4">
+            <label
+              className="block text-sm font-medium mb-3"
+              htmlFor="newSubjectInput"
+            >
+              Subject details
+            </label>
+            <div className="flex items-center gap-4">
+              <select
+                value={newSubjectExamBoard}
+                onChange={(e) => setNewSubjectExamBoard(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm rounded-md border appearance-none"
+              >
+                <option value="AQA">AQA</option>
+                <option value="CCEA">CCEA</option>
+                <option value="Edexcel">Edexcel</option>
+                <option value="Eduqas">Eduqas</option>
+                <option value="OCR">OCR</option>
+                <option value="WJEC">WJEC</option>
+              </select>
+              <select
+                value={newSubjectName}
+                onChange={(e) => setNewSubjectName(e.target.value)}
+                required
+                className="flex-1 px-3 py-2 pl-4 text-sm rounded-md border appearance-none pr-10"
+              >
+                <option value="Biology">Biology</option>
+                <option value="Business">Business</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Citizenship">Citizenship</option>
+                <option value="Classical Civilisation">
+                  Classical Civilisation
+                </option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Criminology">Criminology</option>
+                <option value="Drama">Drama</option>
+                <option value="Economics">Economics</option>
+                <option value="English Language">English Language</option>
+                <option value="English Literature">English Literature</option>
+                <option value="Fine Art">Fine Art</option>
+                <option value="Food Preparation and Nutrition">
+                  Food Preparation and Nutrition
+                </option>
+                <option value="Food Science">Food Science</option>
+                <option value="French">French</option>
+                <option value="Further Mathematics">Further Mathematics</option>
+                <option value="Geography">Geography</option>
+                <option value="German">German</option>
+                <option value="Graphics Communications">
+                  Graphics Communications
+                </option>
+                <option value="History">History</option>
+                <option value="Latin">Latin</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Music">Music</option>
+                <option value="Philosophy">Philosophy</option>
+                <option value="Physical Education">Physical Education</option>
+                <option value="Physics">Physics</option>
+                <option value="Politics">Politics</option>
+                <option value="Product Design">Product Design</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Religious Studies">Religious Studies</option>
+                <option value="Science">Science (Combined)</option>
+                <option value="Sociology">Sociology</option>
+                <option value="Spanish">Spanish</option>
+                <option value="Statistics">Statistics</option>
+                <option value="Textiles">Textiles</option>
+              </select>
+              <Button onClick={handleAddSubject}>Add</Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              <i>
+                Note: Pack currently only supports a limited number of subjects.
+                You can see the full list <a className="underline font-medium" href="/support">here</a>.
+              </i>
+            </p>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Done</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="md:hidden lg:hidden xl:hidden">
         <Drawer>
