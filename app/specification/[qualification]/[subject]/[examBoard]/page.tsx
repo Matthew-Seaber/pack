@@ -100,6 +100,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
   const [selectedEntry, setSelectedEntry] = useState<SpecificationEntry | null>(
     null
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Topic");
   const [filterType, setFilterType] = useState<string>("None");
   const [loading, setLoading] = useState(true);
@@ -428,6 +429,62 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     fetchSpecificationData();
   }, [qualification, subject, examBoard, router, sortEntriesByTopic]);
 
+  // Singular function to manage filtering entries using a search query and filters (if applicable), and then sorting the result of this
+  const filteredEntries = React.useMemo(() => {
+    if (!specificationEntries) return [];
+
+    let results = specificationEntries;
+
+    // Search query
+    if (searchQuery.trim()) {
+      searchQuery.toLowerCase();
+      results = results.filter((entry) => {
+        const topicNameMatch = entry.topic_name
+          .toLowerCase()
+          .includes(searchQuery);
+        const descriptionMatch =
+          entry.description?.toLowerCase().includes(searchQuery) || false;
+        return topicNameMatch || descriptionMatch; // Returns true if the search query is within either the topic name or description
+      });
+    }
+
+    // Filters
+    if (filterType === "Low confidence") {
+      results = results.filter((entry) => entry.confidence === 1);
+    } else if (filterType === "Medium confidence") {
+      results = results.filter((entry) => entry.confidence === 2);
+    } else if (filterType === "High confidence") {
+      results = results.filter((entry) => entry.confidence === 3);
+    } else if (filterType === "Rarity") {
+      results = results.filter((entry) => entry.common === true);
+    } else if (filterType === "Difficulty") {
+      results = results.filter((entry) => entry.difficult === true);
+    }
+
+    // Sorts results by ascending
+    if (sortType === "Topic") {
+      results = sortEntriesByTopic([...results]);
+    } else if (sortType === "Paper") {
+      results = [...results].sort((a, b) => {
+        const paperA = parseInt(a.paper);
+        const paperB = parseInt(b.paper);
+        return paperA - paperB;
+      });
+    } else if (sortType === "Sessions") {
+      results = [...results].sort((a, b) => a.sessions - b.sessions);
+    } else {
+      console.log("Unexpected sort type:", sortType);
+    }
+
+    return results; // Returns final list of entries which pass the search/filter requirements and are sorted accordingly
+  }, [
+    specificationEntries,
+    searchQuery,
+    filterType,
+    sortType,
+    sortEntriesByTopic,
+  ]);
+
   if (loading) {
     return (
       <>
@@ -456,8 +513,16 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
               <input
                 type="text"
                 placeholder="Search specification..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {searchQuery && (
+                <p className="absolute inset-y-0 right-4 flex items-center text-xs text-muted-foreground">
+                  {filteredEntries.length} result
+                  {filteredEntries.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
 
             <div className="bg-card border border-border rounded-lg px-4 h-[42px] flex items-center gap-4 text-sm xl:w-auto">
@@ -504,134 +569,165 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           </div>
 
           {specificationEntries && specificationEntries.length > 0 ? (
-            <div style={{ overflowX: "auto", width: "100%" }}>
-              <div className="border border-border rounded-xl overflow-hidden">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted border-b border-border">
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        INDEX
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        TOPIC
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        PAPER
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        CONFIDENCE
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold">
-                        SESSIONS
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium">
-                    {specificationEntries.map((entry) => (
-                      <tr
-                        key={entry.id}
-                        onClick={() => setSelectedEntry(entry)}
-                        className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                          selectedEntry?.id === entry.id
-                            ? "ring-4 ring-primary ring-inset rounded-lg"
-                            : ""
-                        }`}
-                      >
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.topic}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
-                          {entry.topic_name}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm border-r-2 border-border">
-                          Paper {entry.paper}
-                        </td>
-
-                        <td className="px-4 py-2 border-r-2 border-border">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 1);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 1
-                                  ? "bg-red-600 border-red-700"
-                                  : "bg-slate-100 border-red-400"
-                              }`}
-                            >
-                              {entry.confidence === 1 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 2);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 2
-                                  ? "bg-yellow-500 border-yellow-600"
-                                  : "bg-slate-100 border-yellow-400"
-                              }`}
-                            >
-                              {entry.confidence === 2 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSubjectLink(entry.id, "confidence", 3);
-                              }}
-                              className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                                entry.confidence === 3
-                                  ? "bg-green-600 border-green-700"
-                                  : "bg-slate-100 border-green-400"
-                              }`}
-                            >
-                              {entry.confidence === 3 && (
-                                <Check
-                                  className="w-3 h-3 text-white"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </button>
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
-                          {entry.sessions ? "|".repeat(entry.sessions) : "-"}
-                        </td>
-
-                        <td className="text-center hover:bg-gray-800">
-                          <button
-                            className="w-full h-full p-2 rounded text-lg font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateSubjectLink(entry.id, "sessions");
-                            }}
-                          >
-                            +
-                          </button>
-                        </td>
+            filteredEntries.length > 0 ? (
+              <div style={{ overflowX: "auto", width: "100%" }}>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted border-b border-border">
+                        <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                          INDEX
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                          TOPIC
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                          PAPER
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                          CONFIDENCE
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold">
+                          SESSIONS
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold w-10"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="font-medium">
+                      {filteredEntries.map((entry) => (
+                        <tr
+                          key={entry.id}
+                          onClick={() => setSelectedEntry(entry)}
+                          className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                            selectedEntry?.id === entry.id
+                              ? "ring-4 ring-primary ring-inset rounded-lg"
+                              : ""
+                          }`}
+                        >
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.topic}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm border-r-2 border-border font-semibold">
+                            {entry.topic_name}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm border-r-2 border-border">
+                            Paper {entry.paper}
+                          </td>
+
+                          <td className="px-4 py-2 border-r-2 border-border">
+                            <div className="flex justify-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateSubjectLink(entry.id, "confidence", 1);
+                                }}
+                                className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                  entry.confidence === 1
+                                    ? "bg-red-600 border-red-700"
+                                    : "bg-slate-100 border-red-400"
+                                }`}
+                              >
+                                {entry.confidence === 1 && (
+                                  <Check
+                                    className="w-3 h-3 text-white"
+                                    strokeWidth={3}
+                                  />
+                                )}
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateSubjectLink(entry.id, "confidence", 2);
+                                }}
+                                className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                  entry.confidence === 2
+                                    ? "bg-yellow-500 border-yellow-600"
+                                    : "bg-slate-100 border-yellow-400"
+                                }`}
+                              >
+                                {entry.confidence === 2 && (
+                                  <Check
+                                    className="w-3 h-3 text-white"
+                                    strokeWidth={3}
+                                  />
+                                )}
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateSubjectLink(entry.id, "confidence", 3);
+                                }}
+                                className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                                  entry.confidence === 3
+                                    ? "bg-green-600 border-green-700"
+                                    : "bg-slate-100 border-green-400"
+                                }`}
+                              >
+                                {entry.confidence === 3 && (
+                                  <Check
+                                    className="w-3 h-3 text-white"
+                                    strokeWidth={3}
+                                  />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-2 text-sm font-bold border-r-2 border-border">
+                            {entry.sessions ? "|".repeat(entry.sessions) : "-"}
+                          </td>
+
+                          <td className="text-center hover:bg-gray-800">
+                            <button
+                              className="w-full h-full p-2 rounded text-lg font-semibold"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSubjectLink(entry.id, "sessions");
+                              }}
+                            >
+                              +
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 p-6 text-center text-gray-500">
+                <p className="mb-4">
+                  There are no results with your current{" "}
+                  {searchQuery !== "" && filterType !== "None"
+                    ? `combined`
+                    : ""}{" "}
+                  {searchQuery !== "" ? " search query" : ""}
+                  {searchQuery !== "" && filterType !== "None" ? ` and ` : ""}
+                  {filterType !== "None" ? " filter" : ""}
+                  {searchQuery !== "" && filterType !== "None"
+                    ? ` combination. `
+                    : "."}
+                </p>
+                <Button
+                  variant="secondary"
+                  className="mr-2"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="ml-2"
+                  onClick={() => setFilterType("None")}
+                >
+                  Clear Filter
+                </Button>
+              </div>
+            )
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>

@@ -51,6 +51,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
   const [selectedEntry, setSelectedEntry] = useState<PastPaperEntry | null>(
     null
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -133,6 +134,36 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
     },
     []
   );
+
+  const filteredEntries = React.useMemo(() => {
+    if (!pastPaperEntries) return [];
+
+    let results = pastPaperEntries;
+
+    // Search query
+    if (searchQuery.trim()) {
+      searchQuery.toLowerCase();
+
+      results = results.filter((entry) => {
+        const combinedName =
+          `${entry.series} ${entry.resource_name}`.toLowerCase();
+        const combinedTitle =
+          `${entry.resource_name} - ${entry.series}`.toLowerCase();
+        const topicNameMatch = entry.resource_name
+          .toLowerCase()
+          .includes(searchQuery);
+        const descriptionMatch = entry.series
+          ?.toLowerCase()
+          .includes(searchQuery);
+        const combinedMatch =
+          combinedName.includes(searchQuery) ||
+          combinedTitle.includes(searchQuery);
+        return topicNameMatch || descriptionMatch || combinedMatch; // Returns true if the search query is within either the resource name, series, or both
+      });
+    }
+
+    return results;
+  }, [pastPaperEntries, searchQuery]);
 
   const downloadZIP = async (entryID: string) => {
     try {
@@ -514,112 +545,134 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
               <input
                 type="text"
                 placeholder="Search past papers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {searchQuery && (
+                <p className="absolute inset-y-0 right-4 flex items-center text-xs text-muted-foreground">
+                  {filteredEntries.length} result
+                  {filteredEntries.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
           </div>
 
           {pastPaperEntries && pastPaperEntries.length > 0 ? (
-            <div style={{ overflowX: "auto", width: "100%" }}>
-              <div className="border border-border rounded-xl overflow-hidden">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted border-b border-border">
-                      <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
-                        NAME
-                      </th>
-                      <th
-                        className="py-3 text-center text-sm font-semibold w-16"
-                        title="Mark Scheme"
-                      >
-                        MS
-                      </th>
-                      <th
-                        className="py-3 text-center text-sm font-semibold w-16"
-                        title="Model Answers"
-                      >
-                        MA
-                      </th>
-                      <th
-                        className="py-3 text-center text-sm font-semibold border-r-2 border-border w-16"
-                        title="Insert"
-                      >
-                        IS
-                      </th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold w-12"></th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold w-12"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium">
-                    {pastPaperEntries.map((entry) => (
-                      <tr
-                        key={entry.id}
-                        onClick={() => setSelectedEntry(entry)}
-                        className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                          selectedEntry?.id === entry.id
-                            ? "ring-4 ring-primary ring-inset rounded-lg"
-                            : ""
-                        }`}
-                      >
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.series} {entry.resource_name}
-                        </td>
-
-                        <td className="py-2 text-center">
-                          {entry.mark_scheme_location ? (
-                            <Check className="w-5 h-5 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 mx-auto" />
-                          )}
-                        </td>
-
-                        <td className="py-2 text-center">
-                          {entry.model_answers_location ? (
-                            <Check className="w-5 h-5 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 mx-auto" />
-                          )}
-                        </td>
-
-                        <td className="py-2 border-r-2 border-border text-center">
-                          {entry.insert_location ? (
-                            <Check className="w-5 h-5 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 mx-auto" />
-                          )}
-                        </td>
-
-                        <td className="text-center hover:bg-gray-800 border-r-2 border-border">
-                          <button
-                            title="Download"
-                            className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              downloadZIP(entry.id);
-                            }}
-                          >
-                            <Download />
-                          </button>
-                        </td>
-
-                        <td className="text-center hover:bg-gray-800">
-                          <button
-                            title="Open"
-                            className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openFiles(entry.id);
-                            }}
-                          >
-                            <SquareArrowOutUpRight />
-                          </button>
-                        </td>
+            filteredEntries.length > 0 ? (
+              <div style={{ overflowX: "auto", width: "100%" }}>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted border-b border-border">
+                        <th className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border">
+                          NAME
+                        </th>
+                        <th
+                          className="py-3 text-center text-sm font-semibold w-16"
+                          title="Mark Scheme"
+                        >
+                          MS
+                        </th>
+                        <th
+                          className="py-3 text-center text-sm font-semibold w-16"
+                          title="Model Answers"
+                        >
+                          MA
+                        </th>
+                        <th
+                          className="py-3 text-center text-sm font-semibold border-r-2 border-border w-16"
+                          title="Insert"
+                        >
+                          IS
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold w-12"></th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold w-12"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="font-medium">
+                      {filteredEntries.map((entry) => (
+                        <tr
+                          key={entry.id}
+                          onClick={() => setSelectedEntry(entry)}
+                          className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                            selectedEntry?.id === entry.id
+                              ? "ring-4 ring-primary ring-inset rounded-lg"
+                              : ""
+                          }`}
+                        >
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.series} {entry.resource_name}
+                          </td>
+
+                          <td className="py-2 text-center">
+                            {entry.mark_scheme_location ? (
+                              <Check className="w-5 h-5 mx-auto" />
+                            ) : (
+                              <X className="w-5 h-5 mx-auto" />
+                            )}
+                          </td>
+
+                          <td className="py-2 text-center">
+                            {entry.model_answers_location ? (
+                              <Check className="w-5 h-5 mx-auto" />
+                            ) : (
+                              <X className="w-5 h-5 mx-auto" />
+                            )}
+                          </td>
+
+                          <td className="py-2 border-r-2 border-border text-center">
+                            {entry.insert_location ? (
+                              <Check className="w-5 h-5 mx-auto" />
+                            ) : (
+                              <X className="w-5 h-5 mx-auto" />
+                            )}
+                          </td>
+
+                          <td className="text-center hover:bg-gray-800 border-r-2 border-border">
+                            <button
+                              title="Download"
+                              className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadZIP(entry.id);
+                              }}
+                            >
+                              <Download />
+                            </button>
+                          </td>
+
+                          <td className="text-center hover:bg-gray-800">
+                            <button
+                              title="Open"
+                              className="w-full h-full p-4 rounded text-lg font-semibold flex items-center justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openFiles(entry.id);
+                              }}
+                            >
+                              <SquareArrowOutUpRight />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 p-6 text-center text-gray-500">
+                <p className="mb-4">
+                  There are no results with your current search query.
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
+              </div>
+            )
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>
