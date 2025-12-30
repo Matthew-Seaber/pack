@@ -70,7 +70,7 @@ export default function CalendarPage() {
       | "Lesson Prep/Planning"
       | "Supervision"
       | "Other";
-    subject_id: string | null;
+    subject: string | null;
     location_type: "In-person" | "Virtual" | null;
     location: string | null;
   }
@@ -98,7 +98,10 @@ export default function CalendarPage() {
   const [eventSubject, setEventSubject] = React.useState<string>("");
   const [eventLocationType, setEventLocationType] = React.useState<string>("");
   const [eventLocation, setEventLocation] = React.useState<string>("");
-  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [addSheetOpen, setAddSheetOpen] = React.useState(false);
+  const [editSheetOpen, setEditSheetOpen] = React.useState(false);
+  const [selectedEvent, setSelectedEvent] =
+    React.useState<CalendarEvent | null>(null);
   const [startOfWeek, setStartOfWeek] = React.useState<Date>(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -254,6 +257,26 @@ export default function CalendarPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Function to prepare the view/edit sheet for an event
+  const handleEventClick = (event: CalendarEvent) => {
+    const start = new Date(event.start);
+    const end = new Date(event.end);
+
+    setSelectedEvent(event);
+    setEventName(event.name);
+    setEventDescription(event.description || "");
+    setStartDate(start);
+    setStartTime(start.toTimeString().slice(0, 5)); // Formats to HH:MM
+    setEndDate(end);
+    setEndTime(end.toTimeString().slice(0, 5)); // Formats to HH:MM
+    setEventType(event.type || "");
+    setEventSubject(event.subject || "");
+    setEventLocationType(event.location_type || "");
+    setEventLocation(event.location || "");
+
+    setEditSheetOpen(true);
+  };
+
   // Function to handle adding a new calendar event
   const handleAddEvent = async () => {
     // Validate fields
@@ -262,7 +285,7 @@ export default function CalendarPage() {
       return;
     }
 
-    const finalLocationType = eventLocationType || 0; // Sets default location type to 0 if none selected
+    const finalLocationType = eventLocationType || 0; // Sets default location type to 0 if "None" selected
 
     try {
       // Combine start date and time into a timestampz
@@ -275,8 +298,8 @@ export default function CalendarPage() {
           const [hours, minutes] = startTime.split(":");
           combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
         } else {
-          // Default to end of day if no time is selected
-          combinedDate.setHours(23, 59, 59, 999);
+          toast.error("Start time is required.");
+          return;
         }
 
         startTimestamp = combinedDate.toISOString();
@@ -287,6 +310,7 @@ export default function CalendarPage() {
 
       if (endDate) {
         const combinedDate = new Date(endDate);
+
         if (endTime) {
           const [hours, minutes] = endTime.split(":");
           combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -297,7 +321,7 @@ export default function CalendarPage() {
 
         endTimestamp = combinedDate.toISOString();
       } else {
-        toast.error("Start date is required.");
+        toast.error("End date is required.");
         return;
       }
 
@@ -341,7 +365,7 @@ export default function CalendarPage() {
         setEventSubject("");
         setEventLocationType("");
         setEventLocation("");
-        setSheetOpen(false);
+        setAddSheetOpen(false);
 
         setTimeout(() => window.location.reload(), 500); // Gives the user time to read the toast
       } else {
@@ -351,6 +375,142 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Error adding event:", error);
       toast.error("Error adding event. Please try again later.");
+    }
+  };
+
+  // Function to handle editing an existing calendar event
+  const handleEditEvent = async () => {
+    if (!selectedEvent) return;
+
+    // Validate fields
+    if (!eventName.trim()) {
+      toast.error("Event name is required.");
+      return;
+    }
+
+    const finalLocationType = eventLocationType || 0; // Sets default location type to 0 if "None" selected
+
+    try {
+      // Combine start date and time into a timestampz
+      let startTimestamp: string | null = null;
+      let endTimestamp: string | null = null;
+
+      if (startDate) {
+        const combinedDate = new Date(startDate);
+        if (startTime) {
+          const [hours, minutes] = startTime.split(":");
+          combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        } else {
+          toast.error("Start time is required.");
+          return;
+        }
+
+        startTimestamp = combinedDate.toISOString();
+      } else {
+        toast.error("Start date is required.");
+        return;
+      }
+
+      if (endDate) {
+        const combinedDate = new Date(endDate);
+
+        if (endTime) {
+          const [hours, minutes] = endTime.split(":");
+          combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        } else {
+          // Default to end of day if no time is selected
+          combinedDate.setHours(23, 59, 59, 999);
+        }
+
+        endTimestamp = combinedDate.toISOString();
+      } else {
+        toast.error("End date is required.");
+        return;
+      }
+
+      if (startTimestamp >= endTimestamp) {
+        toast.error("End date/time must be after the start date/time.");
+        return;
+      }
+
+      const response = await fetch("/api/calendar/edit_event", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedEvent.id,
+          name: eventName.trim(),
+          description: eventDescription.trim() || null,
+          start: startTimestamp,
+          end: endTimestamp,
+          type: eventType || null,
+          subjectID: eventSubject || null,
+          locationType: finalLocationType || 0,
+          location: eventLocation?.trim() || null,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Event updated!");
+
+        // Reset form fields
+        setEventName("");
+        setEventDescription("");
+        setStartDate(new Date());
+        setStartTime("");
+        setEndDate(new Date());
+        setEndTime("");
+        setEventType("");
+        setEventSubject("");
+        setEventLocationType("");
+        setEventLocation("");
+        setEditSheetOpen(false);
+
+        setTimeout(() => window.location.reload(), 500); // Gives the user time to read the toast
+      } else {
+        console.error("Failed to update event:", response.statusText);
+        toast.error("Failed to update event. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error updating event:", error);
+      toast.error("Error updating event. Please try again later.");
+    }
+  };
+
+  // Function to handle the deletion of a calendar event
+  const handleDeleteEvent = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch("/api/calendar/delete_event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventID: selectedEvent.id }),
+      });
+
+      if (response.ok) {
+        toast.success("Event deleted!");
+
+        // Reset form fields
+        setEventName("");
+        setEventDescription("");
+        setStartDate(new Date());
+        setStartTime("");
+        setEndDate(new Date());
+        setEndTime("");
+        setEventType("");
+        setEventSubject("");
+        setEventLocationType("");
+        setEventLocation("");
+        setEditSheetOpen(false);
+
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        console.error("Failed to delete event:", response.statusText);
+        toast.error("Failed to delete event. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Error deleting event. Please try again later.");
     }
   };
 
@@ -411,16 +571,19 @@ export default function CalendarPage() {
       return (
         <div
           key={event.id}
+          onClick={() => handleEventClick(event)}
           className={`absolute left-0 right-0 flex items-start justify-between border-l-4 ${
             colours.border
-          } ${colours.bg} rounded-md p-2 text-foreground/97 mr-1 ${
+          } ${
+            colours.bg
+          } rounded-md p-2 text-foreground/97 mr-1 cursor-pointer hover:opacity-75 transition-opacity ${
             isPastEvent ? "opacity-50" : ""
           }`}
           style={{ top: `${distanceFromTop}px`, height: `${eventHeight}px` }}
         >
           <div className="flex-1 min-w-0">
             <p
-              className="text-sm font-semibold"
+              className="text-xs font-semibold"
               style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
             >
               {event.name.length > 30
@@ -430,7 +593,7 @@ export default function CalendarPage() {
             {event.location && (
               <div className="flex items-center gap-1 mt-1">
                 <MapPin className="w-3 h-3" />
-                <p className="text-xs">{event.location}</p>
+                <p className="text-[10px]">{event.location}</p>
               </div>
             )}
           </div>
@@ -508,7 +671,7 @@ export default function CalendarPage() {
         <span className="font-normal text-foreground/90">{year}</span>
       </h2>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
         <SheetTrigger asChild>
           <Fab className="hover:rotate-180 transition-transform duration-700 z-10">
             <Plus />
@@ -765,6 +928,283 @@ export default function CalendarPage() {
         </SheetContent>
       </Sheet>
 
+      <Sheet
+        open={editSheetOpen}
+        onOpenChange={(open) => {
+          setEditSheetOpen(open);
+          if (!open) {
+            setSelectedEvent(null);
+
+            // Reset form fields
+            setEventName("");
+            setEventDescription("");
+            setStartDate(new Date());
+            setStartTime("");
+            setEndDate(new Date());
+            setEndTime("");
+            setEventType("");
+            setEventSubject("");
+            setEventLocationType("");
+            setEventLocation("");
+          }
+        }}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>View/edit event</SheetTitle>
+            <SheetDescription>View details or edit your event</SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <div className="flex flex-col gap-3 mb-5">
+              <Label className="px-1" htmlFor="name">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={eventName}
+                onChange={(e) => setEventName(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-3 mb-5">
+              <Label className="px-1" htmlFor="description">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={eventDescription}
+                onChange={(e) => setEventDescription(e.target.value)}
+              />
+            </div>
+            <div className="mb-5">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="datePicker1" className="px-1">
+                    Start date
+                  </Label>
+                  <Dialog open={calendarOpen1} onOpenChange={setCalendarOpen1}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="datePicker1"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {startDate
+                          ? startDate.toLocaleDateString()
+                          : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select start date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(selectedDate) => {
+                          setStartDate(selectedDate);
+                          setCalendarOpen1(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="timePicker1" className="px-1">
+                    Start time
+                  </Label>
+                  <Input
+                    type="time"
+                    id="timePicker1"
+                    step="60" // Hours and minutes
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4 mt-6">
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="datePicker2" className="px-1">
+                    End date
+                  </Label>
+                  <Dialog open={calendarOpen2} onOpenChange={setCalendarOpen2}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="datePicker2"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {endDate ? endDate.toLocaleDateString() : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select end date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(selectedDate) => {
+                          setEndDate(selectedDate);
+                          setCalendarOpen2(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="timePicker2" className="px-1">
+                    End time
+                  </Label>
+                  <Input
+                    type="time"
+                    id="timePicker2"
+                    step="60" // Hours and minutes
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3 flex-1">
+                  <Label
+                    className="px-1 whitespace-nowrap"
+                    htmlFor="locationType"
+                  >
+                    Location type
+                  </Label>
+                  <Select
+                    value={eventLocationType}
+                    onValueChange={setEventLocationType}
+                  >
+                    <SelectTrigger id="locationType">
+                      <SelectValue placeholder="None selected" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="In-person">In-person</SelectItem>
+                      <SelectItem value="Virtual">Virtual</SelectItem>
+                      <SelectItem value="None">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-3 flex-1">
+                  <Label className="px-1" htmlFor="Location">
+                    Location
+                  </Label>
+                  <Input
+                    id="location"
+                    value={eventLocation}
+                    placeholder="Empty"
+                    onChange={(e) => setEventLocation(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mb-5">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3 flex-1">
+                  <Label className="px-1" htmlFor="type">
+                    Category
+                  </Label>
+                  <Select value={eventType} onValueChange={setEventType}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Other" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userRole === "Student" ? (
+                        <>
+                          <SelectItem value="Revision/Homework">
+                            Revision/Homework
+                          </SelectItem>
+                          <SelectItem value="Exam">Exam</SelectItem>
+                          <SelectItem value="School/Lesson">
+                            School/Lesson
+                          </SelectItem>
+                          <SelectItem value="Work">Work</SelectItem>
+                          <SelectItem value="Break">Break</SelectItem>
+                          <SelectItem value="Appointment/Club">
+                            Appointment/Club
+                          </SelectItem>
+                          <SelectItem value="Food">Food</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </>
+                      ) : userRole === "Teacher" ? (
+                        <>
+                          <SelectItem value="Lesson">Lesson</SelectItem>
+                          <SelectItem value="Staff Meeting">
+                            Staff Meeting
+                          </SelectItem>
+                          <SelectItem value="Parent Meeting">
+                            Parent Meeting
+                          </SelectItem>
+                          <SelectItem value="Marking">Marking</SelectItem>
+                          <SelectItem value="Lesson Prep/Planning">
+                            Lesson Prep/Planning
+                          </SelectItem>
+                          <SelectItem value="Supervision">
+                            Supervision
+                          </SelectItem>
+                          <SelectItem value="Break">Break</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </>
+                      ) : null}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {userRole === "Student" && (
+                  <div className="flex flex-col gap-3 flex-1">
+                    <Label className="px-1" htmlFor="subject">
+                      Subject
+                    </Label>
+                    <Select
+                      value={eventSubject}
+                      onValueChange={setEventSubject}
+                    >
+                      <SelectTrigger id="subject">
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects && subjects.length > 0 ? (
+                          subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.id}>
+                              {subject.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-subjects" disabled>
+                            No subjects available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button className="mt-2 sm:mt-0" onClick={handleEditEvent}>
+              Save
+            </Button>
+            <Button
+              variant="destructive"
+              className="mt-2 sm:mt-0"
+              onClick={handleDeleteEvent}
+            >
+              Delete
+            </Button>
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
       {/* Desktop calendar page controls */}
       <div className="hidden md:flex items-center justify-between mb-3 text-foreground/95">
         <Button variant="outline" onClick={handlePreviousWeek}>
@@ -881,7 +1321,7 @@ export default function CalendarPage() {
                   )}
                   {isToday && (
                     <div
-                      className="absolute left-0 right-0 border-t-2 border-slate-200 z-20"
+                      className="absolute left-0 right-0 border-t-2 border-foreground z-20"
                       style={{ top: `${currentMinutes}px` }}
                     ></div>
                   )}
@@ -957,7 +1397,7 @@ export default function CalendarPage() {
                   )}
                   {isToday && (
                     <div
-                      className="absolute left-0 right-0 border-t-2 border-slate-200 z-20"
+                      className="absolute left-0 right-0 border-t-2 border-foreground z-20"
                       style={{ top: `${currentMinutes}px` }}
                     ></div>
                   )}

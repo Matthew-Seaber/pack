@@ -59,7 +59,7 @@ export async function GET() {
         start: event.event_start,
         end: event.event_end,
         type: event.type || "Other",
-        subject_id: event.subject_id || null,
+        subject: event.subject_id || null,
         location_type: final_location_type || null,
         location: event.location || null,
       };

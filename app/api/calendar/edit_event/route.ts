@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 import { getUser } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function PUT(req: Request) { // PUT request used rather than POST because PUT is idempotent (calling it once or several times has the same effect)
   try {
     // Gets user here instead of the client for security
     const user = await getUser();
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
 
     const user_id = user.user_id;
     const {
+      id,
       name,
       description,
       start,
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
 
     // Validate required fields
     if (
+      !id ||
       !name ||
       !start ||
       !end ||
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
       locationType === undefined
     ) {
       return NextResponse.json(
-        { error: "Name, start, end, and locationType are required" },
+        { error: "ID, name, start, end, and locationType are required" },
         { status: 400 }
       );
     }
@@ -49,12 +51,11 @@ export async function POST(req: Request) {
     } else {
       finalLocation = 0;
     }
-      
-    // Insert the new event into the database
-    const { data: calendarData, error: insertError } = await supabaseMainAdmin
+
+    // Update the event in the database
+    const { data: calendarData, error: updateError } = await supabaseMainAdmin
       .from("calendar_events")
-      .insert({
-        user_id: user_id,
+      .update({
         event_name: name,
         event_description: description || null,
         event_start: start,
@@ -64,21 +65,23 @@ export async function POST(req: Request) {
         location_type: finalLocation,
         location: location || null,
       })
+      .eq("event_id", id)
+      .eq("user_id", user_id) // Ensures the user calling the API has permission to amend the event
       .select(
         "event_id, event_name, event_description, event_start, event_end, type, subject_id, location_type, location"
       )
       .single();
 
-    if (insertError) {
-      console.error("Error adding calendar event:", insertError);
+    if (updateError) {
+      console.error("Error updating calendar event:", updateError);
       return NextResponse.json(
-        { error: "Failed to add calendar event" },
+        { error: "Failed to update calendar event" },
         { status: 500 }
       );
     }
 
-    // Returns the created calendar event
-    const newEvent = {
+    // Returns the updated calendar event
+    const updatedEvent = {
       id: calendarData.event_id,
       name: calendarData.event_name,
       description: calendarData.event_description || null,
@@ -91,8 +94,8 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json({
-      event: newEvent,
-      message: "Event successfully added",
+      event: updatedEvent,
+      message: "Event successfully amended",
     });
   } catch (error) {
     console.error("API Error:", error);
