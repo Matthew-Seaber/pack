@@ -74,6 +74,8 @@ export default function TasksPage() {
   const [taskDescription, setTaskDescription] = React.useState("");
   const [taskPriority, setTaskPriority] = React.useState<string>("");
   const [taskSubject, setTaskSubject] = React.useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortType, setSortType] = useState<string>("Date");
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const router = useRouter();
 
@@ -370,6 +372,7 @@ export default function TasksPage() {
                   ticks: 100,
                   gravity: 1.2,
                 });
+
                 // Refreshes all task lists and UI to ensure consistency before and after the transaction
                 setTasks((previous) =>
                   previous ? previous.filter((tsk) => tsk.id !== task.id) : null
@@ -539,6 +542,83 @@ export default function TasksPage() {
     fetchUserAndTasksAndSubjects();
   }, [router, categoriseTask]);
 
+  // Function  to filter tasks using a search query
+  const filterBySearch = React.useCallback(
+    (tasks: Task[]) => {
+      if (!searchQuery.trim()) return tasks;
+
+      searchQuery.toLowerCase().trim();
+      return tasks.filter((entry) => {
+        const nameMatch = entry.name.toLowerCase().includes(searchQuery);
+        const descriptionMatch =
+          entry.description?.toLowerCase().includes(searchQuery) || false;
+        let subject = null;
+        if (!(entry.subject == null)) {
+          subject = subjectMap.get(entry.subject) ?? null;
+        } else {
+          subject = null;
+        }
+        const subjectMatch =
+          subject?.toLowerCase().includes(searchQuery) || false;
+        return nameMatch || descriptionMatch || subjectMatch;
+      });
+    },
+    [searchQuery, subjectMap]
+  );
+
+  // Filters tasks of each date category
+  const filteredTasksOverdue = React.useMemo(
+    () => filterBySearch(tasksOverdue),
+    [tasksOverdue, filterBySearch]
+  );
+  const filteredTasksDueToday = React.useMemo(
+    () => filterBySearch(tasksDueToday),
+    [tasksDueToday, filterBySearch]
+  );
+  const filteredTasksDueTomorrow = React.useMemo(
+    () => filterBySearch(tasksDueTomorrow),
+    [tasksDueTomorrow, filterBySearch]
+  );
+  const filteredTasksDueThisWeek = React.useMemo(
+    () => filterBySearch(tasksDueThisWeek),
+    [tasksDueThisWeek, filterBySearch]
+  );
+  const filteredTasksDueLater = React.useMemo(
+    () => filterBySearch(tasksDueLater),
+    [tasksDueLater, filterBySearch]
+  );
+  const filteredTasksWithoutDueDate = React.useMemo(
+    () => filterBySearch(tasksWithoutDueDate),
+    [tasksWithoutDueDate, filterBySearch]
+  );
+
+  // Singular function to manage filtering entries using a search query, and then sorting the remaining results
+  const filteredEntries = React.useMemo(() => {
+    if (!tasks) return [];
+
+    let results = tasks;
+
+    // Search query
+    if (searchQuery.trim()) {
+      results = filterBySearch(results);
+    }
+
+    // Sorts results by ascending
+    if (sortType === "Date") {
+      // No logic is needed here due to the conditional rendering of tasks when sortType is equal to "Date"
+    } else if (sortType === "Priority") {
+      results = [...results].sort((a, b) => {
+        const paperA = parseInt(a.priority.toString());
+        const paperB = parseInt(b.priority.toString());
+        return paperA - paperB;
+      });
+    } else {
+      console.log("Unexpected sort type:", sortType);
+    }
+
+    return results; // Returns final list of entries which pass the search requirement and are sorted accordingly
+  }, [tasks, searchQuery, sortType, filterBySearch]);
+
   if (loading) {
     return (
       <>
@@ -692,56 +772,120 @@ export default function TasksPage() {
         </SheetContent>
       </Sheet>
 
-      {tasks && tasks.length > 0 ? (
-        <>
-          {tasksOverdue.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">Overdue</h3>
+      <div className="flex flex-row gap-3 mt-5">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search your tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          {searchQuery && (
+            <p className="absolute inset-y-0 right-4 flex items-center text-xs text-muted-foreground">
+              {filteredEntries.length} result
+              {filteredEntries.length !== 1 ? "s" : ""}
+            </p>
           )}
-
-          {tasksOverdue.length > 0 && tasksOverdue.map(renderTask)}
-
-          <h3 className="pt-10 text-lg font-semibold">Today</h3>
-
-          {tasksDueToday.length === 0 && (
-            <div className="mt-5 p-6 text-center text-gray-500">
-              <p>No remaining tasks due today! 🥳</p>
-            </div>
-          )}
-
-          {tasksDueToday.length > 0 && tasksDueToday.map(renderTask)}
-
-          {tasksDueTomorrow.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">Tomorrow</h3>
-          )}
-
-          {tasksDueTomorrow.length > 0 && tasksDueTomorrow.map(renderTask)}
-
-          {tasksDueThisWeek.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">
-              Within the next week
-            </h3>
-          )}
-
-          {tasksDueThisWeek.length > 0 && tasksDueThisWeek.map(renderTask)}
-
-          {tasksDueLater.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">In the future</h3>
-          )}
-
-          {tasksDueLater.length > 0 && tasksDueLater.map(renderTask)}
-
-          {tasksWithoutDueDate.length > 0 && (
-            <h3 className="pt-10 text-lg font-semibold">No date</h3>
-          )}
-
-          {tasksWithoutDueDate.length > 0 &&
-            tasksWithoutDueDate.map(renderTask)}
-        </>
-      ) : (
-        <div className="mt-5 p-6 text-center text-gray-500">
-          <p>You have no remaining tasks! 🥳</p>
         </div>
-      )}
+        <div className="bg-card border border-border rounded-lg px-4 h-[42px] flex items-center text-sm flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <label className="text-muted-foreground" htmlFor="sort">
+              Sort:
+            </label>
+            <Select value={sortType} onValueChange={setSortType}>
+              <SelectTrigger id="sort" className="border-0 p-0">
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Date">Date</SelectItem>
+                <SelectItem value="Priority">Priority</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {sortType === "Date" &&
+        (tasks && tasks.length > 0 ? (
+          <>
+            {filteredTasksOverdue.length > 0 && (
+              <h3 className="pt-10 text-lg font-semibold">Overdue</h3>
+            )}
+
+            {filteredTasksOverdue.length > 0 &&
+              filteredTasksOverdue.map(renderTask)}
+
+            {!searchQuery && (
+              <h3 className="pt-10 text-lg font-semibold">Today</h3>
+            )}
+
+            {filteredTasksDueToday.length === 0 && !searchQuery && (
+              <div className="mt-5 p-6 text-center text-gray-500">
+                <p>No remaining tasks due today! 🥳</p>
+              </div>
+            )}
+
+            {filteredTasksDueToday.length > 0 &&
+              filteredTasksDueToday.map(renderTask)}
+
+            {filteredTasksDueTomorrow.length > 0 && (
+              <h3 className="pt-10 text-lg font-semibold">Tomorrow</h3>
+            )}
+
+            {filteredTasksDueTomorrow.length > 0 &&
+              filteredTasksDueTomorrow.map(renderTask)}
+
+            {filteredTasksDueThisWeek.length > 0 && (
+              <h3 className="pt-10 text-lg font-semibold">
+                Within the next week
+              </h3>
+            )}
+
+            {filteredTasksDueThisWeek.length > 0 &&
+              filteredTasksDueThisWeek.map(renderTask)}
+
+            {filteredTasksDueLater.length > 0 && (
+              <h3 className="pt-10 text-lg font-semibold">In the future</h3>
+            )}
+
+            {filteredTasksDueLater.length > 0 &&
+              filteredTasksDueLater.map(renderTask)}
+
+            {filteredTasksWithoutDueDate.length > 0 && (
+              <h3 className="pt-10 text-lg font-semibold">No date</h3>
+            )}
+
+            {filteredTasksWithoutDueDate.length > 0 &&
+              filteredTasksWithoutDueDate.map(renderTask)}
+
+            {searchQuery &&
+              filteredTasksOverdue.length === 0 &&
+              filteredTasksDueToday.length === 0 &&
+              filteredTasksDueTomorrow.length === 0 &&
+              filteredTasksDueThisWeek.length === 0 &&
+              filteredTasksDueLater.length === 0 &&
+              filteredTasksWithoutDueDate.length === 0 && (
+                <div className="mt-5 p-6 text-center text-gray-500">
+                  <p>There are no tasks with your current search query.</p>
+                </div>
+              )}
+          </>
+        ) : (
+          <div className="mt-5 p-6 text-center text-gray-500">
+            <p>You have no remaining tasks! 🥳</p>
+          </div>
+        ))}
+
+      {sortType === "Priority" &&
+        (filteredEntries && filteredEntries.length > 0 ? (
+          filteredEntries.map(renderTask)
+        ) : (
+          <div className="mt-5 p-6 text-center text-gray-500">
+            <p>There are no tasks with your current search query.</p>
+          </div>
+        ))}
+
       <Toaster />
     </>
   );

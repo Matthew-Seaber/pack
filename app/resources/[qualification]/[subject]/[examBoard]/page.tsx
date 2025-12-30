@@ -45,8 +45,8 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
     resource_name: string;
     resource_description: string | null;
     location: string;
-    topic: string | null;
-    paper: string | null;
+    topic: string;
+    paper: string;
     uploaded_at: string;
     type: string;
     creator: string;
@@ -60,6 +60,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
   const [selectedEntry, setSelectedEntry] = useState<ResourceEntry | null>(
     null
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Topic");
   const [filterType, setFilterType] = useState<string>("None");
   const [loading, setLoading] = useState(true);
@@ -478,6 +479,57 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
     fetchResourceData();
   }, [qualification, subject, examBoard, router, sortEntriesByTopic]);
 
+  // Singular function to manage filtering entries using a search query and filters (if applicable), and then sorting the result of this
+  const filteredEntries = React.useMemo(() => {
+    if (!resourceEntries) return [];
+
+    let results = resourceEntries;
+
+    // Search query
+    if (searchQuery.trim()) {
+      searchQuery.toLowerCase();
+      results = results.filter((entry) => {
+        const nameMatch = entry.resource_name
+          .toLowerCase()
+          .includes(searchQuery);
+        const descriptionMatch =
+          entry.resource_description?.toLowerCase().includes(searchQuery) ||
+          false;
+        return nameMatch || descriptionMatch; // Returns true if the search query is within either the resource name or description
+      });
+    }
+
+    // Filters
+    if (filterType === "Common topics") {
+      results = results.filter((entry) => entry.commonTopic === true);
+    } else if (filterType === "Difficult topics") {
+      results = results.filter((entry) => entry.difficultTopic === true);
+    } else if (filterType === "Creator: Pack") {
+      results = results.filter((entry) => entry.creator === "Pack");
+    }
+
+    // Sorts results by ascending
+    if (sortType === "Topic") {
+      results = sortEntriesByTopic([...results]);
+    } else if (sortType === "Paper") {
+      results = [...results].sort((a, b) => {
+        const paperA = parseInt(a.paper);
+        const paperB = parseInt(b.paper);
+        return paperA - paperB;
+      });
+    } else if (sortType === "Uploaded") {
+      results = [...results].sort((a, b) => {
+        const dateA = new Date(a.uploaded_at).getTime();
+        const dateB = new Date(b.uploaded_at).getTime();
+        return dateB - dateA;
+      });
+    } else {
+      console.log("Unexpected sort type:", sortType);
+    }
+
+    return results; // Returns final list of entries which pass the search/filter requirements and are sorted accordingly
+  }, [resourceEntries, searchQuery, filterType, sortType, sortEntriesByTopic]);
+
   if (loading) {
     return (
       <>
@@ -506,8 +558,16 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
               <input
                 type="text"
                 placeholder="Search resources..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-[42px] px-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {searchQuery && (
+                <p className="absolute inset-y-0 right-4 flex items-center text-xs text-muted-foreground">
+                  {filteredEntries.length} result
+                  {filteredEntries.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
             <div className="bg-card border border-border rounded-lg px-4 h-[42px] flex items-center gap-4 text-sm xl:w-auto">
               <div className="flex items-center gap-2">
@@ -535,8 +595,10 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Rarity">Common topics</SelectItem>
-                    <SelectItem value="Difficulty">Difficult topics</SelectItem>
+                    <SelectItem value="Common topics">Common topics</SelectItem>
+                    <SelectItem value="Difficult topics">
+                      Difficult topics
+                    </SelectItem>
                     <SelectItem value="Creator: Pack">Creator: Pack</SelectItem>
                   </SelectContent>
                 </Select>
@@ -545,112 +607,143 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
           </div>
 
           {resourceEntries && resourceEntries.length > 0 ? (
-            <div style={{ overflowX: "auto", width: "100%" }}>
-              <div className="border border-border rounded-xl overflow-hidden">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted border-b border-border">
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "10%" }}
-                      >
-                        INDEX
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "30%" }}
-                      >
-                        NAME
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "15%" }}
-                      >
-                        TYPE
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "10%" }}
-                      >
-                        PAPER
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "15%" }}
-                      >
-                        CREATOR
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
-                        style={{ width: "15%" }}
-                      >
-                        UPLOADED
-                      </th>
-                      <th
-                        className="px-4 py-3 text-center text-sm font-semibold w-12"
-                        style={{ width: "5%" }}
-                      ></th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium">
-                    {resourceEntries.map((entry) => (
-                      <tr
-                        key={entry.id}
-                        onClick={() => setSelectedEntry(entry)}
-                        className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
-                          selectedEntry?.id === entry.id
-                            ? "ring-4 ring-primary ring-inset rounded-lg"
-                            : ""
-                        }`}
-                      >
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.topic}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.resource_name}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.type}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          Paper {entry.paper}
-                        </td>
-
-                        <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
-                          {entry.creator}
-                        </td>
-
-                        <td
-                          className="px-4 py-2 text-sm font-medium border-r-2 border-border"
-                          title={formatTimestamp(entry.uploaded_at, 0)}
+            filteredEntries.length > 0 ? (
+              <div style={{ overflowX: "auto", width: "100%" }}>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted border-b border-border">
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "10%" }}
                         >
-                          {" "}
-                          {/* Reveals long date on hover */}
-                          {formatTimestamp(entry.uploaded_at, 2)}{" "}
-                          {/* Relative format */}
-                        </td>
-
-                        <td className=" text-center hover:bg-gray-800">
-                          <button
-                            title="Download"
-                            className="p-4 rounded text-lg font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              downloadFile(entry.id);
-                            }}
-                          >
-                            <Download />
-                          </button>
-                        </td>
+                          INDEX
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "30%" }}
+                        >
+                          NAME
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "15%" }}
+                        >
+                          TYPE
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "10%" }}
+                        >
+                          PAPER
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "15%" }}
+                        >
+                          CREATOR
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold border-r-2 border-border"
+                          style={{ width: "15%" }}
+                        >
+                          UPLOADED
+                        </th>
+                        <th
+                          className="px-4 py-3 text-center text-sm font-semibold w-12"
+                          style={{ width: "5%" }}
+                        ></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="font-medium">
+                      {filteredEntries.map((entry) => (
+                        <tr
+                          key={entry.id}
+                          onClick={() => setSelectedEntry(entry)}
+                          className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
+                            selectedEntry?.id === entry.id
+                              ? "ring-4 ring-primary ring-inset rounded-lg"
+                              : ""
+                          }`}
+                        >
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.topic}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.resource_name}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.type}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            Paper {entry.paper}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm font-medium border-r-2 border-border">
+                            {entry.creator}
+                          </td>
+
+                          <td
+                            className="px-4 py-2 text-sm font-medium border-r-2 border-border"
+                            title={formatTimestamp(entry.uploaded_at, 0)}
+                          >
+                            {" "}
+                            {/* Reveals long date on hover */}
+                            {formatTimestamp(entry.uploaded_at, 2)}{" "}
+                            {/* Relative format */}
+                          </td>
+
+                          <td className=" text-center hover:bg-gray-800">
+                            <button
+                              title="Download"
+                              className="p-4 rounded text-lg font-semibold"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadFile(entry.id);
+                              }}
+                            >
+                              <Download />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 p-6 text-center text-gray-500">
+                <p className="mb-4">
+                  There are no results with your current{" "}
+                  {searchQuery !== "" && filterType !== "None"
+                    ? `combined`
+                    : ""}{" "}
+                  {searchQuery !== "" ? " search query" : ""}
+                  {searchQuery !== "" && filterType !== "None" ? ` and ` : ""}
+                  {filterType !== "None" ? " filter" : ""}
+                  {searchQuery !== "" && filterType !== "None"
+                    ? ` combination. `
+                    : "."}
+                </p>
+                <Button
+                  variant="secondary"
+                  className="mr-2"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="ml-2"
+                  onClick={() => setFilterType("None")}
+                >
+                  Clear Filter
+                </Button>
+              </div>
+            )
           ) : (
             <div className="mt-5 p-6 text-center text-gray-500">
               <p>

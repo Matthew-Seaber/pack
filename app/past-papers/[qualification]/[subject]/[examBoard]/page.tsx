@@ -148,6 +148,8 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
         const combinedName =
           `${entry.series} ${entry.resource_name}`.toLowerCase();
         const combinedTitle =
+          `${entry.resource_name} ${entry.series}`.toLowerCase();
+        const combinedTitleHyphenated =
           `${entry.resource_name} - ${entry.series}`.toLowerCase();
         const topicNameMatch = entry.resource_name
           .toLowerCase()
@@ -157,7 +159,8 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
           .includes(searchQuery);
         const combinedMatch =
           combinedName.includes(searchQuery) ||
-          combinedTitle.includes(searchQuery);
+          combinedTitle.includes(searchQuery) ||
+          combinedTitleHyphenated.includes(searchQuery);
         return topicNameMatch || descriptionMatch || combinedMatch; // Returns true if the search query is within either the resource name, series, or both
       });
     }
@@ -665,10 +668,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                 <p className="mb-4">
                   There are no results with your current search query.
                 </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => setSearchQuery("")}
-                >
+                <Button variant="secondary" onClick={() => setSearchQuery("")}>
                   Clear Search
                 </Button>
               </div>

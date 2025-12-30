@@ -36,4 +36,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# dbdiagram
+dbdiagram.dbdiagram
+dbdiagram.dbml
