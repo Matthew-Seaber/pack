@@ -76,7 +76,9 @@ export default function TasksPage() {
   const [taskSubject, setTaskSubject] = React.useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Date");
-  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [addSheetOpen, setAddSheetOpen] = React.useState(false);
+  const [editSheetOpen, setEditSheetOpen] = React.useState(false);
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const router = useRouter();
 
   const priorityColours = {
@@ -186,6 +188,34 @@ export default function TasksPage() {
     []
   );
 
+  // Function to prepare the view/edit sheet for a task
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setTaskName(task.name);
+    setTaskDescription(task.description || "");
+
+    if (task.due) {
+      const dueDate = new Date(task.due || "");
+      const time = dueDate.toTimeString().slice(0, 5);
+
+      setDate(dueDate);
+
+      if (time === "23:59") {
+        setTime(""); // User hasn't set a time
+      } else {
+        setTime(time || ""); // Formats to HH:MM
+      }
+    } else {
+      setDate(undefined);
+      setTime("");
+    }
+
+    setTaskPriority(task.priority.toString());
+    setTaskSubject(task.subject || "");
+
+    setEditSheetOpen(true);
+  };
+
   // Function to handle adding a new task
   const handleAddTask = async () => {
     // Validate fields
@@ -250,7 +280,7 @@ export default function TasksPage() {
         setTime("");
         setTaskPriority("");
         setTaskSubject("");
-        setSheetOpen(false);
+        setAddSheetOpen(false);
       } else {
         console.error("Failed to add task:", response.statusText);
         toast.error("Failed to add task. Please try again later.");
@@ -258,6 +288,143 @@ export default function TasksPage() {
     } catch (error) {
       console.error("Error adding task:", error);
       toast.error("Error adding task. Please try again later.");
+    }
+  };
+
+  // Function to handle editing an existing calendar event
+  const handleEditTask = async () => {
+    if (!selectedTask) return;
+
+    // Validate fields
+    if (!taskName.trim()) {
+      toast.error("Task name is required.");
+      return;
+    }
+
+    const finalPriority = taskPriority || "4"; // Sets default priority to lowest if none selected
+
+    try {
+      // Combine date and time into a timestampz
+      let dueTimestamp: string | null = null;
+      const now = new Date();
+
+      if (date) {
+        const combinedDate = new Date(date);
+        if (time) {
+          const [hours, minutes] = time.split(":");
+          combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        } else {
+          // Default to end of day if no time is selected
+          combinedDate.setHours(23, 59, 59, 999);
+        }
+
+        if (combinedDate < now) {
+          toast.error("Due date cannot be in the past.");
+          return;
+        }
+
+        dueTimestamp = combinedDate.toISOString();
+      }
+
+      const response = await fetch("/api/tasks/edit_task", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedTask.id,
+          name: taskName.trim(),
+          description: taskDescription.trim() || null,
+          due: dueTimestamp || null,
+          priority: parseInt(finalPriority),
+          subject: taskSubject || null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Task updated!");
+
+        // Add updated task to the appropriate section (updates UI without refresh for improved UX)
+        const updatedTask = data.task;
+        setTasks((previous) =>
+          previous ? [...previous, updatedTask] : [updatedTask]
+        );
+
+        // Categorise the updated task
+        const category = categoriseTask(updatedTask);
+        addTaskToCategory(updatedTask, category);
+
+        // Reset form fields
+        setTaskName("");
+        setTaskDescription("");
+        setDate(undefined);
+        setTime("");
+        setTaskPriority("");
+        setTaskSubject("");
+        setEditSheetOpen(false);
+      } else {
+        console.error("Failed to edit task:", response.statusText);
+        toast.error("Failed to edit task. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+      toast.error("Error editing task. Please try again later.");
+    }
+  };
+
+  // Function to handle the deletion of a calendar event
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch("/api/tasks/delete_task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskID: selectedTask.id }),
+      });
+
+      if (response.ok) {
+        toast.success("Task deleted!");
+
+        // Refreshes all task lists and UI to ensure consistency before and after the transaction
+        setTasks((previous) =>
+          previous ? previous.filter((tsk) => tsk.id !== selectedTask.id) : null
+        );
+        setTasksDueToday((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueTomorrow((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueThisWeek((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueLater((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksOverdue((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksWithoutDueDate((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+
+        // Reset form fields
+        setTaskName("");
+        setTaskDescription("");
+        setDate(undefined);
+        setTime("");
+        setTaskPriority("");
+        setTaskSubject("");
+        setEditSheetOpen(false);
+      } else {
+        console.error("Failed to delete task:", response.statusText);
+        toast.error("Failed to delete task. Please try again later.");
+        return;
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Error deleting task. Please try again later.");
+      return;
     }
   };
 
@@ -301,7 +468,8 @@ export default function TasksPage() {
     return (
       <div
         key={task.id}
-        className={`flex items-start justify-between gap-4 ${colours.bg} rounded-md mt-5 pt-5 pb-3 px-6`}
+        onClick={() => handleTaskClick(task)}
+        className={`flex items-start justify-between gap-4 ${colours.bg} rounded-md mt-5 pt-5 pb-3 px-6 cursor-pointer hover:opacity-75 transition-opacity`}
         style={{ color: colours.text }}
       >
         <div className="flex-1 min-w-0">
@@ -356,7 +524,7 @@ export default function TasksPage() {
           style={{ borderColor: colours.text }}
           onClick={async () => {
             try {
-              const response = await fetch("/api/tasks/complete_task", {
+              const response = await fetch("/api/tasks/delete_task", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ taskID: task.id }),
@@ -638,7 +806,7 @@ export default function TasksPage() {
       <h2 className="text-2xl font-semibold mb-3">Tasks</h2>
       <p>Keep on top of your to-do list.</p>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
         <SheetTrigger asChild>
           <Fab className="hover:rotate-180 transition-transform duration-700">
             <Plus />
@@ -764,6 +932,158 @@ export default function TasksPage() {
           <SheetFooter>
             <Button className="mt-2 sm:mt-0" onClick={handleAddTask}>
               Add task
+            </Button>
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet
+        open={editSheetOpen}
+        onOpenChange={(open) => {
+          setEditSheetOpen(open);
+          if (!open) {
+            setSelectedTask(null);
+
+            // Reset form fields
+            setTaskName("");
+            setTaskDescription("");
+            setDate(undefined);
+            setTime("");
+            setTaskPriority("");
+            setTaskSubject("");
+          }
+        }}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>View/edit task</SheetTitle>
+            <SheetDescription>View details or edit your task</SheetDescription>
+          </SheetHeader>
+          <div className="py-3">
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="name">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+              />
+            </div>
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="description">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+              />
+            </div>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="datePicker" className="px-1">
+                    Due date
+                  </Label>
+                  <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="datePicker"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {date ? date.toLocaleDateString() : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select a due date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(selectedDate) => {
+                          setDate(selectedDate);
+                          setCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="timePicker" className="px-1">
+                    Due time
+                  </Label>
+                  <Input
+                    type="time"
+                    id="timePicker"
+                    step="60" // Hours and minutes
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="priority">
+                    Priority
+                  </Label>
+                  <Select value={taskPriority} onValueChange={setTaskPriority}>
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
+                      <SelectItem value="4">4</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="subject">
+                    Subject
+                  </Label>
+                  <Select value={taskSubject} onValueChange={setTaskSubject}>
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects && subjects.length > 0 ? (
+                        subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-subjects" disabled>
+                          No subjects available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button className="mt-2 sm:mt-0" onClick={handleEditTask}>
+              Save
+            </Button>
+            <Button
+              variant="destructive"
+              className="mt-2 sm:mt-0"
+              onClick={handleDeleteTask}
+            >
+              Delete
             </Button>
             <SheetClose asChild>
               <Button variant="outline">Cancel</Button>

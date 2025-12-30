@@ -24,15 +24,15 @@ export async function POST(req: Request) {
       .eq("user_id", user_id);
 
     if (fetchError) {
-      console.error("Error completing task:", fetchError);
+      console.error("Error removing task:", fetchError);
       return NextResponse.json(
-        { error: "Failed to complete task" },
+        { error: "Failed to remove task from account" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      message: `Successfully deleted task ${taskID} from the DB`,
+      message: `Successfully removed task ${taskID} from the DB`,
     });
   } catch (error) {
     console.error("API Error:", error);

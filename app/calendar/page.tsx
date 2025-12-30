@@ -542,6 +542,7 @@ export default function CalendarPage() {
       return `${day} ${month} ${inputYear}`;
     }
   };
+  
   // Function to render events for a given day (with colours based on their type)
   const renderDay = (day: Date) => {
     if (!events) return null;

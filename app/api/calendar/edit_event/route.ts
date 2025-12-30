@@ -52,7 +52,7 @@ export async function PUT(req: Request) { // PUT request used rather than POST b
       finalLocation = 0;
     }
 
-    // Update the event in the database
+    // Updates the event in the database
     const { data: calendarData, error: updateError } = await supabaseMainAdmin
       .from("calendar_events")
       .update({
