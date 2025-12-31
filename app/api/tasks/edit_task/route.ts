@@ -16,7 +16,7 @@ export async function PUT(req: Request) {
     }
 
     const user_id = user.user_id;
-    const { id, name, description, due, priority, subjectID } =
+    const { id, name, description, due, priority, subject } =
       await req.json();
 
     // Validate required fields
@@ -46,7 +46,7 @@ export async function PUT(req: Request) {
         task_description: description || null,
         due: due || null,
         priority: priority,
-        subject_id: subjectID || null,
+        subject_id: subject || null,
       })
       .eq("task_id", id)
       .eq("user_id", user_id) // Ensures the user calling the API has permission to amend the task

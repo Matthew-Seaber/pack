@@ -343,6 +343,29 @@ export default function TasksPage() {
         const data = await response.json();
         toast.success("Task updated!");
 
+        // Removes old version of task from categories and UI
+        setTasks((previous) =>
+          previous ? previous.filter((tsk) => tsk.id !== selectedTask.id) : null
+        );
+        setTasksDueToday((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueTomorrow((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueThisWeek((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksDueLater((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksOverdue((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+        setTasksWithoutDueDate((previous) =>
+          previous.filter((tsk) => tsk.id !== selectedTask.id)
+        );
+
         // Add updated task to the appropriate section (updates UI without refresh for improved UX)
         const updatedTask = data.task;
         setTasks((previous) =>

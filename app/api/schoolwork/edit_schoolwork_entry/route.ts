@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 import { getUser } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function PUT(req: Request) {
+  // PUT request used rather than POST because PUT is idempotent (calling it once or several times has the same effect)
   try {
     // Gets user here instead of the client for security
     const user = await getUser();
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
 
     const user_id = user.user_id;
     const {
+      id,
       schoolwork_name,
       schoolwork_description,
       due,
@@ -56,11 +58,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Insert the new entry into the database
-    const { data: schoolworkData, error: insertError } = await supabaseMainAdmin
+    // Updates the entry in the database
+    const { data: schoolworkData, error: updateError } = await supabaseMainAdmin
       .from("schoolwork")
-      .insert({
-        user_id: user_id,
+      .update({
         type: type,
         completed: false,
         due: due,
@@ -69,6 +70,8 @@ export async function POST(req: Request) {
         schoolwork_description: schoolwork_description || null,
         subject_id: subject_id || null,
       })
+      .eq("schoolwork_id", id)
+      .eq("user_id", user_id) // Ensures the user calling the API has permission to amend the schoolwork entry
       .select(
         `
         schoolwork_id,
@@ -87,16 +90,16 @@ export async function POST(req: Request) {
       )
       .single();
 
-    if (insertError) {
-      console.error("Error adding schoolwork entry:", insertError);
+    if (updateError) {
+      console.error("Error updating schoolwork entry:", updateError);
       return NextResponse.json(
-        { error: "Failed to add schoolwork entry" },
+        { error: "Failed to update schoolwork entry" },
         { status: 500 }
       );
     }
 
-    // Returns the created schoolwork entry
-    const newSchoolwork = {
+    // Returns the updated entry
+    const updatedEntry = {
       id: schoolworkData.schoolwork_id,
       category: 1, // Student-managed schoolwork
       schoolworkType: schoolworkData.type === 1 ? "Homework" : "Test",
@@ -104,15 +107,16 @@ export async function POST(req: Request) {
       issued: schoolworkData.issued,
       name: schoolworkData.schoolwork_name,
       description: schoolworkData.schoolwork_description || null,
-      subject_name: schoolworkData.subjects?.[0]?.courses?.[0]?.course_name || null,
+      subject_name:
+        schoolworkData.subjects?.[0]?.courses?.[0]?.course_name || null,
       class_name: null,
       teacher_name: schoolworkData.subjects?.[0]?.teacher_name || null,
       completed: false,
     };
 
     return NextResponse.json({
-      entry: newSchoolwork,
-      message: "Schoolwork entry successfully added",
+      entry: updatedEntry,
+      message: "Schoolwork entry successfully amended",
     });
   } catch (error) {
     console.error("API Error:", error);

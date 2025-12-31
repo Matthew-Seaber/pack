@@ -96,7 +96,8 @@ export default function SchoolworkPage() {
     null
   );
   const [loading, setLoading] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [entryName, setEntryName] = useState("");
   const [entryDescription, setEntryDescription] = useState("");
@@ -145,6 +146,28 @@ export default function SchoolworkPage() {
     } catch (error) {
       console.log("Could not play completion SFX:", error);
     }
+  };
+
+  // Function to prepare the edit sheet for a schoolwork entry
+  const handleEntryClick = (entry: SchoolworkEntry) => {
+    setSelectedEntry(entry);
+    setEntryName(entry.name);
+    setEntryDescription(entry.description || "");
+    setDueDate(new Date(entry.due));
+    setIssuedDate(new Date(entry.issued || ""));
+    setEntryType(entry.schoolworkType);
+
+    const subjectFound = subjects?.find(
+      (subject) => subject.name === entry.subject_name
+    );
+
+    if (subjectFound) {
+      setSubjectID(subjectFound.id);
+    } else {
+      setSubjectID(undefined);
+    }
+
+    setEditSheetOpen(true);
   };
 
   // Function to handle adding a new schoolwork entry
@@ -208,7 +231,7 @@ export default function SchoolworkPage() {
         const data = await response.json();
         toast.success("Schoolwork entry added!");
 
-        // Add new entry to the appropriate section (updates UI without refresh for improved UX)
+        // Adds new entry to the appropriate section (updates UI without refresh for improved UX)
         const newEntry = data.entry;
         const sortedEntries = sortEntriesByDueDate(
           schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
@@ -225,7 +248,7 @@ export default function SchoolworkPage() {
         setIssuedDate(undefined);
         setEntryType("Homework");
         setSubjectID(undefined);
-        setSheetOpen(false);
+        setAddSheetOpen(false);
       } else {
         console.error("Failed to add schoolwork entry:", response.statusText);
         toast.error("Failed to add schoolwork entry. Please try again later.");
@@ -233,6 +256,139 @@ export default function SchoolworkPage() {
     } catch (error) {
       console.error("Error adding schoolwork entry:", error);
       toast.error("Error adding schoolwork entry. Please try again later.");
+    }
+  };
+
+  // Function to handle editing an existing calendar event
+  const handleEditEntry = async () => {
+    if (!selectedEntry) return;
+
+    // Validate fields
+    if (!entryName.trim()) {
+      toast.error("Entry name is required.");
+      return;
+    }
+
+    try {
+      // Combine date and time into a timestampz
+      let dueTimestamp: string | null = null;
+      let issuedTimestamp: string | null = null;
+      const now = new Date();
+
+      if (dueDate) {
+        const combinedDate = new Date(dueDate);
+        combinedDate.setHours(23, 59, 59, 999);
+
+        if (combinedDate < now) {
+          toast.error("Due date cannot be in the past.");
+          return;
+        }
+
+        dueTimestamp = combinedDate.toISOString();
+      } else {
+        toast.error("Please enter a due date.");
+        return;
+      }
+
+      if (issuedDate) {
+        const combinedDate = new Date(issuedDate);
+        combinedDate.setHours(23, 59, 59, 999);
+        issuedTimestamp = combinedDate.toISOString();
+      } else {
+        const combinedDate = new Date(now);
+        combinedDate.setHours(23, 59, 59, 999);
+        issuedTimestamp = combinedDate.toISOString();
+      }
+
+      if (issuedTimestamp > dueTimestamp) {
+        toast.error("Issued date cannot be after the due date.");
+        return;
+      }
+
+      const response = await fetch("/api/schoolwork/edit_schoolwork_entry", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedEntry.id,
+          schoolwork_name: entryName.trim(),
+          schoolwork_description: entryDescription.trim() || null,
+          due: dueTimestamp,
+          issued: issuedTimestamp,
+          type: entryType,
+          subject_id: subjectID || null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Schoolwork entry updated!");
+
+        // Removes old version of the entry from the appropriate arrays and therefore the UI
+        setSchoolworkEntries((previous) =>
+          previous
+            ? previous.filter(
+                (swk) =>
+                  !(
+                    swk.id === selectedEntry.id &&
+                    swk.category === selectedEntry.category
+                  )
+              )
+            : null
+        );
+        setFutureEntries((previous) =>
+          previous.filter(
+            (swk) =>
+              !(
+                swk.id === selectedEntry.id &&
+                swk.category === selectedEntry.category
+              )
+          )
+        );
+        setOverdueEntries((previous) =>
+          previous.filter(
+            (swk) =>
+              !(
+                swk.id === selectedEntry.id &&
+                swk.category === selectedEntry.category
+              )
+          )
+        );
+        setCompletedEntries((previous) =>
+          previous.filter(
+            (swk) =>
+              !(
+                swk.id === selectedEntry.id &&
+                swk.category === selectedEntry.category
+              )
+          )
+        );
+
+        // Adds updated entry to the appropriate section (updates UI without refresh for improved UX)
+        const newEntry = data.entry;
+        const sortedEntries = sortEntriesByDueDate(
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+        );
+        setSchoolworkEntries(sortedEntries);
+
+        // Categorise the updated entry
+        const category = categoriseEntry(newEntry);
+        addEntryToCategory(newEntry, category);
+
+        // Reset form fields
+        setEntryName("");
+        setEntryDescription("");
+        setDueDate(undefined);
+        setIssuedDate(undefined);
+        setEntryType("Homework");
+        setSubjectID(undefined);
+        setEditSheetOpen(false);
+      } else {
+        console.error("Failed to edit schoolwork entry:", response.statusText);
+        toast.error("Failed to edit schoolwork entry. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error editing schoolwork entry:", error);
+      toast.error("Error editing schoolwork entry. Please try again later.");
     }
   };
 
@@ -525,7 +681,7 @@ export default function SchoolworkPage() {
               variant="default"
               onClick={() => {
                 setEntryType("Homework");
-                setSheetOpen(true);
+                setAddSheetOpen(true);
               }}
             >
               <span className="mr-2">+</span>
@@ -535,7 +691,7 @@ export default function SchoolworkPage() {
               variant="default"
               onClick={() => {
                 setEntryType("Test");
-                setSheetOpen(true);
+                setAddSheetOpen(true);
               }}
             >
               <span className="mr-2">+</span>
@@ -560,7 +716,7 @@ export default function SchoolworkPage() {
             variant="default"
             onClick={() => {
               setEntryType("Homework");
-              setSheetOpen(true);
+              setAddSheetOpen(true);
             }}
           >
             <span className="mr-2">+</span>
@@ -570,7 +726,7 @@ export default function SchoolworkPage() {
             variant="default"
             onClick={() => {
               setEntryType("Test");
-              setSheetOpen(true);
+              setAddSheetOpen(true);
             }}
           >
             <span className="mr-2">+</span>
@@ -678,7 +834,10 @@ export default function SchoolworkPage() {
               </Button>
             )}
             {selectedEntry.category === 1 && ( // Only deletion of student-managed entries is allowed
-              <Button className="w-full bg-[#F8921A] hover:bg-[#DF8319]">
+              <Button
+                className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
+                onClick={() => handleEntryClick(selectedEntry)}
+              >
                 Edit
               </Button>
             )}
@@ -1252,7 +1411,7 @@ export default function SchoolworkPage() {
         </div>
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Add Schoolwork</SheetTitle>
@@ -1408,6 +1567,178 @@ export default function SchoolworkPage() {
         </SheetContent>
       </Sheet>
 
+      <Sheet
+        open={editSheetOpen}
+        onOpenChange={(open) => {
+          setEditSheetOpen(open);
+          if (!open) {
+            setSelectedEntry(null);
+
+            // Reset form fields
+            setEntryName("");
+            setEntryDescription("");
+            setDueDate(undefined);
+            setIssuedDate(undefined);
+            setEntryType("Homework");
+            setSubjectID(undefined);
+          }
+        }}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Schoolwork</SheetTitle>
+            <SheetDescription>
+              Edit your {selectedEntry?.schoolworkType.toLowerCase()}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-3">
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="entryName">
+                Name
+              </Label>
+              <Input
+                id="entryName"
+                value={entryName}
+                onChange={(e) => setEntryName(e.target.value)}
+              />
+            </div>
+            <div className="py-2 flex flex-col gap-3 mb-2">
+              <Label className="px-1" htmlFor="entryDescription">
+                Description
+              </Label>
+              <Input
+                id="entryDescription"
+                value={entryDescription}
+                onChange={(e) => setEntryDescription(e.target.value)}
+              />
+            </div>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="dueDatePicker" className="px-1">
+                    Due date
+                  </Label>
+                  <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="dueDatePicker"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {dueDate ? dueDate.toLocaleDateString() : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select a due date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={(selectedDate) => {
+                          setDueDate(selectedDate);
+                          setCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label htmlFor="issuedDatePicker" className="px-1">
+                    Issued date
+                  </Label>
+                  <Dialog
+                    open={issuedCalendarOpen}
+                    onOpenChange={setIssuedCalendarOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="issuedDatePicker"
+                        className="w-32 justify-between font-normal"
+                      >
+                        {issuedDate
+                          ? issuedDate.toLocaleDateString()
+                          : "Select date"}
+                        <ChevronDownIcon />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto max-w-fit">
+                      <DialogHeader>
+                        <DialogTitle>Select issued date</DialogTitle>
+                      </DialogHeader>
+                      <Calendar
+                        mode="single"
+                        selected={issuedDate}
+                        onSelect={(selectedDate) => {
+                          setIssuedDate(selectedDate);
+                          setIssuedCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </div>
+            <div className="py-2 mb-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="entryType">
+                    Type
+                  </Label>
+                  <Select
+                    value={entryType}
+                    onValueChange={(value: "Homework" | "Test") =>
+                      setEntryType(value)
+                    }
+                  >
+                    <SelectTrigger id="entryType" className="w-32">
+                      <SelectValue placeholder={entryType} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Homework">Homework</SelectItem>
+                      <SelectItem value="Test">Test</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Label className="px-1" htmlFor="subject">
+                    Subject
+                  </Label>
+                  <Select value={subjectID} onValueChange={setSubjectID}>
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects && subjects.length > 0 ? (
+                        subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-subjects" disabled>
+                          No subjects available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button className="mt-2 sm:mt-0" onClick={handleEditEntry}>
+              Save
+            </Button>
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1438,7 +1769,8 @@ export default function SchoolworkPage() {
             <p className="text-sm text-muted-foreground mb-6">
               <i>
                 Note: joining a class will share your first name and schoolwork
-                status with the teacher of the class.
+                status with the teacher of that class, and allow them to send
+                you notifications.
               </i>
             </p>
 
