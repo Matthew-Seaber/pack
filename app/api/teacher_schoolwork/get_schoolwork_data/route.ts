@@ -26,7 +26,10 @@ export async function GET(request: Request) {
 
     const { data: classData, error: classFetchError } = await supabaseMainAdmin
       .from("classes")
-      .select("class_name")
+      .select(`
+      class_name,
+      class_student_link!inner(student_id)
+      `)
       .eq("class_id", classID)
       .single();
 
@@ -39,6 +42,9 @@ export async function GET(request: Request) {
     }
 
     const className = classData.class_name;
+    const studentIDs = classData.class_student_link.map(
+      (link: { student_id: string }) => link.student_id
+    );
 
     const { data: schoolworkData, error: schoolworkFetchError } =
       await supabaseMainAdmin
@@ -120,7 +126,7 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json({ className, schoolwork: schoolworkEntries });
+    return NextResponse.json({ className, schoolwork: schoolworkEntries, studentIDs });
   } catch (error) {
     console.error("API Error:", error);
     return NextResponse.json(

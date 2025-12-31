@@ -259,7 +259,7 @@ export default function SchoolworkPage() {
     }
   };
 
-  // Function to handle editing an existing calendar event
+  // Function to handle editing an existing schoolwork entry
   const handleEditEntry = async () => {
     if (!selectedEntry) return;
 
