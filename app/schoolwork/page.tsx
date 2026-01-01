@@ -17,6 +17,7 @@ import { Toaster, toast } from "sonner";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Drawer,
   DrawerContent,
@@ -60,7 +61,7 @@ import { Card } from "@/components/ui/card";
 export default function SchoolworkPage() {
   interface SchoolworkEntry {
     id: string;
-    category: number; // 1 = student-managed, 2 = teacher-managed
+    category: 1 | 2; // 1 = student-managed, 2 = teacher-managed
     schoolworkType: "Homework" | "Test"; // Can be either "Homework" or "Test", restricts assigning any other value
     due: string;
     issued: string | null;
@@ -109,6 +110,7 @@ export default function SchoolworkPage() {
   const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
   const [joinCode, setJoinCode] = useState("");
+  const [recommendation, setRecommendation] = useState<string | null>(null);
   const router = useRouter();
 
   // Function to sort entries by due date (using bubble sort)
@@ -704,6 +706,16 @@ export default function SchoolworkPage() {
               Select an entry to view details.
             </p>
           </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Custom Insights</h3>
+            </div>
+            {recommendation === null ? (
+              <Skeleton className="h-3 w-full" />
+            ) : (
+              <p className="text-xs text-muted-foreground">{recommendation}</p>
+            )}
+          </div>
         </div>
       );
     }
@@ -922,6 +934,17 @@ export default function SchoolworkPage() {
             )}
           </div>
         </div>
+
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Custom Insights</h3>
+          </div>
+          {recommendation === null ? (
+            <Skeleton className="h-3 w-full" />
+          ) : (
+            <p className="text-xs text-muted-foreground">{recommendation}</p>
+          )}
+        </div>
       </div>
     );
   };
@@ -1051,6 +1074,50 @@ export default function SchoolworkPage() {
       fetchTeacherClasses();
     });
   }, [router, sortEntriesByDueDate]);
+
+  React.useEffect(() => {
+    const fetchRecommendation = async () => {
+      try {
+        if (
+          (!futureEntries || futureEntries.length === 0) &&
+          (!overdueEntries || overdueEntries.length === 0)
+        ) {
+          setRecommendation(
+            "We have no recommendations for you at this time; please try again later or try adding some more schoolwork."
+          );
+          return;
+        }
+
+        const recommendationResponse = await fetch(
+          "/api/recommendations/schoolwork",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              schoolwork: futureEntries.concat(overdueEntries),
+            }), // Combining all uncomplete entries means that the API file doesn't need to filter out completed entries again, saving computation time
+          }
+        );
+
+        if (!recommendationResponse.ok) {
+          console.error(
+            "Error getting recommendation:",
+            recommendationResponse.statusText
+          );
+        } else {
+          const recommendationData = await recommendationResponse.json();
+          setRecommendation(recommendationData.topInfo);
+        }
+      } catch (error) {
+        console.error("Error fetching recommendation:", error);
+        setRecommendation(
+          "We have no recommendations for you at this time; please try again later or try adding some more schoolwork."
+        );
+      }
+    };
+
+    fetchRecommendation();
+  }, [futureEntries, overdueEntries]);
 
   if (loading) {
     return (

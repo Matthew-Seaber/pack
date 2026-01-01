@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Drawer,
   DrawerContent,
@@ -103,6 +104,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Topic");
   const [filterType, setFilterType] = useState<string>("None");
+  const [recommendation, setRecommendation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -162,7 +164,11 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Custom Insights</h3>
             </div>
-            <p className="text-xs text-muted-foreground">Blah blah blah</p>
+            {recommendation === null ? (
+              <Skeleton className="h-3 w-full" />
+            ) : (
+              <p className="text-xs text-muted-foreground">{recommendation}</p>
+            )}
           </div>
         </div>
       );
@@ -294,7 +300,11 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold">Custom Insights</h3>
           </div>
-          <p className="text-xs text-muted-foreground">Blah blah blah</p>
+          {recommendation === null ? (
+            <Skeleton className="h-3 w-full" />
+          ) : (
+            <p className="text-xs text-muted-foreground">{recommendation}</p>
+          )}
         </div>
       </div>
     );
@@ -484,6 +494,48 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
     sortType,
     sortEntriesByTopic,
   ]);
+
+  React.useEffect(() => {
+    const fetchRecommendation = async () => {
+      try {
+        if (!specificationEntries || specificationEntries.length === 0) {
+          setRecommendation(
+            "We have no recommendations for you at this time. This may be because no topics have been added to this specification yet."
+          );
+          return;
+        }
+
+        const recommendationResponse = await fetch(
+          "/api/recommendations/specification",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topics: specificationEntries,
+              subjectName: `${examBoard} ${subject}`,
+            }),
+          }
+        );
+
+        if (!recommendationResponse.ok) {
+          console.error(
+            "Error getting recommendation:",
+            recommendationResponse.statusText
+          );
+        } else {
+          const recommendationData = await recommendationResponse.json();
+          setRecommendation(recommendationData.topInfo);
+        }
+      } catch (error) {
+        console.error("Error fetching recommendation:", error);
+        setRecommendation(
+          "We have no recommendations for you at this time; please try again later or try changing the confidence levels or session count of each topic."
+        );
+      }
+    };
+
+    fetchRecommendation();
+  }, [specificationEntries, examBoard, subject]);
 
   if (loading) {
     return (

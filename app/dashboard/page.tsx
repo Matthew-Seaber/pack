@@ -1,5 +1,6 @@
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -173,7 +174,7 @@ export default async function Dashboard() {
       );
 
       if (upcomingEvents.length === 0) {
-        console.log("No upcoming calendar events found.");
+        // No upcoming calendar events found
         return event;
       }
 
@@ -216,6 +217,137 @@ export default async function Dashboard() {
     } catch (error) {
       console.error("Failed to get next calendar event:", error);
       return event;
+    }
+  };
+
+  const getRecommendedTask = async () => {
+    let task = {
+      name: "",
+      description: null as string | null,
+      due: null as string | null,
+      priority: 4,
+      message:
+        "We have no task recommendations for you at this time; please try again later or try adding some more tasks.",
+    };
+
+    if (user.role !== "Student") {
+      return task; // Avoids database call if user is a teacher
+    }
+
+    try {
+      const { data: tasksData, error: fetchError } = await supabaseMainAdmin
+        .from("tasks")
+        .select("task_id, task_name, task_description, due, priority")
+        .eq("user_id", user.user_id);
+
+      if (fetchError) {
+        console.error("Error getting tasks:", fetchError);
+        return task;
+      }
+
+      if (!tasksData || tasksData.length === 0) {
+        console.log("No tasks found.");
+        return task;
+      }
+
+      let topWeighting = 0;
+      let topInfo = "";
+      let topID = "";
+
+      function calculateWeighting(due: string, priority: number) {
+        let tempWeighting = 0;
+        const daysUntilDue =
+          (new Date(due).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24); // Converts to days
+
+        if (due === null) {
+          return 1 / (8 * priority); // Very low weighting for entries without a due date
+        }
+
+        if (daysUntilDue <= 0) {
+          tempWeighting = 1; // Highest priority for overdue items
+        } else if (daysUntilDue < 2) {
+          tempWeighting = 0.9;
+        } else if (daysUntilDue < 7) {
+          tempWeighting = 0.6;
+        } else if (daysUntilDue < 14) {
+          tempWeighting = 0.5;
+        } else if (daysUntilDue < 28) {
+          tempWeighting = 0.4;
+        } else {
+          tempWeighting = 0.2; // Lowest priority for items due in over a month
+        }
+
+        return tempWeighting * (1 / priority); // Priority is from 1 to 4 
+      }
+
+      for (const task of tasksData) {
+        let weighting = 0;
+
+        weighting = calculateWeighting(task.due, task.priority);
+        if (weighting > topWeighting) {
+          topWeighting = weighting;
+          topID = task.task_id;
+        }
+      }
+
+      if (topID) {
+        const topTask = tasksData.find((task) => task.task_id === topID);
+
+        if (!topTask) {
+          return task;
+        }
+
+        const daysUntilDue =
+          (new Date(topTask.due).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24); // Converts to days
+        const combinedRandom = Math.floor(Math.random() * 3); // Result is either 0 or 1 or 2
+        let basedOnText = "";
+
+        if (combinedRandom === 0) {
+          basedOnText = `your ${tasksData.length} tasks`;
+        } else if (combinedRandom === 1) {
+          basedOnText = "your tasks";
+        } else if (combinedRandom === 2) {
+          basedOnText = "your to-do list";
+        }
+
+        if (topTask) {
+          topInfo = `Based on ${basedOnText}, we recommend completing the "${
+            topTask.task_name
+          }" task which is ${
+            daysUntilDue <= 0
+              ? "overdue"
+              : daysUntilDue < 1
+              ? "due today"
+              : `due in ${daysUntilDue} days`
+          }.`;
+        } else {
+          return task;
+        }
+      } else {
+        return task;
+      }
+
+      const chosenTask = tasksData.find((tsk) => tsk.task_id === topID);
+
+      if (!chosenTask) {
+        console.log("Recommended task not found.");
+        return task;
+      }
+
+      task = {
+        name: chosenTask?.task_name,
+        description: chosenTask?.task_description || null,
+        due: chosenTask?.due || null,
+        priority: chosenTask?.priority || 4,
+        message: topInfo,
+      };
+
+      return task;
+    } catch (error) {
+      console.error("Failed to get recommended task:", error);
+      return task;
     }
   };
 
@@ -374,6 +506,7 @@ export default async function Dashboard() {
   const statsRange = `${formatDate(joinDate)} - ${formatDate(today)}`;
   const usersStats = await getUserStats();
   const nextCalendarEvent = await getNextCalendarEvent();
+  const recommendedTask = await getRecommendedTask();
   const teacherData = await getTeacherData();
 
   const teacherClasses: TeacherClass[] = teacherData?.teacherClasses || [];
@@ -463,7 +596,7 @@ export default async function Dashboard() {
                   </Button>
                 </>
               ) : (
-                <p className="text-center mt-8 text-sm text-muted-foreground">
+                <p className="text-center mt-4 text-sm text-muted-foreground">
                   You have no upcoming events. Enjoy your day!
                 </p>
               )}
@@ -582,6 +715,31 @@ export default async function Dashboard() {
               <p className="text-xs text-muted-foreground text-center mb-4">
                 TO DO LIST
               </p>
+              {recommendedTask?.name ? (
+                <>
+                  <Link
+                    href="/tasks"
+                    className="bg-[#B342FF]/20 rounded-md p-3 block cursor-pointer hover:bg-[#B342FF]/25 transition-colors"
+                    style={{ color: "#FFA6E4" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-lg border-2 border-[#FFA6E4] cursor-pointer hover:bg-white/20 transition-colors" />
+                      <p className="text-sm">{recommendedTask.name}</p>
+                    </div>
+                    <p className="text-[#FFA6E4]/80 text-xs mt-2">
+                      {recommendedTask.description}
+                    </p>
+                  </Link>
+                  <p className="text-muted-foreground text-xs italic mt-3">
+                    {recommendedTask?.message}
+                  </p>
+                </>
+              ) : (
+                <p className="text-center mt-4 text-sm text-muted-foreground">
+                  We have no task recommendations for you at this time; please
+                  try again later or try adding some more tasks.
+                </p>
+              )}
             </Card>
             <Card
               className="flex flex-col p-4"
