@@ -171,7 +171,7 @@ export default function NotificationBox() {
             {readNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className="p-4 flex items-center space-x-2 rounded-lg hover:bg-slate-800"
+                className="p-4 flex items-center space-x-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800"
               >
                 <div className="h-2 w-2" />
                 <div>

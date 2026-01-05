@@ -74,9 +74,19 @@ function PomodoroPage() {
   const [mode, setMode] = React.useState<"focus" | "break">("focus");
 
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const remainingMinutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+
+    if (hours === 0) {
+      return `${remainingMinutes}:${remainingSeconds
+        .toString()
+        .padStart(2, "0")}`;
+    } else {
+      return `${hours}:${remainingMinutes
+        .toString()
+        .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+    }
   };
 
   const startTimer = React.useCallback(() => {
@@ -253,6 +263,11 @@ function PomodoroPage() {
         const sessionLength = focusLength - Math.ceil(currentTime / 60);
         console.log("Session length:", sessionLength);
 
+        if (sessionLength <= 0) {
+          console.log("Stats not logged as focus time was less than 1 minute.");
+          return;
+        }
+
         const res = await fetch("/api/user_stats/save_stats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -264,7 +279,9 @@ function PomodoroPage() {
 
         if (res.ok) {
           toast.success(
-            `Great work! ${sessionLength} minutes have been added to your stats.`
+            `Great work! ${sessionLength} minute${
+              sessionLength !== 1 ? "s have" : " has"
+            } been added to your stats.`
           );
         } else {
           toast.error("Failed to save stats to profile.");

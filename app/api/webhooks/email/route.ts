@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 export async function POST(req: Request) {try {
     const body = await req.json();
     
-    const { error, details, userId, context } = body;
+    const { error, details, userID, context } = body;
 
     // Formatting email
     const subject = "Pack Signup Rollback error";
@@ -14,7 +14,7 @@ export async function POST(req: Request) {try {
       <h2>${subject}</h2>
       <h3><strong>Error:</strong> ${error || "N/A"}</h3>
       <p><strong>Context:</strong> ${context || "N/A"}</p>
-      <p><strong>User ID:</strong> ${userId || "N/A"}</p>
+      <p><strong>User ID:</strong> ${userID || "N/A"}</p>
       <p><strong>Details:</strong> ${details || "N/A"}</p>
       <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
       <hr>

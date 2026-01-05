@@ -331,7 +331,8 @@ export async function POST(req: Request) {
 
   // Creates session token
   const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 days
+  const cookieAge = 90; // In days
+  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * cookieAge);
 
   await supabaseMainAdmin.from("sessions").insert({
     user_id: user.user_id,
@@ -343,7 +344,6 @@ export async function POST(req: Request) {
   const res = NextResponse.json(
     studentDebugInfo || { message: "Successfully logged in", clearCache: true }
   );
-  const cookieAge = 30; // In days
 
   res.cookies.set({
     name: "sessionCookie",

@@ -18,7 +18,7 @@ Use the live demo at the bottom of the README
 - To-do list
 - Schoolwork management (homework/tests)
 - Detailed subject specifications
-- Smart recommendation syste
+- Smart recommendation system
 ### NOTE
 Some features have limited functionality at launch with a limited range of supported exam board/subject combinations. You can see the full list [here](https://www.packapp.co.uk/support) or at `/support`
 

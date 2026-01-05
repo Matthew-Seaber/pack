@@ -220,6 +220,7 @@ export default function SubjectsPage() {
             examBoard: newSubjectExamBoard.trim(),
           }),
         });
+        
         if (response.ok) {
           toast.success("Successfully added subject!");
           setNewSubjectExamBoard("");

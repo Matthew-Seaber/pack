@@ -139,7 +139,13 @@ export default function SignupPage() {
 
     if (!firstName || !username || !email || !password) {
       // Validation for empty fields
-      const emptyField = !firstName ? "first name" : !username ? "username" : !email ? "email" : "password";
+      const emptyField = !firstName
+        ? "first name"
+        : !username
+        ? "username"
+        : !email
+        ? "email"
+        : "password";
       toast.error(`Please fill in all fields (${emptyField}).`);
       return;
     } else if (username.length < 5 || username.length > 20) {
@@ -228,8 +234,9 @@ export default function SignupPage() {
             examBoards: examBoards.filter((board) => board.trim() !== ""),
           }),
         });
+
         if (res.ok) {
-          // Clear cached user role
+          // Clear cached user role - used for Navbar rendering so it doesn't have to fetch the role for each new page load
           sessionStorage.removeItem("userRole");
           toast.success(`Success! Redirecting you to the dashboard...`);
           confetti({
@@ -241,9 +248,9 @@ export default function SignupPage() {
           });
           setTimeout(() => {
             router.push("/dashboard");
-          }, 1500);
+          }, 1500); // Gives time for user to read the toast message
         } else {
-          toast.error("Failed to create user. Please try again.");
+          toast.error("Failed to create user. Please try again later.");
           const errorData = await res.json();
           console.error("USER CREATION ERROR:", errorData.message);
         }
@@ -283,7 +290,7 @@ export default function SignupPage() {
           {" "}
           {/* Manual validation takes place on submit */}
           {currentStep === 1 ? (
-            // Page 1
+            // Page 1 - GENERAL
             <>
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-6">

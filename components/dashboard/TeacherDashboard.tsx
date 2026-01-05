@@ -165,6 +165,7 @@ export default function TeacherDashboard({
               className: newClassName.trim(),
             }),
           });
+          
           if (response.ok) {
             toast.success("Successfully added class!");
             setNewClassName("");
