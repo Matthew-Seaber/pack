@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/forms/ConfirmationDialog";
 
 interface ClassSchoolworkPageProps {
   params: Promise<{
@@ -108,6 +109,7 @@ export default function ClassSchoolworkPage({
     useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [issuedCalendarOpen, setIssuedCalendarOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const router = useRouter();
 
   // Function to sort entries by due date (using bubble sort)
@@ -669,7 +671,19 @@ export default function ClassSchoolworkPage({
             <Button
               variant="destructive"
               className="w-full"
-              onClick={async () => {
+              onClick={() => setConfirmDeleteOpen(true)}
+            >
+              Delete
+            </Button>
+
+            <ConfirmDialog
+              open={confirmDeleteOpen}
+              onOpenChange={setConfirmDeleteOpen}
+              title="Delete schoolwork entry"
+              description={`Are you sure you want to permanently delete "${selectedEntry.name}"?`}
+              confirmLabel="Delete"
+              variant="destructive"
+              onConfirm={async () => {
                 try {
                   const response = await fetch(
                     "/api/teacher_schoolwork/delete_schoolwork_entry",
@@ -714,9 +728,7 @@ export default function ClassSchoolworkPage({
                   );
                 }
               }}
-            >
-              Delete
-            </Button>
+            />
           </div>
         </div>
 
@@ -1270,7 +1282,7 @@ export default function ClassSchoolworkPage({
             <SheetTitle>Edit Schoolwork</SheetTitle>
             <SheetDescription>
               Edit your students&apos;{" "}
-              {selectedEntry?.schoolworkType.toLowerCase()}
+              {selectedEntry?.schoolworkType?.toLowerCase()}
             </SheetDescription>
           </SheetHeader>
           <div className="py-3">

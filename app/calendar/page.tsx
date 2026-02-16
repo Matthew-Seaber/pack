@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -89,7 +89,7 @@ export default function CalendarPage() {
   const [eventName, setEventName] = React.useState("");
   const [eventDescription, setEventDescription] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | undefined>(
-    new Date()
+    new Date(),
   );
   const [startTime, setStartTime] = React.useState<string>("");
   const [endDate, setEndDate] = React.useState<Date | undefined>(new Date());
@@ -129,7 +129,7 @@ export default function CalendarPage() {
   React.useEffect(() => {
     if (theme === "system") {
       const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
+        "(prefers-color-scheme: dark)",
       ).matches;
       setTheme(prefersDark ? "dark" : "light");
     }
@@ -238,7 +238,10 @@ export default function CalendarPage() {
 
   React.useEffect(() => {
     const onTKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "T" || e.key === "t") handleJumpToToday();
+      if (e.key === "T" || e.key === "t") {
+        e.preventDefault();
+        handleJumpToToday();
+      }
     };
 
     window.addEventListener("keydown", onTKeyDown);
@@ -351,7 +354,7 @@ export default function CalendarPage() {
 
         const newEvent = data.event;
         setEvents((previous) =>
-          previous ? [...previous, newEvent] : [newEvent]
+          previous ? [...previous, newEvent] : [newEvent],
         );
 
         // Reset form fields
@@ -477,7 +480,7 @@ export default function CalendarPage() {
   };
 
   // Function to handle the deletion of a calendar event
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = useCallback(async () => {
     if (!selectedEvent) return;
 
     try {
@@ -503,7 +506,7 @@ export default function CalendarPage() {
         setEventLocation("");
         setEditSheetOpen(false);
 
-        setTimeout(() => window.location.reload(), 500);
+        setTimeout(() => window.location.reload(), 500); // Gives the user time to read the toast
       } else {
         console.error("Failed to delete event:", response.statusText);
         toast.error("Failed to delete event. Please try again later.");
@@ -512,7 +515,21 @@ export default function CalendarPage() {
       console.error("Error deleting event:", error);
       toast.error("Error deleting event. Please try again later.");
     }
-  };
+  }, [selectedEvent]);
+
+  React.useEffect(() => {
+    const onDeleteKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Delete" && selectedEvent) {
+        e.preventDefault();
+        handleDeleteEvent();
+      }
+    };
+
+    window.addEventListener("keydown", onDeleteKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onDeleteKeyDown);
+    };
+  }, [handleDeleteEvent, selectedEvent]);
 
   // Function to convert a given timestamp to a UX-friendly format
   const formatTimestamp = (timestamp: string, type: number): string => {
@@ -542,13 +559,13 @@ export default function CalendarPage() {
       return `${day} ${month} ${inputYear}`;
     }
   };
-  
+
   // Function to render events for a given day (with colours based on their type)
   const renderDay = (day: Date) => {
     if (!events) return null;
 
     const eventsToRender = events.filter(
-      (e) => new Date(e.start).toDateString() === day.toDateString()
+      (e) => new Date(e.start).toDateString() === day.toDateString(),
     );
 
     return eventsToRender.map((event) => {
@@ -616,7 +633,7 @@ export default function CalendarPage() {
         if (!eventsResponse.ok) {
           console.error("Error getting events:", eventsResponse.statusText);
           toast.error(
-            "Error getting your calendar events. Please try again later."
+            "Error getting your calendar events. Please try again later.",
           );
           setEvents(null);
         } else {
@@ -641,7 +658,7 @@ export default function CalendarPage() {
       } catch (error) {
         console.error("Error getting events or subjects:", error);
         toast.error(
-          "Error getting your calendar data. Please try again later."
+          "Error getting your calendar data. Please try again later.",
         );
       } finally {
         setLoading(false);
@@ -1287,8 +1304,8 @@ export default function CalendarPage() {
                       ? theme === "dark"
                         ? "bg-[#0A1731]"
                         : theme === "light"
-                        ? "bg-[#DEE8FC]"
-                        : "bg-background"
+                          ? "bg-[#DEE8FC]"
+                          : "bg-background"
                       : "bg-background"
                   }`}
                 >
@@ -1311,14 +1328,14 @@ export default function CalendarPage() {
                   {hours.map(
                     (
                       _,
-                      hourIndex // Draws horizontal hour lines
+                      hourIndex, // Draws horizontal hour lines
                     ) => (
                       <div
                         key={hourIndex}
                         className="absolute left-0 right-0 border-t border-border/50"
                         style={{ top: `${hourIndex * 60}px`, height: "60px" }}
                       />
-                    )
+                    ),
                   )}
                   {isToday && (
                     <div
@@ -1362,8 +1379,8 @@ export default function CalendarPage() {
                       ? theme === "dark"
                         ? "bg-[#0A1731]"
                         : theme === "light"
-                        ? "bg-[#DEE8FC]"
-                        : "bg-background"
+                          ? "bg-[#DEE8FC]"
+                          : "bg-background"
                       : "bg-background"
                   }`}
                 >
@@ -1387,14 +1404,14 @@ export default function CalendarPage() {
                   {hours.map(
                     (
                       _,
-                      hourIndex // Draws horizontal hour lines
+                      hourIndex, // Draws horizontal hour lines
                     ) => (
                       <div
                         key={hourIndex}
                         className="absolute left-0 right-0 border-t border-border/50"
                         style={{ top: `${hourIndex * 60}px`, height: "60px" }}
                       />
-                    )
+                    ),
                   )}
                   {isToday && (
                     <div

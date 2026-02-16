@@ -545,7 +545,8 @@ export default function TasksPage() {
         <div
           className="flex-shrink-0 w-7 h-7 rounded-full border-2 cursor-pointer hover:bg-white/20 transition-colors"
           style={{ borderColor: colours.text }}
-          onClick={async () => {
+          onClick={async (e) => {
+            e.stopPropagation();
             try {
               const response = await fetch("/api/tasks/delete_task", {
                 method: "POST",

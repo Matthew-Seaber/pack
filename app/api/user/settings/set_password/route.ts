@@ -1,17 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
+import { getUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
-    const { userID, newPassword, oldPassword } = await req.json();
+    const { newPassword, oldPassword } = await req.json();
 
-    if (!userID || !newPassword || !oldPassword)
+    // Gets user here instead of the client for security
+    const user = await getUser();
+
+    if (!user || !newPassword || !oldPassword)
         return NextResponse.json({ ok: false }, { status: 400 });
 
     const { data, error } = await supabaseMainAdmin
         .from("users")
         .select("password")
-        .eq("user_id", userID)
+        .eq("user_id", user.user_id)
         .single();
 
     if (error) {
@@ -29,7 +33,7 @@ export async function POST(req: Request) {
     const { error: updateError } = await supabaseMainAdmin
       .from("users")
       .update({ password: hashedPassword })
-      .eq("user_id", userID);
+      .eq("user_id", user.user_id);
 
     if (updateError) {
       return NextResponse.json({ ok: false }, { status: 500 });

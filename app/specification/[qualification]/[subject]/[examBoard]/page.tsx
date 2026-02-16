@@ -447,13 +447,12 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
 
     // Search query
     if (searchQuery.trim()) {
-      searchQuery.toLowerCase();
       results = results.filter((entry) => {
         const topicNameMatch = entry.topic_name
           .toLowerCase()
-          .includes(searchQuery);
+          .includes(searchQuery.toLowerCase());
         const descriptionMatch =
-          entry.description?.toLowerCase().includes(searchQuery) || false;
+          entry.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         return topicNameMatch || descriptionMatch; // Returns true if the search query is within either the topic name or description
       });
     }

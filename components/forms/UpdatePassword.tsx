@@ -6,13 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 
-type Props = {
-  userID: string;
-};
-
-export default function PasswordFormClient({
-  userID,
-}: Props) {
+export default function PasswordFormClient() {
   const [password, setPassword] = useState<string>("");
   const [passwordConfirm, setPasswordConfirm] = useState<string>("");
   const [oldPassword, setOldPassword] = useState<string>("");
@@ -107,7 +101,7 @@ export default function PasswordFormClient({
       const res = await fetch("/api/user/settings/set_password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID, newPassword, oldPassword }),
+        body: JSON.stringify({ newPassword, oldPassword }),
       });
 
       if (res.ok) {

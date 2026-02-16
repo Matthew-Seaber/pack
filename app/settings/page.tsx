@@ -86,7 +86,7 @@ export default async function SettingsPage() {
             <DialogDescription>
               Change your account&apos;s email address.
             </DialogDescription>
-            <UpdateEmailForm userID={user.user_id} currentEmail={user.email} />
+            <UpdateEmailForm currentEmail={user.email} />
           </DialogContent>
         </Dialog>
       </div>
@@ -114,7 +114,7 @@ export default async function SettingsPage() {
             <DialogDescription>
               Change your account&apos;s password.
             </DialogDescription>
-            <UpdatePasswordForm userID={user.user_id} />
+            <UpdatePasswordForm />
           </DialogContent>
         </Dialog>
       </div>
@@ -151,7 +151,6 @@ export default async function SettingsPage() {
                 Customise your progress emails.
               </DialogDescription>
               <UpdateProgressEmailsForm
-                userID={user.user_id}
                 state={
                   studentInfo?.progressEmails === true ? "Enabled" : "Disabled"
                 }

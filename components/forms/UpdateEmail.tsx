@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 
 type Props = {
-  userID: string;
   currentEmail: string;
 };
 
 export default function EmailFormClient({
-  userID,
   currentEmail,
 }: Props) {
   const [email, setEmail] = useState<string>("");
@@ -37,7 +35,7 @@ export default function EmailFormClient({
       const res = await fetch("/api/user/settings/set_email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID, newEmail }),
+        body: JSON.stringify({ newEmail }),
       });
 
       if (res.ok) {

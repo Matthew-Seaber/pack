@@ -145,7 +145,7 @@ export async function POST(req: Request) {
     const newEntry = {
       id: entryData.class_schoolwork_id,
       course_name: entryData.course_id,
-      schoolworkType: entryData.type,
+      schoolworkType: entryData.type === 1 ? "Homework" : "Test",
       due: entryData.due,
       issued: entryData.issued,
       name: entryData.schoolwork_name,

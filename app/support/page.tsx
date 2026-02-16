@@ -19,11 +19,16 @@ function SupportPage() {
       </h3>
       <h4 className="mt-2">A level:</h4>
       <ul className="list-disc list-inside mb-4">
+        <li>AQA Further Mathematics</li>
+        <li>AQA Mathematics</li>
         <li>OCR Computer Science</li>
+        <li>OCR Economics</li>
       </ul>
       <h4 className="mt-2">GCSE:</h4>
       <ul className="list-disc list-inside mb-4">
-        <p className="italic text-muted-foreground">There are currently no supported subjects at GCSE level.</p>
+        <p className="italic text-muted-foreground">
+          There are currently no supported subjects at GCSE level.
+        </p>
       </ul>
     </>
   );

@@ -349,6 +349,7 @@ export async function POST(req: Request) {
     name: "sessionCookie",
     value: token,
     httpOnly: true,
+    secure: true,
     path: "/",
     maxAge: 60 * 60 * 24 * cookieAge,
     sameSite: "lax",

@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 
 type Props = {
-  userID: string;
   state: string;
 };
 
-export default function EmailFormClient({ userID, state }: Props) {
+export default function ProgressEmailsClient({ state }: Props) {
   const [newState, setNewState] = useState<string>(state);
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
 
@@ -22,7 +21,7 @@ export default function EmailFormClient({ userID, state }: Props) {
       const res = await fetch("/api/user/settings/set_progress_emails", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID, newState }),
+        body: JSON.stringify({ newState }),
       });
 
       if (res.ok) {

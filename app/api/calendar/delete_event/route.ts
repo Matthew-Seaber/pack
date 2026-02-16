@@ -15,13 +15,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const user_id = user.user_id;
+    const userID = user.user_id;
 
     const { error: fetchError } = await supabaseMainAdmin
       .from("calendar_events")
       .delete()
       .eq("event_id", eventID)
-      .eq("user_id", user_id);
+      .eq("user_id", userID);
 
     if (fetchError) {
       console.error("Error deleting calendar event:", fetchError);

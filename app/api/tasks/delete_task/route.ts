@@ -15,16 +15,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const user_id = user.user_id;
+    const userID = user.user_id;
 
-    const { error: fetchError } = await supabaseMainAdmin
+    const { error: deleteError } = await supabaseMainAdmin
       .from("tasks")
       .delete()
       .eq("task_id", taskID)
-      .eq("user_id", user_id);
+      .eq("user_id", userID);
 
-    if (fetchError) {
-      console.error("Error removing task:", fetchError);
+    if (deleteError) {
+      console.error("Error removing task:", deleteError);
       return NextResponse.json(
         { error: "Failed to remove task from account" },
         { status: 500 }

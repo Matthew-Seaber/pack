@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Checks if user is already logged in (runs in the background on page load so UI has priority since this may take time and the majority of users will be here to create an account)
+    // Checks if user is already logged in (runs in the background on page load so UI has priority since this may take time to process and the majority of users will be here to create an account)
     const checkAuthStatus = async () => {
       try {
         const res = await fetch("/api/user");

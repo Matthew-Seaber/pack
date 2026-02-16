@@ -7,7 +7,7 @@ import { supabaseMainAdmin } from "@/lib/supabaseMainAdmin";
 export async function POST(req: Request) {
   const { username, password } = await req.json();
 
-  // Gets user's ID and password via username
+  // Gets the user's ID and hashed password via username
   const { data: user, error: fetchError } = await supabaseMainAdmin
     .from("users")
     .select("user_id, password")
@@ -26,7 +26,8 @@ export async function POST(req: Request) {
 
   // Creates session token
   const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 days
+  const cookieAge = 90; // In days
+  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * cookieAge); // 90 days
 
   await supabaseMainAdmin.from("sessions").insert({
     user_id: user.user_id,
@@ -35,13 +36,16 @@ export async function POST(req: Request) {
   });
 
   // HTTP cookie for session
-  const res = NextResponse.json({ message: "Successfully logged in", clearCache: true });
-  const cookieAge = 30; // In days
+  const res = NextResponse.json({
+    message: "Successfully logged in",
+    clearCache: true,
+  });
 
   res.cookies.set({
     name: "sessionCookie",
     value: token,
     httpOnly: true,
+    secure: true,
     path: "/",
     maxAge: 60 * 60 * 24 * cookieAge,
     sameSite: "lax",

@@ -1655,7 +1655,7 @@ export default function SchoolworkPage() {
           <SheetHeader>
             <SheetTitle>Edit Schoolwork</SheetTitle>
             <SheetDescription>
-              Edit your {selectedEntry?.schoolworkType.toLowerCase()}
+              Edit your {selectedEntry?.schoolworkType?.toLowerCase()}
             </SheetDescription>
           </SheetHeader>
           <div className="py-3">
