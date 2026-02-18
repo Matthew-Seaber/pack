@@ -93,7 +93,7 @@ export default function ViewPastPaperPage({ params }: ViewPastPaperPageProps) {
             return;
           }
 
-          // Gets tasks via API call
+          // Gets file locations API call
           const pastPapersResponse = await fetch(
             `/api/past_papers/open_files?entryID=${encodeURIComponent(paperID)}`
           );

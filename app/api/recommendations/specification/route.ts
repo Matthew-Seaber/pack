@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       confidence = 2;
     }
 
-    return tempWeighting + confidence / 10; // Confidence of green is 1, amber is 2, and red is 3
+    return tempWeighting + ((4 - confidence) / 10); // Confidence of 1 is red, 2 is amber, and 3 is green - inverted so red confidence adds more weight
   }
 
   for (const entry of topics) {

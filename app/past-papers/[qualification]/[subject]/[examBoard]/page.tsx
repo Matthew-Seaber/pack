@@ -183,8 +183,8 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
       }
 
       const blob = await downloadResponse.blob(); // Gets the raw binary data (BLOB = Binary Large Object)
-
       const entry = pastPaperEntries?.find((item) => item.id === entryID);
+      
       const words = subject.toLowerCase().split(" "); // Same logic reused from sign up page
       let prefix = "";
       if (words.length >= 2) {
@@ -201,15 +201,40 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
             .replace(/\s+/g, "-")}.zip`
         : "past-papers.zip"; // e.g. "cs-june-2022-paper-2.zip" so it's easily identifiable what each ZIP is in the file explorer
 
-      const url = window.URL.createObjectURL(blob);
-      const downloadObject = document.createElement("a");
-      downloadObject.href = url;
-      downloadObject.download = filename;
-      document.body.appendChild(downloadObject);
-      downloadObject.click();
+      // Attempts to use File System Access API if available (on Chromium browsers)
+      if ("showSaveFilePicker" in window) {
+        try {
+          const handle = await window.showSaveFilePicker!({
+            suggestedName: filename,
+            types: [
+              {
+                description: "ZIP Archive",
+                accept: { "application/zip": [".zip"] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } catch (pickerError: unknown) {
+          // User potentially clicked cancel on the save dialog
+          if (pickerError instanceof DOMException && pickerError.name === "AbortError") {
+            toast.info("Download cancelled.");
+          }
+          throw pickerError;
+        }
+      } else {
+        // Fallback for browsers that don't support showSaveFilePicker() which downloads the .ZIP file straight to the user's default downloads folder
+        const url = window.URL.createObjectURL(blob);
+        const downloadObject = document.createElement("a");
+        downloadObject.href = url;
+        downloadObject.download = filename;
+        document.body.appendChild(downloadObject);
+        downloadObject.click();
 
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(downloadObject);
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(downloadObject);
+      }
 
       toast.success("Download complete!");
 

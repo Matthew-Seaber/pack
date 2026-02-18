@@ -1095,7 +1095,7 @@ export default function SchoolworkPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               schoolwork: futureEntries.concat(overdueEntries),
-            }), // Combining all uncomplete entries means that the API file doesn't need to filter out completed entries again, saving computation time
+            }), // Combining all uncomplete entries means that the API file doesn't need to filter out completed entries again, saving computation time on the server and improving response times for the user
           }
         );
 

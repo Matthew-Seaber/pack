@@ -113,9 +113,9 @@ export async function POST(req: Request) {
       }
     } else if (studentEntryPresent) {
       if (combinedRandom === 0) {
-        basedOnText = "your student schoolwork entries";
+        basedOnText = "your schoolwork entries";
       } else if (combinedRandom === 1) {
-        basedOnText = `your ${schoolwork.length} student schoolwork entries`;
+        basedOnText = `your ${schoolwork.length} schoolwork entries`;
       } else if (combinedRandom === 2) {
         basedOnText = `your ${schoolwork.length} schoolwork entries`;
       }
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
           ? "overdue"
           : daysUntilDue < 1
           ? "due today"
-          : `due in ${daysUntilDue} days`
+          : `due in ${Math.round(daysUntilDue)} days`
       }.${teacherIssuedText}`;
     } else {
       return NextResponse.json(

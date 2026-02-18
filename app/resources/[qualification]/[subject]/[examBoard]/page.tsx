@@ -58,7 +58,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
     ResourceEntry[] | null
   >(null);
   const [selectedEntry, setSelectedEntry] = useState<ResourceEntry | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Topic");
@@ -181,7 +181,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
         return indexA.localeCompare(indexB);
       });
     },
-    []
+    [],
   );
 
   const downloadFile = async (entryID: string) => {
@@ -189,7 +189,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
       toast.info("Preparing download...");
 
       const downloadResponse = await fetch(
-        `/api/resources/download_file?entryID=${encodeURIComponent(entryID)}`
+        `/api/resources/download_file?entryID=${encodeURIComponent(entryID)}`,
       );
 
       if (!downloadResponse.ok) {
@@ -199,22 +199,67 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
       }
 
       const blob = await downloadResponse.blob(); // Gets the raw binary data (BLOB = Binary Large Object)
-
       const entry = resourceEntries?.find((item) => item.id === entryID);
 
+      const mimeType = blob.type || "application/octet-stream";
+      let extension = "";
+
+      if (mimeType == "application/zip") {
+        extension = "zip";
+      } else if (mimeType == "application/pdf") {
+        extension = "pdf";
+      }
+        else if (mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        extension = "docx";
+      } else if (mimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+        extension = "xlsx";
+      } else if (mimeType == "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+        extension = "pptx";
+      } else if (mimeType == "video/mp4") {
+        extension = "mp4";
+      }
+
       const filename = entry
-        ? `${entry.resource_name.toLowerCase().replace(/\s+/g, "-")}.zip`
-        : "resource.zip"; // e.g. "fde-cycle-song.zip" so it's easily identifiable what each ZIP is in the file explorer
+        ? `${entry.resource_name.toLowerCase().replace(/\s+/g, "-")}.${extension}`
+        : `resource.${extension}`; // e.g. "fde-cycle-song.mp4" so it's easily identifiable what each file is in the file explorer
 
-      const url = window.URL.createObjectURL(blob);
-      const downloadObject = document.createElement("a");
-      downloadObject.href = url;
-      downloadObject.download = filename;
-      document.body.appendChild(downloadObject);
-      downloadObject.click();
+      // Attempts to use File System Access API if available (on Chromium browsers)
+      if ("showSaveFilePicker" in window) {
+        try {
+          const handle = await window.showSaveFilePicker!({
+            suggestedName: filename,
+            types: [
+              {
+                description: `${extension.toUpperCase()} File`,
+                accept: { [mimeType]: [`.${extension}`] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } catch (pickerError: unknown) {
+          // User potentially clicked cancel on the save dialog
+          if (
+            pickerError instanceof DOMException &&
+            pickerError.name === "AbortError"
+          ) {
+            toast.info("Download cancelled.");
+          }
+          throw pickerError;
+        }
+      } else {
+        // Fallback for browsers that don't support showSaveFilePicker() which downloads the .ZIP file straight to the user's default downloads folder
+        const url = window.URL.createObjectURL(blob);
+        const downloadObject = document.createElement("a");
+        downloadObject.href = url;
+        downloadObject.download = filename;
+        document.body.appendChild(downloadObject);
+        downloadObject.click();
 
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(downloadObject);
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(downloadObject);
+      }
 
       toast.success("Download complete!");
 
@@ -256,7 +301,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                   `/specification/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
-                    examBoard.toLowerCase()
+                    examBoard.toLowerCase(),
                 )
               }
             >
@@ -269,7 +314,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                   `/past-papers/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
-                    examBoard.toLowerCase()
+                    examBoard.toLowerCase(),
                 )
               }
             >
@@ -302,7 +347,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                 `/specification/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
-                  examBoard.toLowerCase()
+                  examBoard.toLowerCase(),
               )
             }
           >
@@ -315,7 +360,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                 `/past-papers/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
-                  examBoard.toLowerCase()
+                  examBoard.toLowerCase(),
               )
             }
           >
@@ -395,7 +440,7 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
                     subject +
                     " (" +
                     examBoard +
-                    ")"
+                    ")",
                 );
                 const emailBody = encodeURIComponent(`Dear Pack Support,
 
@@ -443,23 +488,23 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
           // Gets past paper entries and their files' locations
           const resourceResponse = await fetch(
             `/api/resources/get_resource_data?qualification=${encodeURIComponent(
-              qualification
+              qualification,
             )}&subject=${encodeURIComponent(
-              subject
-            )}&examBoard=${encodeURIComponent(examBoard)}`
+              subject,
+            )}&examBoard=${encodeURIComponent(examBoard)}`,
           );
 
           if (!resourceResponse.ok) {
             console.error(
               "Error getting resource entries:",
-              resourceResponse.statusText
+              resourceResponse.statusText,
             );
             toast.error("Error getting resource data. Please try again later.");
             setResourceEntries(null);
           } else {
             const resourceData = await resourceResponse.json();
             const sortedEntries = sortEntriesByTopic(
-              resourceData.resourceEntries
+              resourceData.resourceEntries,
             );
             setResourceEntries(sortedEntries);
           }

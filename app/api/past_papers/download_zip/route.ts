@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     }
 
     function crc32(buffer: Buffer) {
-      // CRC32 checksum calculation (cycle redundancy check) - required to ensure data integrity by checking for corruption - the CRC is a unique* value generated from the file's data (*collisions rare)
+      // CRC32 checksum calculation (cyclic redundancy check) - required to ensure data integrity by checking for corruption - the CRC is a unique* value generated from the file's data (*collisions rare)
       const table = new Uint32Array(256); // Array of 256 unsigned 32-bit integers
       for (let byte = 0; byte < 256; byte++) {
         let crc = byte;
@@ -140,7 +140,7 @@ export async function GET(request: Request) {
     ]); // Combines multiple buffers into one (to be returned below)
 
     const centralDirectorySize = centralDirectoryBuffers.reduce(
-      (acc, bfr) => acc + bfr.length, // Sums the lengths of all central directory buffers so the ZIP knows how many bytes it occupies
+      (acc, bfr) => acc + bfr.length, // Sums the lengths of all central directory buffers so the ZIP knows how many bytes it occupies (acc = accumulator)
       0
     );
 

@@ -103,7 +103,7 @@ export default function TasksPage() {
   // Function to categorise a task based on its due date/time
   const categoriseTask = React.useCallback(
     (
-      task: Task
+      task: Task,
     ): "overdue" | "today" | "tomorrow" | "thisWeek" | "later" | "noDate" => {
       if (!task.due) {
         return "noDate";
@@ -154,7 +154,7 @@ export default function TasksPage() {
 
       return "noDate";
     },
-    []
+    [],
   );
 
   // Function to add a task to the appropriate due category
@@ -185,7 +185,7 @@ export default function TasksPage() {
           break;
       }
     },
-    []
+    [],
   );
 
   // Function to prepare the view/edit sheet for a task
@@ -345,31 +345,33 @@ export default function TasksPage() {
 
         // Removes old version of task from categories and UI
         setTasks((previous) =>
-          previous ? previous.filter((tsk) => tsk.id !== selectedTask.id) : null
+          previous
+            ? previous.filter((tsk) => tsk.id !== selectedTask.id)
+            : null,
         );
         setTasksDueToday((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueTomorrow((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueThisWeek((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueLater((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksOverdue((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksWithoutDueDate((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
 
         // Add updated task to the appropriate section (updates UI without refresh for improved UX)
         const updatedTask = data.task;
         setTasks((previous) =>
-          previous ? [...previous, updatedTask] : [updatedTask]
+          previous ? [...previous, updatedTask] : [updatedTask],
         );
 
         // Categorise the updated task
@@ -410,25 +412,27 @@ export default function TasksPage() {
 
         // Refreshes all task lists and UI to ensure consistency before and after the transaction
         setTasks((previous) =>
-          previous ? previous.filter((tsk) => tsk.id !== selectedTask.id) : null
+          previous
+            ? previous.filter((tsk) => tsk.id !== selectedTask.id)
+            : null,
         );
         setTasksDueToday((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueTomorrow((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueThisWeek((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksDueLater((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksOverdue((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
         setTasksWithoutDueDate((previous) =>
-          previous.filter((tsk) => tsk.id !== selectedTask.id)
+          previous.filter((tsk) => tsk.id !== selectedTask.id),
         );
 
         // Reset form fields
@@ -567,25 +571,27 @@ export default function TasksPage() {
 
                 // Refreshes all task lists and UI to ensure consistency before and after the transaction
                 setTasks((previous) =>
-                  previous ? previous.filter((tsk) => tsk.id !== task.id) : null
+                  previous
+                    ? previous.filter((tsk) => tsk.id !== task.id)
+                    : null,
                 );
                 setTasksDueToday((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
                 setTasksDueTomorrow((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
                 setTasksDueThisWeek((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
                 setTasksDueLater((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
                 setTasksOverdue((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
                 setTasksWithoutDueDate((previous) =>
-                  previous.filter((tsk) => tsk.id !== task.id)
+                  previous.filter((tsk) => tsk.id !== task.id),
                 );
               } else {
                 console.error("Failed to complete task:", response.statusText);
@@ -703,7 +709,7 @@ export default function TasksPage() {
           if (!subjectsResponse.ok) {
             console.error(
               "Error getting subjects:",
-              subjectsResponse.statusText
+              subjectsResponse.statusText,
             );
             toast.error("Error getting your subjects. Please try again later.");
             setSubjects(null);
@@ -734,16 +740,18 @@ export default function TasksPage() {
     fetchUserAndTasksAndSubjects();
   }, [router, categoriseTask]);
 
-  // Function  to filter tasks using a search query
+  // Function to filter tasks using a search query
   const filterBySearch = React.useCallback(
     (tasks: Task[]) => {
       if (!searchQuery.trim()) return tasks;
 
-      searchQuery.toLowerCase().trim();
       return tasks.filter((entry) => {
-        const nameMatch = entry.name.toLowerCase().includes(searchQuery);
+        const nameMatch =
+          entry.name.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         const descriptionMatch =
-          entry.description?.toLowerCase().includes(searchQuery) || false;
+          entry.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) || false;
         let subject = null;
         if (!(entry.subject == null)) {
           subject = subjectMap.get(entry.subject) ?? null;
@@ -751,37 +759,37 @@ export default function TasksPage() {
           subject = null;
         }
         const subjectMatch =
-          subject?.toLowerCase().includes(searchQuery) || false;
+          subject?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         return nameMatch || descriptionMatch || subjectMatch;
       });
     },
-    [searchQuery, subjectMap]
+    [searchQuery, subjectMap],
   );
 
   // Filters tasks of each date category
   const filteredTasksOverdue = React.useMemo(
     () => filterBySearch(tasksOverdue),
-    [tasksOverdue, filterBySearch]
+    [tasksOverdue, filterBySearch],
   );
   const filteredTasksDueToday = React.useMemo(
     () => filterBySearch(tasksDueToday),
-    [tasksDueToday, filterBySearch]
+    [tasksDueToday, filterBySearch],
   );
   const filteredTasksDueTomorrow = React.useMemo(
     () => filterBySearch(tasksDueTomorrow),
-    [tasksDueTomorrow, filterBySearch]
+    [tasksDueTomorrow, filterBySearch],
   );
   const filteredTasksDueThisWeek = React.useMemo(
     () => filterBySearch(tasksDueThisWeek),
-    [tasksDueThisWeek, filterBySearch]
+    [tasksDueThisWeek, filterBySearch],
   );
   const filteredTasksDueLater = React.useMemo(
     () => filterBySearch(tasksDueLater),
-    [tasksDueLater, filterBySearch]
+    [tasksDueLater, filterBySearch],
   );
   const filteredTasksWithoutDueDate = React.useMemo(
     () => filterBySearch(tasksWithoutDueDate),
-    [tasksWithoutDueDate, filterBySearch]
+    [tasksWithoutDueDate, filterBySearch],
   );
 
   // Singular function to manage filtering entries using a search query, and then sorting the remaining results
@@ -800,9 +808,9 @@ export default function TasksPage() {
       // No logic is needed here due to the conditional rendering of tasks when sortType is equal to "Date"
     } else if (sortType === "Priority") {
       results = [...results].sort((a, b) => {
-        const paperA = parseInt(a.priority.toString());
-        const paperB = parseInt(b.priority.toString());
-        return paperA - paperB;
+        const taskA = parseInt(a.priority.toString());
+        const taskB = parseInt(b.priority.toString());
+        return taskA - taskB;
       });
     } else {
       console.log("Unexpected sort type:", sortType);
@@ -1224,9 +1232,13 @@ export default function TasksPage() {
       {sortType === "Priority" &&
         (filteredEntries && filteredEntries.length > 0 ? (
           filteredEntries.map(renderTask)
-        ) : (
+        ) : searchQuery !== "" ? (
           <div className="mt-5 p-6 text-center text-gray-500">
             <p>There are no tasks with your current search query.</p>
+          </div>
+        ) : (
+          <div className="mt-5 p-6 text-center text-gray-500">
+            <p>You have no remaining tasks! 🥳</p>
           </div>
         ))}
 
