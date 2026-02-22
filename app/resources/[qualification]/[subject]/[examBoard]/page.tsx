@@ -532,13 +532,12 @@ export default function ResourcesPage({ params }: ResourcesPageProps) {
 
     // Search query
     if (searchQuery.trim()) {
-      searchQuery.toLowerCase();
       results = results.filter((entry) => {
         const nameMatch = entry.resource_name
           .toLowerCase()
-          .includes(searchQuery);
+          .includes(searchQuery.toLowerCase());
         const descriptionMatch =
-          entry.resource_description?.toLowerCase().includes(searchQuery) ||
+          entry.resource_description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           false;
         return nameMatch || descriptionMatch; // Returns true if the search query is within either the resource name or description
       });

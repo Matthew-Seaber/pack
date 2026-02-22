@@ -90,7 +90,7 @@ export default function ClassSchoolworkPage({
   const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
   const [pastEntries, setPastEntries] = useState<SchoolworkEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
-    null
+    null,
   );
   const [className, setClassName] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -134,7 +134,7 @@ export default function ClassSchoolworkPage({
 
       return sortedCopy;
     },
-    []
+    [],
   );
 
   // Function to prepare the edit sheet for a schoolwork entry
@@ -207,7 +207,7 @@ export default function ClassSchoolworkPage({
             course_id: null, // To be implemented in the future
             class_id: classID,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -217,7 +217,7 @@ export default function ClassSchoolworkPage({
         // Add new entry to the appropriate section (updates UI without refresh for improved UX)
         const newEntry = data.entry;
         const sortedEntries = sortEntriesByDueDate(
-          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry],
         );
         setSchoolworkEntries(sortedEntries);
 
@@ -303,7 +303,7 @@ export default function ClassSchoolworkPage({
             class_id: classID,
             original_completed: selectedEntry.completed,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -314,19 +314,19 @@ export default function ClassSchoolworkPage({
         setSchoolworkEntries((previous) =>
           previous
             ? previous.filter((swk) => !(swk.id === selectedEntry.id))
-            : null
+            : null,
         );
         setFutureEntries((previous) =>
-          previous.filter((swk) => !(swk.id === selectedEntry.id))
+          previous.filter((swk) => !(swk.id === selectedEntry.id)),
         );
         setPastEntries((previous) =>
-          previous.filter((swk) => !(swk.id === selectedEntry.id))
+          previous.filter((swk) => !(swk.id === selectedEntry.id)),
         );
 
         // Adds updated entry to the appropriate section (updates UI without refresh for improved UX)
         const newEntry = data.entry;
         const sortedEntries = sortEntriesByDueDate(
-          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry],
         );
         setSchoolworkEntries(sortedEntries);
 
@@ -355,7 +355,7 @@ export default function ClassSchoolworkPage({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ recipients: studentIDs, message }),
-            }
+            },
           );
 
           if (notificationResponse.ok) {
@@ -363,9 +363,41 @@ export default function ClassSchoolworkPage({
           } else {
             console.error(
               "Failed to send notifications:",
-              notificationResponse.statusText
+              notificationResponse.statusText,
             );
             toast.error("Error sending notifications.");
+          }
+
+          try {
+            const emailResponse = await fetch(
+              "/api/webhooks/emails/teacher_schoolwork_multi",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  emailType: "update",
+                  name: selectedEntry?.name,
+                  description: selectedEntry?.description,
+                  dueDate: selectedEntry?.due,
+                  type: selectedEntry?.schoolworkType,
+                  className: className,
+                  teacherName: "TBD",
+                  studentIDs: studentIDs,
+                }),
+              },
+            );
+
+            if (emailResponse.ok) {
+              toast.success("Emails sent to all students.");
+            } else {
+              console.error("Failed to send emails:", emailResponse.statusText);
+              toast.error("Error sending emails.");
+            }
+          } catch (emailError) {
+            console.error("Error sending emails :", emailError);
+            toast.error("Error sending emails.");
           }
         }
 
@@ -377,10 +409,10 @@ export default function ClassSchoolworkPage({
     } catch (error) {
       console.error(
         "Error editing schoolwork entry or sending students notifications:",
-        error
+        error,
       );
       toast.error(
-        "Error editing schoolwork entry or sending students notifications. Please try again later."
+        "Error editing schoolwork entry or sending students notifications. Please try again later.",
       );
     }
   };
@@ -435,8 +467,8 @@ export default function ClassSchoolworkPage({
     try {
       const response = await fetch(
         `/api/teacher_schoolwork/get_student_submissions?schoolworkID=${encodeURIComponent(
-          schoolworkID
-        )}`
+          schoolworkID,
+        )}`,
       );
 
       if (response.ok) {
@@ -446,7 +478,7 @@ export default function ClassSchoolworkPage({
       } else {
         console.error(
           "Failed to fetch student submissions:",
-          response.statusText
+          response.statusText,
         );
         toast.error("Error getting student submissions.");
         setIncompleteStudents([]);
@@ -492,12 +524,12 @@ export default function ClassSchoolworkPage({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ recipients: studentIDs, message }),
-        }
+        },
       );
 
       if (response.ok) {
         toast.success(
-          studentID === "all" ? "Reminders sent." : "Reminder sent."
+          studentID === "all" ? "Reminders sent." : "Reminder sent.",
         );
       } else {
         console.error("Failed to send reminder:", response.statusText);
@@ -506,6 +538,42 @@ export default function ClassSchoolworkPage({
     } catch (error) {
       console.error("Error sending reminder :", error);
       toast.error("Error sending reminder.");
+    }
+
+    try {
+      const emailResponse = await fetch(
+        "/api/webhooks/emails/teacher_schoolwork_multi",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            emailType: "reminder",
+            name: selectedEntry?.name,
+            description: selectedEntry?.description,
+            dueDate: selectedEntry?.due,
+            type: selectedEntry?.schoolworkType,
+            className: className,
+            teacherName: "TBD",
+            studentIDs: studentIDs,
+          }),
+        },
+      );
+
+      if (emailResponse.ok) {
+        toast.success(
+          studentID === "all"
+            ? "Email reminders sent."
+            : "Email reminder sent.",
+        );
+      } else {
+        console.error("Failed to send email:", emailResponse.statusText);
+        toast.error("Error sending email reminder.");
+      }
+    } catch (emailError) {
+      console.error("Error sending email reminder :", emailError);
+      toast.error("Error sending email reminder.");
     }
   };
 
@@ -523,7 +591,7 @@ export default function ClassSchoolworkPage({
         return "past";
       }
     },
-    []
+    [],
   );
 
   // Function to add an entry to the appropriate category
@@ -531,17 +599,21 @@ export default function ClassSchoolworkPage({
     (entry: SchoolworkEntry, category: ReturnType<typeof categoriseEntry>) => {
       switch (category) {
         case "future":
-          setFutureEntries((previous) => [...previous, entry]);
+          setFutureEntries((previous) =>
+            sortEntriesByDueDate([...previous, entry]),
+          );
           break;
         case "past":
-          setPastEntries((previous) => [...previous, entry]);
+          setPastEntries((previous) =>
+            sortEntriesByDueDate([...previous, entry]),
+          );
           break;
         default:
           console.log("Entry categorisation error", category);
           break;
       }
     },
-    []
+    [sortEntriesByDueDate],
   );
 
   // Sidebar content component
@@ -694,7 +766,7 @@ export default function ClassSchoolworkPage({
                         entryID: selectedEntry.id,
                         classID: classID,
                       }),
-                    }
+                    },
                   );
 
                   if (response.ok) {
@@ -703,28 +775,28 @@ export default function ClassSchoolworkPage({
                     setSchoolworkEntries((previous) =>
                       previous
                         ? previous.filter((swk) => swk.id !== selectedEntry.id)
-                        : null
+                        : null,
                     );
                     setFutureEntries((previous) =>
-                      previous.filter((swk) => swk.id !== selectedEntry.id)
+                      previous.filter((swk) => swk.id !== selectedEntry.id),
                     );
                     setPastEntries((previous) =>
-                      previous.filter((swk) => swk.id !== selectedEntry.id)
+                      previous.filter((swk) => swk.id !== selectedEntry.id),
                     );
                     setSelectedEntry(null);
                   } else {
                     console.error(
                       "Failed to delete schoolwork entry:",
-                      response.statusText
+                      response.statusText,
                     );
                     toast.error(
-                      "Failed to delete schoolwork entry. Please try again later."
+                      "Failed to delete schoolwork entry. Please try again later.",
                     );
                   }
                 } catch (error) {
                   console.error("Error deleting schoolwork entry:", error);
                   toast.error(
-                    "Error deleting schoolwork entry. Please try again later."
+                    "Error deleting schoolwork entry. Please try again later.",
                   );
                 }
               }}
@@ -863,14 +935,14 @@ export default function ClassSchoolworkPage({
           // Gets schoolwork entries and class name by classID
           const schoolworkResponse = await fetch(
             `/api/teacher_schoolwork/get_schoolwork_data?classID=${encodeURIComponent(
-              classID
-            )}`
+              classID,
+            )}`,
           );
 
           if (!schoolworkResponse.ok) {
             console.error(
               "Error getting schoolwork entries:",
-              schoolworkResponse.statusText
+              schoolworkResponse.statusText,
             );
             toast.error("Error getting schoolwork. Please try again later.");
             setSchoolworkEntries(null);
@@ -886,7 +958,7 @@ export default function ClassSchoolworkPage({
             setClassName(schoolworkData.className);
             setStudentIDs(schoolworkData.studentIDs);
             const sortedEntries = sortEntriesByDueDate(
-              schoolworkData.schoolwork
+              schoolworkData.schoolwork,
             );
             setSchoolworkEntries(sortedEntries);
 

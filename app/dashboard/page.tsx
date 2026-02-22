@@ -450,7 +450,7 @@ export default async function Dashboard() {
       // teacherNotifications
       //
 
-      // Create a notification for any schoolwork due today (UK timezone)
+      // Create a notification for any schoolwork due today (UK time zone)
       const currentUKTime = new Date().toLocaleString("en-GB", {
         // Gets UK current time as server time will be EST
         timeZone: "Europe/London",

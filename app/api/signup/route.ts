@@ -115,7 +115,7 @@ export async function POST(req: Request) {
           .delete()
           .eq("user_id", user.user_id);
       } catch (rollbackError) {
-        await fetch("/api/webhooks/email", {
+        await fetch("/api/webhooks/emails/signup_rollback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

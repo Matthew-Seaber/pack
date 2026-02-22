@@ -1168,7 +1168,8 @@ export default function TasksPage() {
             {filteredTasksOverdue.length > 0 &&
               filteredTasksOverdue.map(renderTask)}
 
-            {!searchQuery && (
+            {((filteredTasksDueToday.length > 0 && searchQuery) ||
+              !searchQuery) && (
               <h3 className="pt-10 text-lg font-semibold">Today</h3>
             )}
 

@@ -101,6 +101,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
   const [selectedEntry, setSelectedEntry] = useState<SpecificationEntry | null>(
     null
   );
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("Topic");
   const [filterType, setFilterType] = useState<string>("None");
@@ -648,7 +649,12 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
                       {filteredEntries.map((entry) => (
                         <tr
                           key={entry.id}
-                          onClick={() => setSelectedEntry(entry)}
+                          onClick={() => {
+                            setSelectedEntry(entry);
+                            if (window.innerWidth < 768) {
+                              setDrawerOpen(true);
+                            }
+                          }}
                           className={`border-b-2 border-border cursor-pointer hover:opacity-80 ${
                             selectedEntry?.id === entry.id
                               ? "ring-4 ring-primary ring-inset rounded-lg"
@@ -801,7 +807,7 @@ export default function SpecificationPage({ params }: SpecificationPageProps) {
       </div>
 
       <div className="md:hidden lg:hidden xl:hidden">
-        <Drawer>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Fab>
               <PanelBottomOpen />

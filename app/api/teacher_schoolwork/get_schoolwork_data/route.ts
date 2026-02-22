@@ -31,6 +31,7 @@ export async function GET(request: Request) {
       class_student_link!inner(student_id)
       `)
       .eq("class_id", classID)
+      .eq("teacher_id", user.user_id)
       .single();
 
     if (classFetchError) {

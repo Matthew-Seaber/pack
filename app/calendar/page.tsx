@@ -107,10 +107,13 @@ export default function CalendarPage() {
     now.setHours(0, 0, 0, 0);
     const dayOfWeek = now.getDay();
 
-    if (dayOfWeek !== 0) {
-      now.setDate(now.getDate() - dayOfWeek);
-    }
+    now.setDate(now.getDate() - (dayOfWeek === 0 ? 7 : dayOfWeek));
 
+    return now;
+  });
+  const [mobileStartDate, setMobileStartDate] = React.useState<Date>(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
     return now;
   });
   const [theme, setTheme] = React.useState<string | null>(null);
@@ -207,7 +210,7 @@ export default function CalendarPage() {
   };
 
   const handlePreviousDay = () => {
-    setStartOfWeek((prev) => {
+    setMobileStartDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(prev.getDate() - 1);
       return newDate;
@@ -215,7 +218,7 @@ export default function CalendarPage() {
   };
 
   const handleNextDay = () => {
-    setStartOfWeek((prev) => {
+    setMobileStartDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(prev.getDate() + 1);
       return newDate;
@@ -228,16 +231,21 @@ export default function CalendarPage() {
       newDate.setHours(0, 0, 0, 0);
       const dayOfWeek = newDate.getDay();
 
-      if (dayOfWeek !== 0) {
-        newDate.setDate(newDate.getDate() - dayOfWeek);
-      }
+      newDate.setDate(newDate.getDate() - (dayOfWeek === 0 ? 7 : dayOfWeek));
 
       return newDate;
+    });
+
+    setMobileStartDate(() => {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      return now;
     });
   };
 
   React.useEffect(() => {
     const onTKeyDown = (e: KeyboardEvent) => {
+      if (addSheetOpen || editSheetOpen) return;
       if (e.key === "T" || e.key === "t") {
         e.preventDefault();
         handleJumpToToday();
@@ -248,7 +256,7 @@ export default function CalendarPage() {
     return () => {
       window.removeEventListener("keydown", onTKeyDown);
     };
-  }, []);
+  }, [addSheetOpen, editSheetOpen]);
 
   React.useEffect(() => {
     const updateCurrentTime = () => {
@@ -564,9 +572,16 @@ export default function CalendarPage() {
   const renderDay = (day: Date) => {
     if (!events) return null;
 
-    const eventsToRender = events.filter(
-      (e) => new Date(e.start).toDateString() === day.toDateString(),
-    );
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(day);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const eventsToRender = events.filter((e) => {
+      const eventStart = new Date(e.start);
+      const eventEnd = new Date(e.end);
+      return eventStart <= dayEnd && eventEnd >= dayStart;
+    });
 
     return eventsToRender.map((event) => {
       const hourHeight = 60; // Height for each hour (in pixels)
@@ -574,21 +589,27 @@ export default function CalendarPage() {
         eventTypeColours[event.type as keyof typeof eventTypeColours] ||
         eventTypeColours["Other"]; // Fallback to "Other" if error getting an event's corresponding colour
 
-      const startTime = new Date(event.start);
-      const endTime = new Date(event.end);
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
       const now = new Date();
 
-      const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
-      const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+      const startMinutes =
+        eventStart < dayStart
+          ? 0
+          : eventStart.getHours() * 60 + eventStart.getMinutes();
+      const endMinutes =
+        eventEnd > dayEnd
+          ? 24 * 60
+          : eventEnd.getHours() * 60 + eventEnd.getMinutes();
 
       const distanceFromTop = startMinutes * (hourHeight / 60);
       const eventHeight = (endMinutes - startMinutes) * (hourHeight / 60) - 4; // Adds a small gap between events for visual clarity
 
-      const isPastEvent = endTime < now;
+      const isPastEvent = eventEnd < now;
 
       return (
         <div
-          key={event.id}
+          key={`${event.id}-${day.toDateString()}`}
           onClick={() => handleEventClick(event)}
           className={`absolute left-0 right-0 flex items-start justify-between border-l-4 ${
             colours.border
@@ -642,18 +663,23 @@ export default function CalendarPage() {
           setEvents(responseData.events);
         }
 
-        const subjectsResponse = await fetch("/api/subjects/get_subjects", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        if (userRole === "Student") {
+          const subjectsResponse = await fetch("/api/subjects/get_subjects", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
 
-        if (!subjectsResponse.ok) {
-          console.error("Error getting subjects:", subjectsResponse.statusText);
-          toast.error("Error getting your subjects. Please try again later.");
-          setSubjects(null);
-        } else {
-          const subjectsData = await subjectsResponse.json();
-          setSubjects(subjectsData.subjects);
+          if (!subjectsResponse.ok) {
+            console.error(
+              "Error getting subjects:",
+              subjectsResponse.statusText,
+            );
+            toast.error("Error getting your subjects. Please try again later.");
+            setSubjects(null);
+          } else {
+            const subjectsData = await subjectsResponse.json();
+            setSubjects(subjectsData.subjects);
+          }
         }
       } catch (error) {
         console.error("Error getting events or subjects:", error);
@@ -666,7 +692,7 @@ export default function CalendarPage() {
     };
 
     fetchEventsAndSubjects();
-  }, [router]);
+  }, [router, userRole]);
 
   if (loading) {
     return (
@@ -1288,10 +1314,12 @@ export default function CalendarPage() {
               </div>
             ))}
           </div>
-          {daysOfWeek.slice(0, 2).map((day, idx) => {
-            const index = idx;
-            const dayDate = new Date(startOfWeek);
-            dayDate.setDate(startOfWeek.getDate() + index + 1);
+          {[0, 1].map((index) => {
+            const dayDate = new Date(mobileStartDate);
+            const dayName = dayDate.toLocaleDateString("en-GB", {
+              weekday: "long",
+            });
+            dayDate.setDate(mobileStartDate.getDate() + index);
             const dayOfMonth = dayDate.getDate();
             const isToday =
               dayDate.toDateString() === new Date().toDateString();
@@ -1310,7 +1338,7 @@ export default function CalendarPage() {
                   }`}
                 >
                   <div className="text-[10px] font-medium text-muted-foreground">
-                    {day.slice(0, 3).toUpperCase()}
+                    {dayName.slice(0, 3).toUpperCase()}
                   </div>
                   {/* e.g. MON, TUE etc. */}
                   <div

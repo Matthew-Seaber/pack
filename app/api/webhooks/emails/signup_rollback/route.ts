@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { Resend } from 'resend';
+import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-export async function POST(req: Request) {try {
+export async function POST(req: Request) {
+  try {
     const body = await req.json();
-    
+
     const { error, details, userID, context } = body;
 
     // Formatting email
@@ -22,7 +23,7 @@ export async function POST(req: Request) {try {
     `;
 
     await resend.emails.send({
-      from: 'Pack Support <support@packapp.co.uk>',
+      from: "Pack Support <support@packapp.co.uk>",
       to: process.env.ERROR_NOTIFICATION_EMAIL!,
       subject: subject,
       html: emailContent,
@@ -32,7 +33,7 @@ export async function POST(req: Request) {try {
   } catch (error) {
     return NextResponse.json(
       { success: false, error: `Failed to send email: ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

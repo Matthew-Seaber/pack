@@ -91,7 +91,7 @@ function PomodoroPage() {
 
   const startTimer = React.useCallback(() => {
     const settingsButtons = document.querySelectorAll(
-      "#settingsButton"
+      "#settingsButton",
     ) as NodeListOf<HTMLButtonElement>;
 
     settingsButtons.forEach((btn) => {
@@ -99,9 +99,37 @@ function PomodoroPage() {
       btn.classList.add("bg-gray-600");
     });
 
+    let adjustedFocus = focusLength;
+    let adjustedBreak = breakLength;
+
+    if (focusLength < 5) {
+      adjustedFocus = 5;
+      setFocusLength(adjustedFocus);
+      localStorage.setItem("pomodoroFocusLength", adjustedFocus.toString());
+      toast.info("Focus length adjusted.");
+    } else if (focusLength > 180) {
+      adjustedFocus = 180;
+      setFocusLength(adjustedFocus);
+      localStorage.setItem("pomodoroFocusLength", adjustedFocus.toString());
+      toast.info("Focus length adjusted.");
+    }
+
+    if (breakLength < 0) {
+      adjustedBreak = 0;
+      setBreakLength(adjustedBreak);
+      localStorage.setItem("pomodoroBreakLength", adjustedBreak.toString());
+      toast.info("Break length adjusted.");
+    } else if (breakLength > 60) {
+      adjustedBreak = 60;
+      setBreakLength(adjustedBreak);
+      localStorage.setItem("pomodoroBreakLength", adjustedBreak.toString());
+      toast.info("Break length adjusted.");
+    }
+
+    setCurrentTime(mode === "focus" ? adjustedFocus * 60 : adjustedBreak * 60);
     setTimerStatus("running");
     toast.info("Timer started.");
-  }, []);
+  }, [focusLength, breakLength, mode]);
 
   const sectionComplete = React.useCallback(async () => {
     setTimerStatus("stopped");
@@ -121,7 +149,7 @@ function PomodoroPage() {
 
           if (res.ok) {
             toast.success(
-              `${focusLength} minutes have been added to your stats.`
+              `${focusLength} minutes have been added to your stats.`,
             );
           } else {
             toast.error("Failed to save stats to profile.");
@@ -187,10 +215,10 @@ function PomodoroPage() {
     let validCounter = 0;
 
     const focusInput = document.getElementById(
-      "focusLengthInput"
+      "focusLengthInput",
     ) as HTMLInputElement;
     const breakInput = document.getElementById(
-      "breakLengthInput"
+      "breakLengthInput",
     ) as HTMLInputElement;
 
     const newFocus = parseInt(focusInput.value, 10);
@@ -231,7 +259,7 @@ function PomodoroPage() {
 
   const togglePauseTimer = () => {
     const pauseButton = document.getElementById(
-      "pauseButton"
+      "pauseButton",
     ) as HTMLButtonElement;
 
     if (pauseButton.innerText === "Pause") {
@@ -247,7 +275,7 @@ function PomodoroPage() {
 
   const endTimer = async () => {
     const settingsButtons = document.querySelectorAll(
-      "#settingsButton"
+      "#settingsButton",
     ) as NodeListOf<HTMLButtonElement>;
 
     settingsButtons.forEach((btn) => {
@@ -281,7 +309,7 @@ function PomodoroPage() {
           toast.success(
             `Great work! ${sessionLength} minute${
               sessionLength !== 1 ? "s have" : " has"
-            } been added to your stats.`
+            } been added to your stats.`,
           );
         } else {
           toast.error("Failed to save stats to profile.");

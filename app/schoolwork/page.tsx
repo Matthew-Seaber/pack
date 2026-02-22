@@ -604,20 +604,20 @@ export default function SchoolworkPage() {
     (entry: SchoolworkEntry, category: ReturnType<typeof categoriseEntry>) => {
       switch (category) {
         case "future":
-          setFutureEntries((previous) => [...previous, entry]);
+          setFutureEntries((previous) => sortEntriesByDueDate([...previous, entry]));
           break;
         case "past":
-          setOverdueEntries((previous) => [...previous, entry]);
+          setOverdueEntries((previous) => sortEntriesByDueDate([...previous, entry]));
           break;
         case "completed":
-          setCompletedEntries((previous) => [...previous, entry]);
+          setCompletedEntries((previous) => sortEntriesByDueDate([...previous, entry]));
           break;
         default:
           console.log("Entry categorisation error", category);
           break;
       }
     },
-    []
+    [sortEntriesByDueDate]
   );
 
   // Function to add a student to a teacher-managed class
@@ -1871,8 +1871,8 @@ export default function SchoolworkPage() {
                 ))}
                 <p className="text-sm text-muted-foreground mt-3">
                   <i>
-                    Note: leaving a class won&apos;t remove any existing
-                    schoolwork.
+                    Note: leaving a class will remove any existing
+                    schoolwork assigned to that class.
                   </i>
                 </p>
               </>

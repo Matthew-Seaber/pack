@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         { error: "User not signed in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         { error: "Name, start, end, and locationType are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     } else {
       finalLocation = 0;
     }
-      
+
     // Insert the new event into the database
     const { data: calendarData, error: insertError } = await supabaseMainAdmin
       .from("calendar_events")
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         location: location || null,
       })
       .select(
-        "event_id, event_name, event_description, event_start, event_end, type, subject_id, location_type, location"
+        "event_id, event_name, event_description, event_start, event_end, type, subject_id, location_type, location",
       )
       .single();
 
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       console.error("Error adding calendar event:", insertError);
       return NextResponse.json(
         { error: "Failed to add calendar event" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     console.error("API Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
