@@ -49,7 +49,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
     PastPaperEntry[] | null
   >(null);
   const [selectedEntry, setSelectedEntry] = useState<PastPaperEntry | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
         );
       });
     },
-    []
+    [],
   );
 
   const filteredEntries = React.useMemo(() => {
@@ -142,7 +142,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
 
     // Search query
     if (searchQuery.trim()) {
-      searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase();
 
       results = results.filter((entry) => {
         const combinedName =
@@ -153,15 +153,29 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
           `${entry.resource_name} - ${entry.series}`.toLowerCase();
         const topicNameMatch = entry.resource_name
           .toLowerCase()
-          .includes(searchQuery);
-        const descriptionMatch = entry.series
-          ?.toLowerCase()
-          .includes(searchQuery);
+          .includes(query);
+        const descriptionMatch = entry.series?.toLowerCase().includes(query);
         const combinedMatch =
-          combinedName.includes(searchQuery) ||
-          combinedTitle.includes(searchQuery) ||
-          combinedTitleHyphenated.includes(searchQuery);
-        return topicNameMatch || descriptionMatch || combinedMatch; // Returns true if the search query is within either the resource name, series, or both
+          combinedName.includes(query) ||
+          combinedTitle.includes(query) ||
+          combinedTitleHyphenated.includes(query);
+
+        const seriesParts = entry.series?.split(" ") || [];
+        const year = seriesParts[1]; // Extracts the year from the end of the series
+        let yearResourceMatch = false;
+
+        if (year && !isNaN(Number(year))) {
+          yearResourceMatch =
+            `${entry.resource_name} ${year}`.toLowerCase().includes(query) ||
+            `${year} ${entry.resource_name}`.toLowerCase().includes(query);
+        }
+
+        return (
+          topicNameMatch ||
+          descriptionMatch ||
+          combinedMatch ||
+          yearResourceMatch
+        ); // Returns true if the search query is within either the resource name, series, or both
       });
     }
 
@@ -173,7 +187,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
       toast.info("Preparing download...");
 
       const downloadResponse = await fetch(
-        `/api/past_papers/download_zip?entryID=${encodeURIComponent(entryID)}`
+        `/api/past_papers/download_zip?entryID=${encodeURIComponent(entryID)}`,
       );
 
       if (!downloadResponse.ok) {
@@ -184,7 +198,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
 
       const blob = await downloadResponse.blob(); // Gets the raw binary data (BLOB = Binary Large Object)
       const entry = pastPaperEntries?.find((item) => item.id === entryID);
-      
+
       const words = subject.toLowerCase().split(" "); // Same logic reused from sign up page
       let prefix = "";
       if (words.length >= 2) {
@@ -218,7 +232,10 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
           await writable.close();
         } catch (pickerError: unknown) {
           // User potentially clicked cancel on the save dialog
-          if (pickerError instanceof DOMException && pickerError.name === "AbortError") {
+          if (
+            pickerError instanceof DOMException &&
+            pickerError.name === "AbortError"
+          ) {
             toast.info("Download cancelled.");
           }
           throw pickerError;
@@ -269,7 +286,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
     window.open(
       `/past-papers/view/${entryID}/`,
       "_blank",
-      "noopener,noreferrer"
+      "noopener,noreferrer",
     ); // Opens in new tab
   };
 
@@ -286,7 +303,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                   `/specification/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
-                    examBoard.toLowerCase()
+                    examBoard.toLowerCase(),
                 )
               }
             >
@@ -299,7 +316,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                   `/resources/${qualification}/` +
                     subject.replace(/ /g, "-").toLowerCase() +
                     "/" +
-                    examBoard.toLowerCase()
+                    examBoard.toLowerCase(),
                 )
               }
             >
@@ -332,7 +349,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                 `/specification/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
-                  examBoard.toLowerCase()
+                  examBoard.toLowerCase(),
               )
             }
           >
@@ -345,7 +362,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                 `/resources/${qualification}/` +
                   subject.replace(/ /g, "-").toLowerCase() +
                   "/" +
-                  examBoard.toLowerCase()
+                  examBoard.toLowerCase(),
               )
             }
           >
@@ -458,7 +475,7 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
                     subject +
                     " (" +
                     examBoard +
-                    ")"
+                    ")",
                 );
                 const emailBody = encodeURIComponent(`Dear Pack Support,
 
@@ -507,25 +524,25 @@ export default function PastPaperPage({ params }: PastPaperPageProps) {
           // Gets past paper entries and their files' locations
           const pastPaperResponse = await fetch(
             `/api/past_papers/get_past_paper_data?qualification=${encodeURIComponent(
-              qualification
+              qualification,
             )}&subject=${encodeURIComponent(
-              subject
-            )}&examBoard=${encodeURIComponent(examBoard)}`
+              subject,
+            )}&examBoard=${encodeURIComponent(examBoard)}`,
           );
 
           if (!pastPaperResponse.ok) {
             console.error(
               "Error getting past paper entries:",
-              pastPaperResponse.statusText
+              pastPaperResponse.statusText,
             );
             toast.error(
-              "Error getting past paper data. Please try again later."
+              "Error getting past paper data. Please try again later.",
             );
             setPastPaperEntries(null);
           } else {
             const pastPaperData = await pastPaperResponse.json();
             const sortedEntries = sortEntriesBySeries(
-              pastPaperData.pastPaperEntries
+              pastPaperData.pastPaperEntries,
             );
             setPastPaperEntries(sortedEntries);
           }

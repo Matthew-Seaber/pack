@@ -433,12 +433,13 @@ export default function ClassSchoolworkPage({
 
       return `${weekday} ${day}/${month}/${year}`;
     } else if (type === 2) {
-      // Relative format (e.g. in 3 days) so students can quickly compare the age of different resources (only for dates in the future)
+      // Relative format (e.g. in 3 days / 3 days ago) so students can quickly compare the age of different resources
       const msDifference = date.getTime() - now.getTime();
-      if (msDifference <= 0) return "ERROR";
+      const isFuture = msDifference > 0;
+      const absoluteDifference = Math.abs(msDifference);
 
-      const seconds = Math.floor(msDifference / 1000);
-      if (seconds < 60) return "in a few seconds";
+      const seconds = Math.floor(absoluteDifference / 1000);
+      if (seconds < 60) return "now";
 
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
@@ -447,8 +448,11 @@ export default function ClassSchoolworkPage({
       const months = Math.floor(days / 30);
       const years = Math.floor(days / 365);
 
-      const format = (value: number, unit: string) =>
-        `in ${value} ${unit}${value !== 1 ? "s" : ""}`;
+      const format = (value: number, unit: string) => {
+        return isFuture
+          ? `in ${value} ${unit}${value !== 1 ? "s" : ""}`
+          : `${value} ${unit}${value !== 1 ? "s" : ""} ago`;
+      };
 
       if (minutes < 60) return format(minutes, "minute");
       if (hours < 24) return format(hours, "hour");
@@ -509,9 +513,12 @@ export default function ClassSchoolworkPage({
       return;
     }
 
+    const isDuePast = selectedEntry
+      ? new Date(selectedEntry.due).getTime() < Date.now()
+      : false;
     const message = `Reminder sent by your teacher from ${className}: your homework "${
       selectedEntry?.name
-    }" is due ${
+    }" ${isDuePast ? "was" : "is"} due ${
       selectedEntry ? formatTimestamp(selectedEntry.due, 2) : "soon"
     }`;
 

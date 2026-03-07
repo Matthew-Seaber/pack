@@ -11,7 +11,7 @@ export async function PUT(req: Request) {
     if (!user) {
       return NextResponse.json(
         { error: "User not signed in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function PUT(req: Request) {
     if (!schoolwork_name || !typeString || !due || !issued) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function PUT(req: Request) {
       if (due < now) {
         return NextResponse.json(
           { error: "Due date cannot be in the past" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -54,7 +54,7 @@ export async function PUT(req: Request) {
     } else {
       return NextResponse.json(
         { error: "Invalid schoolwork type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,7 +86,7 @@ export async function PUT(req: Request) {
               course_name
           )
         )
-      `
+      `,
       )
       .single();
 
@@ -94,23 +94,38 @@ export async function PUT(req: Request) {
       console.error("Error updating schoolwork entry:", updateError);
       return NextResponse.json(
         { error: "Failed to update schoolwork entry" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
+    type SchoolworkEntry = {
+      schoolwork_id: number | string;
+      type: number | null;
+      due: string | null;
+      issued: string | null;
+      schoolwork_name: string | null;
+      schoolwork_description: string | null;
+      subjects: {
+        teacher_name?: string | null;
+        courses: {
+          course_name?: string | null;
+        } | null;
+      } | null;
+    };
+
     // Returns the updated entry
+    const entry = schoolworkData as unknown as SchoolworkEntry;
     const updatedEntry = {
-      id: schoolworkData.schoolwork_id,
+      id: entry.schoolwork_id,
       category: 1, // Student-managed schoolwork
-      schoolworkType: schoolworkData.type === 1 ? "Homework" : "Test",
-      due: schoolworkData.due,
-      issued: schoolworkData.issued,
-      name: schoolworkData.schoolwork_name,
-      description: schoolworkData.schoolwork_description || null,
-      subject_name:
-        schoolworkData.subjects?.[0]?.courses?.[0]?.course_name || null,
+      schoolworkType: entry.type === 1 ? "Homework" : "Test",
+      due: entry.due,
+      issued: entry.issued,
+      name: entry.schoolwork_name,
+      description: entry.schoolwork_description || null,
+      subject_name: entry.subjects?.courses?.course_name || null,
       class_name: null,
-      teacher_name: schoolworkData.subjects?.[0]?.teacher_name || null,
+      teacher_name: entry.subjects?.teacher_name || null,
       completed: false,
     };
 
@@ -122,7 +137,7 @@ export async function PUT(req: Request) {
     console.error("API Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

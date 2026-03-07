@@ -91,10 +91,10 @@ export default function SchoolworkPage() {
   const [futureEntries, setFutureEntries] = useState<SchoolworkEntry[]>([]);
   const [overdueEntries, setOverdueEntries] = useState<SchoolworkEntry[]>([]);
   const [completedEntries, setCompletedEntries] = useState<SchoolworkEntry[]>(
-    []
+    [],
   );
   const [selectedEntry, setSelectedEntry] = useState<SchoolworkEntry | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -135,7 +135,7 @@ export default function SchoolworkPage() {
 
       return sortedCopy;
     },
-    []
+    [],
   );
 
   const playCompletionSFX = () => {
@@ -160,7 +160,7 @@ export default function SchoolworkPage() {
     setEntryType(entry.schoolworkType);
 
     const subjectFound = subjects?.find(
-      (subject) => subject.name === entry.subject_name
+      (subject) => subject.name === entry.subject_name,
     );
 
     if (subjectFound) {
@@ -236,7 +236,7 @@ export default function SchoolworkPage() {
         // Adds new entry to the appropriate section (updates UI without refresh for improved UX)
         const newEntry = data.entry;
         const sortedEntries = sortEntriesByDueDate(
-          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry],
         );
         setSchoolworkEntries(sortedEntries);
 
@@ -333,9 +333,9 @@ export default function SchoolworkPage() {
                   !(
                     swk.id === selectedEntry.id &&
                     swk.category === selectedEntry.category
-                  )
+                  ),
               )
-            : null
+            : null,
         );
         setFutureEntries((previous) =>
           previous.filter(
@@ -343,8 +343,8 @@ export default function SchoolworkPage() {
               !(
                 swk.id === selectedEntry.id &&
                 swk.category === selectedEntry.category
-              )
-          )
+              ),
+          ),
         );
         setOverdueEntries((previous) =>
           previous.filter(
@@ -352,8 +352,8 @@ export default function SchoolworkPage() {
               !(
                 swk.id === selectedEntry.id &&
                 swk.category === selectedEntry.category
-              )
-          )
+              ),
+          ),
         );
         setCompletedEntries((previous) =>
           previous.filter(
@@ -361,14 +361,14 @@ export default function SchoolworkPage() {
               !(
                 swk.id === selectedEntry.id &&
                 swk.category === selectedEntry.category
-              )
-          )
+              ),
+          ),
         );
 
         // Adds updated entry to the appropriate section (updates UI without refresh for improved UX)
         const newEntry = data.entry;
         const sortedEntries = sortEntriesByDueDate(
-          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry]
+          schoolworkEntries ? [...schoolworkEntries, newEntry] : [newEntry],
         );
         setSchoolworkEntries(sortedEntries);
 
@@ -406,7 +406,7 @@ export default function SchoolworkPage() {
             category: entryCategory,
             complete: true,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -426,24 +426,24 @@ export default function SchoolworkPage() {
             ? previous.map((entry) =>
                 entry.id === entryID && entry.category === entryCategory
                   ? { ...entry, completed: true }
-                  : entry
+                  : entry,
               )
-            : null
+            : null,
         );
         setFutureEntries((previous) =>
           previous.filter(
             (entry) =>
-              !(entry.id === entryID && entry.category === entryCategory)
-          )
+              !(entry.id === entryID && entry.category === entryCategory),
+          ),
         );
         setOverdueEntries((previous) =>
           previous.filter(
             (entry) =>
-              !(entry.id === entryID && entry.category === entryCategory)
-          )
+              !(entry.id === entryID && entry.category === entryCategory),
+          ),
         );
         const completedEntry = [...futureEntries, ...overdueEntries].find(
-          (entry) => entry.id === entryID && entry.category === entryCategory
+          (entry) => entry.id === entryID && entry.category === entryCategory,
         ); // Finds entry from either list and adds to the completed list below
 
         if (completedEntry) {
@@ -476,7 +476,7 @@ export default function SchoolworkPage() {
       } else {
         console.error(
           "Failed to complete schoolwork entry:",
-          response.statusText
+          response.statusText,
         );
         toast.error("Failed to complete schoolwork. Please try again later.");
       }
@@ -488,7 +488,7 @@ export default function SchoolworkPage() {
 
   const handleMarkIncomplete = async (
     entryID: string,
-    entryCategory: number
+    entryCategory: number,
   ) => {
     try {
       const response = await fetch(
@@ -501,7 +501,7 @@ export default function SchoolworkPage() {
             category: entryCategory,
             complete: false,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -512,22 +512,22 @@ export default function SchoolworkPage() {
             ? previous.map((entry) =>
                 entry.id === entryID && entry.category === entryCategory
                   ? { ...entry, completed: false }
-                  : entry
+                  : entry,
               ) // Switches 'complete' to false in master list
-            : null
+            : null,
         );
         setCompletedEntries(
           (
-            previous // Removes entry from the completed list
+            previous, // Removes entry from the completed list
           ) =>
             previous.filter(
               (entry) =>
-                !(entry.id === entryID && entry.category === entryCategory)
-            )
+                !(entry.id === entryID && entry.category === entryCategory),
+            ),
         );
         // Finds the entry and categorises it based on due date (below)
         const incompleteEntry = completedEntries.find(
-          (entry) => entry.id === entryID && entry.category === entryCategory
+          (entry) => entry.id === entryID && entry.category === entryCategory,
         );
 
         if (incompleteEntry) {
@@ -549,16 +549,16 @@ export default function SchoolworkPage() {
       } else {
         console.error(
           "Failed to mark schoolwork as incomplete:",
-          response.statusText
+          response.statusText,
         );
         toast.error(
-          "Failed to mark schoolwork as incomplete. Please try again later."
+          "Failed to mark schoolwork as incomplete. Please try again later.",
         );
       }
     } catch (error) {
       console.error("Error marking schoolwork as incomplete:", error);
       toast.error(
-        "Error marking schoolwork as incomplete. Please try again later."
+        "Error marking schoolwork as incomplete. Please try again later.",
       );
     }
   };
@@ -596,7 +596,7 @@ export default function SchoolworkPage() {
         return "past";
       }
     },
-    []
+    [],
   );
 
   // Function to add an entry to the appropriate category
@@ -604,20 +604,26 @@ export default function SchoolworkPage() {
     (entry: SchoolworkEntry, category: ReturnType<typeof categoriseEntry>) => {
       switch (category) {
         case "future":
-          setFutureEntries((previous) => sortEntriesByDueDate([...previous, entry]));
+          setFutureEntries((previous) =>
+            sortEntriesByDueDate([...previous, entry]),
+          );
           break;
         case "past":
-          setOverdueEntries((previous) => sortEntriesByDueDate([...previous, entry]));
+          setOverdueEntries((previous) =>
+            sortEntriesByDueDate([...previous, entry]),
+          );
           break;
         case "completed":
-          setCompletedEntries((previous) => sortEntriesByDueDate([...previous, entry]));
+          setCompletedEntries((previous) =>
+            sortEntriesByDueDate([...previous, entry]),
+          );
           break;
         default:
           console.log("Entry categorisation error", category);
           break;
       }
     },
-    [sortEntriesByDueDate]
+    [sortEntriesByDueDate],
   );
 
   // Function to add a student to a teacher-managed class
@@ -660,7 +666,7 @@ export default function SchoolworkPage() {
       if (response.ok) {
         toast.success("Successfully left class!");
         setTeacherClasses((previous) =>
-          previous.filter((clss) => clss.id !== classID)
+          previous.filter((clss) => clss.id !== classID),
         );
       } else {
         console.error("Failed to leave class:", response.statusText);
@@ -867,7 +873,7 @@ export default function SchoolworkPage() {
                         body: JSON.stringify({
                           schoolworkID: selectedEntry.id,
                         }),
-                      }
+                      },
                     );
 
                     if (response.ok) {
@@ -880,9 +886,9 @@ export default function SchoolworkPage() {
                                 !(
                                   swk.id === selectedEntry.id &&
                                   swk.category === selectedEntry.category
-                                )
+                                ),
                             )
-                          : null
+                          : null,
                       );
                       setFutureEntries((previous) =>
                         previous.filter(
@@ -890,8 +896,8 @@ export default function SchoolworkPage() {
                             !(
                               swk.id === selectedEntry.id &&
                               swk.category === selectedEntry.category
-                            )
-                        )
+                            ),
+                        ),
                       );
                       setOverdueEntries((previous) =>
                         previous.filter(
@@ -899,8 +905,8 @@ export default function SchoolworkPage() {
                             !(
                               swk.id === selectedEntry.id &&
                               swk.category === selectedEntry.category
-                            )
-                        )
+                            ),
+                        ),
                       );
                       setCompletedEntries((previous) =>
                         previous.filter(
@@ -908,23 +914,23 @@ export default function SchoolworkPage() {
                             !(
                               swk.id === selectedEntry.id &&
                               swk.category === selectedEntry.category
-                            )
-                        )
+                            ),
+                        ),
                       );
                       setSelectedEntry(null);
                     } else {
                       console.error(
                         "Failed to delete schoolwork entry:",
-                        response.statusText
+                        response.statusText,
                       );
                       toast.error(
-                        "Failed to delete schoolwork entry. Please try again later."
+                        "Failed to delete schoolwork entry. Please try again later.",
                       );
                     }
                   } catch (error) {
                     console.error("Error deleting schoolwork entry:", error);
                     toast.error(
-                      "Error deleting schoolwork entry. Please try again later."
+                      "Error deleting schoolwork entry. Please try again later.",
                     );
                   }
                 }}
@@ -964,13 +970,13 @@ export default function SchoolworkPage() {
 
           // Gets schoolwork entries for the student
           const schoolworkResponse = await fetch(
-            `/api/schoolwork/get_schoolwork_data`
+            `/api/schoolwork/get_schoolwork_data`,
           );
 
           if (!schoolworkResponse.ok) {
             console.error(
               "Error getting schoolwork entries:",
-              schoolworkResponse.statusText
+              schoolworkResponse.statusText,
             );
             toast.error("Error getting schoolwork. Please try again later.");
             setSchoolworkEntries(null);
@@ -982,7 +988,7 @@ export default function SchoolworkPage() {
             const schoolworkData =
               (await schoolworkResponse.json()) as APIResponse;
             const sortedEntries = sortEntriesByDueDate(
-              schoolworkData.schoolwork
+              schoolworkData.schoolwork,
             );
             setSchoolworkEntries(sortedEntries);
 
@@ -1020,10 +1026,10 @@ export default function SchoolworkPage() {
             if (!subjectsResponse.ok) {
               console.error(
                 "Error getting subjects:",
-                subjectsResponse.statusText
+                subjectsResponse.statusText,
               );
               toast.error(
-                "Error getting your subjects for schoolwork creation. Please try again later"
+                "Error getting your subjects for schoolwork creation. Please try again later",
               );
               setSubjects(null);
             } else {
@@ -1054,10 +1060,10 @@ export default function SchoolworkPage() {
         if (!classesResponse.ok) {
           console.error(
             "Error getting your linked teacher classes:",
-            classesResponse.statusText
+            classesResponse.statusText,
           );
           toast.error(
-            "Error getting your linked teacher classes. Please try again later."
+            "Error getting your linked teacher classes. Please try again later.",
           );
           setTeacherClasses([]);
         } else {
@@ -1083,7 +1089,7 @@ export default function SchoolworkPage() {
           (!overdueEntries || overdueEntries.length === 0)
         ) {
           setRecommendation(
-            "We have no recommendations for you at this time; please try again later or try adding some more schoolwork."
+            "We have no recommendations for you at this time; please try again later or try adding some more schoolwork.",
           );
           return;
         }
@@ -1096,13 +1102,13 @@ export default function SchoolworkPage() {
             body: JSON.stringify({
               schoolwork: futureEntries.concat(overdueEntries),
             }), // Combining all uncomplete entries means that the API file doesn't need to filter out completed entries again, saving computation time on the server and improving response times for the user
-          }
+          },
         );
 
         if (!recommendationResponse.ok) {
           console.error(
             "Error getting recommendation:",
-            recommendationResponse.statusText
+            recommendationResponse.statusText,
           );
         } else {
           const recommendationData = await recommendationResponse.json();
@@ -1111,7 +1117,7 @@ export default function SchoolworkPage() {
       } catch (error) {
         console.error("Error fetching recommendation:", error);
         setRecommendation(
-          "We have no recommendations for you at this time; please try again later or try adding some more schoolwork."
+          "We have no recommendations for you at this time; please try again later or try adding some more schoolwork.",
         );
       }
     };
@@ -1209,13 +1215,13 @@ export default function SchoolworkPage() {
                               <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
                                 <div className="w-full h-full flex items-center justify-center">
                                   <button
-                                    title="Open"
+                                    title="Mark complete"
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleMarkComplete(
                                         entry.id,
-                                        entry.category
+                                        entry.category,
                                       );
                                     }}
                                   >
@@ -1313,13 +1319,13 @@ export default function SchoolworkPage() {
                               <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
                                 <div className="w-full h-full flex items-center justify-center">
                                   <button
-                                    title="Open"
+                                    title="Mark complete"
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleMarkComplete(
                                         entry.id,
-                                        entry.category
+                                        entry.category,
                                       );
                                     }}
                                   >
@@ -1417,13 +1423,13 @@ export default function SchoolworkPage() {
                               <td className="px-4 py-4 text-center hover:bg-gray-800 border-r-2 border-border">
                                 <div className="w-full h-full flex items-center justify-center">
                                   <button
-                                    title="Open"
+                                    title="Mark incomplete"
                                     className="rounded text-lg font-semibold"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleMarkIncomplete(
                                         entry.id,
-                                        entry.category
+                                        entry.category,
                                       );
                                     }}
                                   >
@@ -1614,7 +1620,7 @@ export default function SchoolworkPage() {
                         ))
                       ) : (
                         <SelectItem value="no-subjects" disabled>
-                          No subjects available
+                          <i>No subjects available</i>
                         </SelectItem>
                       )}
                     </SelectContent>
@@ -1786,7 +1792,7 @@ export default function SchoolworkPage() {
                         ))
                       ) : (
                         <SelectItem value="no-subjects" disabled>
-                          No subjects available
+                          <i>No subjects available</i>
                         </SelectItem>
                       )}
                     </SelectContent>
@@ -1836,8 +1842,8 @@ export default function SchoolworkPage() {
             <p className="text-sm text-muted-foreground mb-6">
               <i>
                 Note: joining a class will share your first name and schoolwork
-                status with the teacher of that class, and allow them to send
-                you notifications.
+                status with the teacher of that class and allow them to send you
+                notifications.
               </i>
             </p>
 
@@ -1871,8 +1877,8 @@ export default function SchoolworkPage() {
                 ))}
                 <p className="text-sm text-muted-foreground mt-3">
                   <i>
-                    Note: leaving a class will remove any existing
-                    schoolwork assigned to that class.
+                    Note: leaving a class will remove any existing schoolwork
+                    assigned to that class.
                   </i>
                 </p>
               </>

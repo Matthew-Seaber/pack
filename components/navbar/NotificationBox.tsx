@@ -1,5 +1,4 @@
 import { Bell, BellRing } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -51,7 +50,7 @@ const formatTimestamp = (timestamp: string | null): string => {
 export default function NotificationBox() {
   const [newNotifications, setNewNotifications] = useState<Notification[]>([]);
   const [readNotifications, setReadNotifications] = useState<Notification[]>(
-    []
+    [],
   );
   const [active, setActive] = useState(false);
 
@@ -65,7 +64,7 @@ export default function NotificationBox() {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (response.ok) {
@@ -76,13 +75,13 @@ export default function NotificationBox() {
             new Date(b.sent).getTime() - new Date(a.sent).getTime();
 
           setNewNotifications(
-            data.newNotifications?.sort(sortBySentDate) || []
+            data.newNotifications?.sort(sortBySentDate) || [],
           );
           setReadNotifications(
-            data.readNotifications?.sort(sortBySentDate) || []
+            data.readNotifications?.sort(sortBySentDate) || [],
           );
           setActive(
-            Boolean(data.newNotifications && data.newNotifications.length > 0)
+            Boolean(data.newNotifications && data.newNotifications.length > 0),
           );
         } else {
           console.error("Failed to fetch notifications");
