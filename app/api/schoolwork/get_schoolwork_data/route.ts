@@ -102,7 +102,7 @@ export async function GET() {
       ])
     );
 
-    // Fetch class_schoolwork with a triple join to 'classes', 'teachers', and 'courses' tables (saves multiple DB calls))
+    // Fetch class_schoolwork with a triple join to 'classes', 'teachers', and 'courses' tables (saves multiple DB calls)
     const { data: teacherSchoolworkData, error: teacherSchoolworkDataError } =
       await supabaseMainAdmin
         .from("class_schoolwork")

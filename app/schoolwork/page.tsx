@@ -318,6 +318,7 @@ export default function SchoolworkPage() {
           issued: issuedTimestamp,
           type: entryType,
           subject_id: subjectID || null,
+          completed: selectedEntry.completed,
         }),
       });
 
@@ -756,7 +757,7 @@ export default function SchoolworkPage() {
           <h3 className="text-lg font-semibold mb-2">{selectedEntry.name}</h3>
           <div className="space-y-2 text-sm">
             <div className="flex gap-2">
-              {selectedEntry.due < new Date().toISOString() && (
+              {selectedEntry.due < new Date().toISOString() && selectedEntry.completed === false && (
                 <Badge
                   backgroundColour="rgba(239, 68, 68, 0.2)"
                   textColour="#F87171"
@@ -851,7 +852,7 @@ export default function SchoolworkPage() {
                 Mark incomplete
               </Button>
             )}
-            {selectedEntry.category === 1 && ( // Only deletion of student-managed entries is allowed
+            {selectedEntry.category === 1 && ( // Only editing of student-managed entries is allowed
               <Button
                 className="w-full bg-[#F8921A] hover:bg-[#DF8319]"
                 onClick={() => handleEntryClick(selectedEntry)}

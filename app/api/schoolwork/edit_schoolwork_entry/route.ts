@@ -24,6 +24,7 @@ export async function PUT(req: Request) {
       issued,
       type: typeString,
       subject_id,
+      completed,
     } = await req.json();
 
     // Validate required fields
@@ -63,7 +64,6 @@ export async function PUT(req: Request) {
       .from("schoolwork")
       .update({
         type: type,
-        completed: false,
         due: due,
         issued: issued,
         schoolwork_name: schoolwork_name,
@@ -126,7 +126,7 @@ export async function PUT(req: Request) {
       subject_name: entry.subjects?.courses?.course_name || null,
       class_name: null,
       teacher_name: entry.subjects?.teacher_name || null,
-      completed: false,
+      completed: completed,
     };
 
     return NextResponse.json({

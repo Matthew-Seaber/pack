@@ -8,6 +8,7 @@ import {
   Notebook,
   Plus,
   ChevronDownIcon,
+  RefreshCw,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -303,6 +304,12 @@ export default function TasksPage() {
 
     const finalPriority = taskPriority || "4"; // Sets default priority to lowest if none selected
 
+    let finalSubject = taskSubject || null;
+
+    if (taskSubject === "none") {
+      finalSubject = null;
+    }
+
     try {
       // Combine date and time into a timestampz
       let dueTimestamp: string | null = null;
@@ -335,7 +342,7 @@ export default function TasksPage() {
           description: taskDescription.trim() || null,
           due: dueTimestamp || null,
           priority: parseInt(finalPriority),
-          subject: taskSubject || null,
+          subject: finalSubject,
         }),
       });
 
@@ -873,9 +880,19 @@ export default function TasksPage() {
             <div className="py-2 mb-2">
               <div className="flex gap-4">
                 <div className="flex flex-col gap-3">
-                  <Label htmlFor="datePicker" className="px-1">
-                    Due date
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="datePicker" className="px-1">
+                      Due date
+                    </Label>
+                    {date && (
+                      <button
+                        onClick={() => setDate(undefined)}
+                        className="p-0.5"
+                      >
+                        <RefreshCw className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                   <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <DialogTrigger asChild>
                       <Button
@@ -903,9 +920,16 @@ export default function TasksPage() {
                   </Dialog>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <Label htmlFor="timePicker" className="px-1">
-                    Due time
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="timePicker" className="px-1">
+                      Due time
+                    </Label>
+                    {time && (
+                      <button onClick={() => setTime("")} className="p-0.5">
+                        <RefreshCw className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                   <Input
                     type="time"
                     id="timePicker"
@@ -945,11 +969,16 @@ export default function TasksPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {subjects && subjects.length > 0 ? (
-                        subjects.map((subject) => (
-                          <SelectItem key={subject.id} value={subject.id}>
-                            {subject.name}
+                        <>
+                          <SelectItem key="0" value="none">
+                            None
                           </SelectItem>
-                        ))
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.id}>
+                              {subject.name}
+                            </SelectItem>
+                          ))}
+                        </>
                       ) : (
                         <SelectItem value="no-subjects" disabled>
                           No subjects available
@@ -1018,9 +1047,19 @@ export default function TasksPage() {
             <div className="py-2 mb-2">
               <div className="flex gap-4">
                 <div className="flex flex-col gap-3">
-                  <Label htmlFor="datePicker" className="px-1">
-                    Due date
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="datePicker" className="px-1">
+                      Due date
+                    </Label>
+                    {date && (
+                      <button
+                        onClick={() => setDate(undefined)}
+                        className="p-0.5"
+                      >
+                        <RefreshCw className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                   <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <DialogTrigger asChild>
                       <Button
@@ -1048,9 +1087,16 @@ export default function TasksPage() {
                   </Dialog>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <Label htmlFor="timePicker" className="px-1">
-                    Due time
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="timePicker" className="px-1">
+                      Due time
+                    </Label>
+                    {time && (
+                      <button onClick={() => setTime("")} className="p-0.5">
+                        <RefreshCw className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                   <Input
                     type="time"
                     id="timePicker"
@@ -1090,11 +1136,16 @@ export default function TasksPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {subjects && subjects.length > 0 ? (
-                        subjects.map((subject) => (
-                          <SelectItem key={subject.id} value={subject.id}>
-                            {subject.name}
+                        <>
+                          <SelectItem key="0" value="none">
+                            None
                           </SelectItem>
-                        ))
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.id}>
+                              {subject.name}
+                            </SelectItem>
+                          ))}
+                        </>
                       ) : (
                         <SelectItem value="no-subjects" disabled>
                           No subjects available
