@@ -11,99 +11,99 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         { error: "User not signed in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const user_id = user.user_id;
+    const userID = user.user_id;
 
     if (dataToChange === "pomodoro") {
       if (extraInfo === undefined || typeof extraInfo !== "number") {
         return NextResponse.json(
           { error: "Invalid extraInfo value" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const { error: updateError } = await supabaseMainAdmin.rpc(
         "increase_pomodoro_stats",
         {
-          inputted_user_id: user_id,
+          inputted_user_id: userID,
           amount: extraInfo,
-        }
+        },
       );
 
       if (updateError) {
         console.error("Database error:", updateError);
         return NextResponse.json(
           { error: `Failed to update user stats ${updateError.message}` },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else if (dataToChange === "tasks_completed") {
       const { error: updateError } = await supabaseMainAdmin.rpc(
         "increment_tasks_stat",
         {
-          inputted_user_id: user_id,
-        }
+          inputted_user_id: userID,
+        },
       );
 
       if (updateError) {
         console.error("Database error:", updateError);
         return NextResponse.json(
           { error: "Failed to update user stats" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else if (dataToChange === "schoolworks_completed") {
       const { error: updateError } = await supabaseMainAdmin.rpc(
         "increment_schoolwork_stat",
         {
-          inputted_user_id: user_id,
-        }
+          inputted_user_id: userID,
+        },
       );
 
       if (updateError) {
         console.error("Database error:", updateError);
         return NextResponse.json(
           { error: "Failed to update user stats" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else if (dataToChange === "resources_downloaded") {
       const { error: updateError } = await supabaseMainAdmin.rpc(
         "increment_resources_stat",
         {
-          inputted_user_id: user_id,
-        }
+          inputted_user_id: userID,
+        },
       );
 
       if (updateError) {
         console.error("Database error:", updateError);
         return NextResponse.json(
           { error: "Failed to update user stats" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else if (dataToChange === "past_papers_downloaded_opened") {
       const { error: updateError } = await supabaseMainAdmin.rpc(
         "increment_past_papers_stat",
         {
-          inputted_user_id: user_id,
-        }
+          inputted_user_id: userID,
+        },
       );
 
       if (updateError) {
         console.error("Database error:", updateError);
         return NextResponse.json(
           { error: "Failed to update user stats" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else {
       return NextResponse.json(
         { error: "Invalid dataToChange value" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
     console.error("Database error:", error);
     return NextResponse.json(
       { error: "Failed to update user stats" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

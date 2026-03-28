@@ -248,6 +248,23 @@ export default function TasksPage() {
         }
 
         dueTimestamp = combinedDate.toISOString();
+      } else {
+        if (time) {
+          if (finalPriority === "1" || finalPriority === "2") {
+            toast.error("A due date is required when setting a time.");
+            return;
+          } else {
+            const combinedDate = new Date(now);
+            const [hours, minutes] = time.split(":");
+            combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            dueTimestamp = combinedDate.toISOString();
+
+            toast.info(
+              "Due date was empty and has therefore been set to today.",
+            );
+          }
+        }
       }
 
       const response = await fetch("/api/tasks/add_task", {
@@ -502,7 +519,7 @@ export default function TasksPage() {
     return (
       <div
         key={task.id}
-        onClick={() => handleTaskClick(task)}
+        onClick={() => handleTaskClick(task)} // Used for viewing more details, editing a task, or deleting a task
         className={`flex items-start justify-between gap-4 ${colours.bg} rounded-md mt-5 pt-5 pb-3 px-6 cursor-pointer hover:opacity-75 transition-opacity`}
         style={{ color: colours.text }}
       >
@@ -511,13 +528,15 @@ export default function TasksPage() {
             className="text-md font-medium pb-4"
             style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
           >
-            {task.name.length > 60 ? task.name.slice(0, 60) + "..." : task.name}
+            {task.name.length > 60 ? task.name.slice(0, 60) + "..." : task.name}{" "}
+            {/* Slices the task name if it's too long to prevent overflow (especially on mobile) */}
           </p>
           {task.due && (
             <div className="flex items-center gap-3 pb-2">
               <Clock className="w-5 h-5" />
               <p className="text-sm font-regular">
-                <i>{formatTimestamp(task.due)}</i>
+                <i>{formatTimestamp(task.due)}</i>{" "}
+                {/* Displays the due date in a different format depending on available info (i.e. whether a time exists for the date) and the current date */}
               </p>
             </div>
           )}
@@ -532,7 +551,8 @@ export default function TasksPage() {
                 }}
               >
                 <i>
-                  {subjectMap.get(task.subject) || "Subject course not found"}
+                  {subjectMap.get(task.subject) || "Subject course not found"}{" "}
+                  {/* Uses the map created on page load to fetch the course name corresponding to the task's 'subject_id' (if it exists) */}
                 </i>
               </p>
             </div>
@@ -542,10 +562,10 @@ export default function TasksPage() {
               <AlignLeft className="w-5 h-5 flex-shrink-0 mt-0.2" />
               <p
                 className="text-sm font-regular"
-                style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+                style={{ wordBreak: "break-word", overflowWrap: "break-word" }} // Ensures that no words overflow the container
               >
                 <i>
-                  {task.description.length > 100
+                  {task.description.length > 100 // Slices the description for readability (especially on mobile devices)
                     ? task.description.slice(0, 100) + "..."
                     : task.description}
                 </i>
@@ -854,7 +874,9 @@ export default function TasksPage() {
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Add task</SheetTitle>
-            <SheetDescription>Add a new task to your list</SheetDescription>
+            <SheetDescription>
+              Add a new task to your to-do list
+            </SheetDescription>
           </SheetHeader>
           <div className="py-3">
             <div className="py-2 flex flex-col gap-3 mb-2">
@@ -952,10 +974,12 @@ export default function TasksPage() {
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="1">1</SelectItem>{" "}
+                      {/* Highest priority */}
                       <SelectItem value="2">2</SelectItem>
                       <SelectItem value="3">3</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
+                      <SelectItem value="4">4</SelectItem>{" "}
+                      {/* Lowest priority */}
                     </SelectContent>
                   </Select>
                 </div>
@@ -973,11 +997,15 @@ export default function TasksPage() {
                           <SelectItem key="0" value="none">
                             None
                           </SelectItem>
-                          {subjects.map((subject) => (
-                            <SelectItem key={subject.id} value={subject.id}>
-                              {subject.name}
-                            </SelectItem>
-                          ))}
+                          {subjects.map(
+                            (
+                              subject, // Iterates through a students' subjects
+                            ) => (
+                              <SelectItem key={subject.id} value={subject.id}>
+                                {subject.name}
+                              </SelectItem>
+                            ),
+                          )}
                         </>
                       ) : (
                         <SelectItem value="no-subjects" disabled>

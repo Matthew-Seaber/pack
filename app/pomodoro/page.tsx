@@ -152,13 +152,13 @@ function PomodoroPage() {
               `${focusLength} minutes have been added to your stats.`,
             );
           } else {
-            toast.error("Failed to save stats to profile.");
+            toast.error("Failed to save Pomodoro time statistic to profile.");
             const errorData = await res.json();
             console.error("Stats saving error:", errorData.message);
           }
         } catch (error) {
           console.error("Stats saving error (2):", error);
-          toast.error("Failed to save stats to profile.");
+          toast.error("Failed to save Pomodoro time statistic to profile.");
         }
       } else {
         toast.info("Timer ended. Sign in to track your progress.");
@@ -194,7 +194,7 @@ function PomodoroPage() {
           const newTime = oldTime - 1;
 
           if (newTime <= 0) {
-            sectionComplete(); // Runs due to closures
+            sectionComplete(); // Closure
             return 0;
           }
 
@@ -278,12 +278,12 @@ function PomodoroPage() {
       "#settingsButton",
     ) as NodeListOf<HTMLButtonElement>;
 
-    settingsButtons.forEach((btn) => {
+    settingsButtons.forEach((btn) => { // Re-enable the settings button so the user can adjust the focus/break time
       btn.disabled = false;
       btn.classList.remove("bg-gray-600");
     });
 
-    setTimerStatus("stopped");
+    setTimerStatus("stopped"); // Automatically resets the timer UI due to the timer's flexible effect hooks
     toast.info("Timer stopped.");
 
     if (user) {
@@ -312,13 +312,13 @@ function PomodoroPage() {
             } been added to your stats.`,
           );
         } else {
-          toast.error("Failed to save stats to profile.");
+          toast.error("Failed to save Pomodoro time statistic to profile.");
           const errorData = await res.json();
           console.error("Stats saving error:", errorData.message);
         }
       } catch (error) {
         console.error("Stats saving error (2):", error);
-        toast.error("Failed to save stats to profile.");
+        toast.error("Failed to save Pomodoro time statistic to profile.");
       }
     } else {
       toast.info("Timer ended. Sign in to track your progress.");
