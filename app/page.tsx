@@ -1,17 +1,17 @@
-import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
-import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
-import { NumberTicker } from "@/components/ui/number-ticker";
-import { SparklesText } from "@/components/ui/sparkles-text";
-import { Particles } from "@/components/ui/particles";
-import {
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  TrendingUp,
-} from "lucide-react";
+// import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
+// import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+// import { NumberTicker } from "@/components/ui/number-ticker";
+// import { SparklesText } from "@/components/ui/sparkles-text";
+// import { Particles } from "@/components/ui/particles";
+// import {
+//   Calendar,
+//   ChevronDown,
+//   ChevronRight,
+//   Clock,
+//   TrendingUp,
+// } from "lucide-react";
+//import Link from "next/link";
 import Image from "next/image";
-import Link from "next/link";
 
 function HomePage() {
   return (
@@ -47,6 +47,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/*
       <div className="hidden md:flex flex-col items-center">
         <p>SCROLL</p>
         <div className="flex justify-center mt-3 space-x-1">
@@ -228,9 +229,10 @@ function HomePage() {
           </Link>
         </div>
       </div>
+      */}
 
-      <div className="w-full flex justify-center mt-24 pt-8 border-t border-border">
-        <p className="text-xs font-medium text-[#B4B4B4]">
+      <div className="w-full flex justify-center mt-4 sm:mt-2 pt-8 border-t border-border">
+        <p className="text-xs font-medium text-center text-[#B4B4B4]">
           By accessing this website, you agree to our{" "}
           <a
             href="/terms"
